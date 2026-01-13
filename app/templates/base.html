@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}診療情報提供書作成{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-gray-50" x-data="appState()">
+    <div class="flex h-screen">
+        {% include "components/sidebar.html" %}
+        <main class="flex-1 overflow-auto p-6">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+[x-cloak] {
+    display: none !important;
+}
+
+/* カスタムスタイル */
+pre {
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+}
