@@ -1,49 +1,75 @@
 ============================================================
-プロジェクト構造: MediDocsLMref
-パス: C:\Users\yokam\PycharmProjects\MediDocsLMref
-生成日時: 2025-08-16 18:28:18
+プロジェクト構造: MediDocsLMreferral
+パス: C:\Users\yokam\PycharmProjects\MediDocsLMreferral
+生成日時: 2026-01-13 18:37:18
 ============================================================
 
-└── MediDocsLMref
-    ├── database
+└── MediDocsLMreferral
+    ├── app
+    │   ├── api
+    │   │   ├── __init__.py
+    │   │   ├── prompts.py
+    │   │   ├── router.py
+    │   │   ├── settings.py
+    │   │   ├── statistics.py
+    │   │   └── summary.py
+    │   ├── core
+    │   │   ├── __init__.py
+    │   │   ├── config.py
+    │   │   ├── constants.py
+    │   │   └── database.py
+    │   ├── external
+    │   │   ├── __init__.py
+    │   │   ├── api_factory.py
+    │   │   ├── base_api.py
+    │   │   ├── claude_api.py
+    │   │   └── gemini_api.py
+    │   ├── models
+    │   │   ├── __init__.py
+    │   │   ├── base.py
+    │   │   ├── prompt.py
+    │   │   ├── setting.py
+    │   │   └── usage.py
+    │   ├── schemas
+    │   │   ├── __init__.py
+    │   │   ├── prompt.py
+    │   │   ├── statistics.py
+    │   │   └── summary.py
+    │   ├── services
+    │   │   ├── __init__.py
+    │   │   ├── prompt_service.py
+    │   │   ├── statistics_service.py
+    │   │   └── summary_service.py
+    │   ├── static
+    │   │   ├── css
+    │   │   │   └── style.css
+    │   │   └── js
+    │   │       └── app.js
+    │   ├── templates
+    │   │   ├── components
+    │   │   │   └── sidebar.html
+    │   │   ├── base.html
+    │   │   ├── index.html
+    │   │   ├── prompts.html
+    │   │   └── statistics.html
+    │   ├── utils
+    │   │   ├── __init__.py
+    │   │   ├── error_handlers.py
+    │   │   ├── exceptions.py
+    │   │   └── text_processor.py
     │   ├── __init__.py
-    │   ├── db.py
-    │   ├── models.py
-    │   └── schema.py
+    │   └── main.py
     ├── docs
+    │   ├── README.md
     │   ├── LICENSE
-    │   └── README.md
-    ├── external_service
-    │   ├── __init__.py
-    │   ├── api_factory.py
-    │   ├── base_api.py
-    │   ├── claude_api.py
-    │   ├── gemini_api.py
-    │   └── openai_api.py
+    │   ├── MIGRATION_GUIDE.md
+    │   └── Migration_plan.md
     ├── scripts
-    │   └── project_structure.py
-    ├── services
-    │   ├── __init__.py
-    │   └── summary_service.py
-    ├── ui_components
-    │   ├── __init__.py
-    │   └── navigation.py
-    ├── utils
-    │   ├── __init__.py
-    │   ├── config.py
-    │   ├── constants.py
-    │   ├── error_handlers.py
-    │   ├── exceptions.py
-    │   ├── prompt_manager.py
-    │   └── text_processor.py
-    ├── views
-    │   ├── __init__.py
-    │   ├── main_page.py
-    │   ├── prompt_management_page.py
-    │   └── statistics_page.py
+    │   ├── project_structure.py
+    │   └── project_structure.txt
     ├── config.ini
     ├── Procfile
     ├── requirements.txt
-    ├── app.py
-    ├── runtime.txt
-    └── setup.sh
+    ├── .python-version
+    ├── CLAUDE.md
+    └── pyrightconfig.json
