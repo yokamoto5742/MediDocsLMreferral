@@ -2,10 +2,12 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from pydantic import ValidationError
 
 from app.api.router import api_router
 from app.core.config import get_settings
 from app.core.constants import DEFAULT_DEPARTMENT, DOCUMENT_TYPES, TAB_NAMES
+from app.utils.error_handlers import api_exception_handler, validation_exception_handler
 
 settings = get_settings()
 
@@ -15,6 +17,10 @@ app = FastAPI(
     docs_url="/api/docs",
     redoc_url="/api/redoc",
 )
+
+# エラーハンドラーを登録
+app.add_exception_handler(ValidationError, validation_exception_handler)
+app.add_exception_handler(Exception, api_exception_handler)
 
 # 静的ファイル
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
