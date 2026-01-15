@@ -58,7 +58,7 @@ async def index(request: Request):
     """メインページ"""
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, **get_common_context("index")},
+        {"request": request, **get_common_context()},
     )
 
 
