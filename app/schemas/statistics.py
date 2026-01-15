@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class UsageSummary(BaseModel):
@@ -20,5 +20,4 @@ class UsageRecord(BaseModel):
     processing_time: float | None
     created_at: datetime | None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
