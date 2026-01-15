@@ -5,25 +5,25 @@
     <form @submit.prevent="generateSummary()" class="space-y-4">
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">紹介目的</label>
-            <textarea x-model="form.referralPurpose" rows="3"
+            <textarea x-model="form.referralPurpose" rows="1"
                 class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500"></textarea>
         </div>
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">現在の処方</label>
-            <textarea x-model="form.currentPrescription" rows="3"
+            <textarea x-model="form.currentPrescription" rows="1"
                 class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500"></textarea>
         </div>
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">カルテ記載</label>
-            <textarea x-model="form.medicalText" rows="8"
+            <textarea x-model="form.medicalText" rows="3"
                 class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500"></textarea>
         </div>
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">追加情報</label>
-            <textarea x-model="form.additionalInfo" rows="3"
+            <textarea x-model="form.additionalInfo" rows="1"
                 class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500"></textarea>
         </div>
 
