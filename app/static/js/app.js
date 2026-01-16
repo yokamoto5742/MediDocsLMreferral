@@ -28,6 +28,8 @@ function appState() {
 
         // UI state
         isGenerating: false,
+        elapsedTime: 0,
+        timerInterval: null,
         error: null,
         activeTab: 0,
         tabs: ['全文', '【主病名】', '【紹介目的】', '【既往歴】', '【症状経過】', '【治療経過】', '【現在の処方】', '【備考】'],
@@ -46,6 +48,18 @@ function appState() {
             }
         },
 
+        startTimer() {
+            this.elapsedTime = 0;
+            this.timerInterval = setInterval(() => {
+                this.elapsedTime++;
+            }, 1000);
+        },
+
+        stopTimer() {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        },
+
         async generateSummary() {
             if (!this.form.medicalText.trim()) {
                 this.error = 'カルテ情報を入力してください';
@@ -54,6 +68,7 @@ function appState() {
 
             this.isGenerating = true;
             this.error = null;
+            this.startTimer();
 
             try {
                 const response = await fetch('/api/summary/generate', {
@@ -89,6 +104,7 @@ function appState() {
             } catch (e) {
                 this.error = 'API エラーが発生しました';
             } finally {
+                this.stopTimer();
                 this.isGenerating = false;
             }
         },
