@@ -5,11 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}診療情報提供書作成アプリ{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <script>
+        // ダークモード検出スクリプト（DOM読み込み前に実行）
+        (function() {
+            function updateDarkMode() {
+                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+
+            // 初期設定
+            updateDarkMode();
+
+            // OS設定変更を監視
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateDarkMode);
+        })();
+    </script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body class="bg-gray-50" x-data="appState()">
+<body class="bg-gray-50 dark:bg-gray-900" x-data="appState()">
     <div class="flex h-screen">
         {% include "components/sidebar.html" %}
         <main class="flex-1 overflow-auto p-6">

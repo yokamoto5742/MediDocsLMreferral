@@ -31,6 +31,7 @@ function appState() {
         error: null,
         activeTab: 0,
         tabs: ['全文', '【主病名】', '【紹介目的】', '【既往歴】', '【症状経過】', '【治療経過】', '【現在の処方】', '【備考】'],
+        currentScreen: 'input', // 'input' or 'output'
 
         async init() {
             await this.updateDoctors();
@@ -81,6 +82,7 @@ function appState() {
                         modelSwitched: data.model_switched
                     };
                     this.activeTab = 0;
+                    this.currentScreen = 'output';
                 } else {
                     this.error = data.error_message || 'エラーが発生しました';
                 }
@@ -106,6 +108,20 @@ function appState() {
                 modelSwitched: false
             };
             this.error = null;
+        },
+
+        backToInput() {
+            this.currentScreen = 'input';
+            this.error = null;
+        },
+
+        async copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                alert('コピーしました');
+            } catch (e) {
+                alert('コピーに失敗しました');
+            }
         }
     };
 }
