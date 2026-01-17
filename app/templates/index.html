@@ -5,27 +5,27 @@
     <!-- 入力画面 -->
     <template x-if="currentScreen === 'input'">
     <div>
-    <form @submit.prevent="generateSummary()" class="space-y-4">
+    <form @submit.prevent="generateSummary()" class="space-y-2">
         <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">紹介目的</label>
+            <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-1">紹介目的</label>
             <textarea x-model="form.referralPurpose" rows="1"
                 class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"></textarea>
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">現在の処方</label>
+            <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-1">現在の処方</label>
             <textarea x-model="form.currentPrescription" rows="1"
                 class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"></textarea>
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">カルテ記載</label>
+            <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-1">カルテ記載</label>
             <textarea x-model="form.medicalText" rows="3"
                 class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"></textarea>
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">追加情報</label>
+            <label class="block text-base font-medium text-gray-700 dark:text-gray-300 mb-1">追加情報</label>
             <textarea x-model="form.additionalInfo" rows="1"
                 class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"></textarea>
         </div>
