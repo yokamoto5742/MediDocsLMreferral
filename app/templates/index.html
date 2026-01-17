@@ -42,9 +42,9 @@
             </button>
         </div>
 
-        <!-- 生成中の経過時間表示 -->
+        <!-- 作成時間の経過表示 -->
         <template x-if="isGenerating">
-        <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        <div class="mt-2 text-base text-gray-600 dark:text-gray-400">
             作成時間: <span x-text="elapsedTime"></span>秒
         </div>
         </template>
@@ -100,11 +100,11 @@
             </template>
         </div>
 
-        <p x-show="result.processingTime" class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            処理時間: <span x-text="result.processingTime.toFixed(0)"></span>秒
+        <p x-show="result.processingTime" class="mt-2 text-base text-gray-500 dark:text-gray-400">
+            作成時間: <span x-text="result.processingTime.toFixed(0)"></span>秒
         </p>
 
-        <p class="mt-6 text-xs text-gray-500 dark:text-gray-400">
+        <p class="mt-6 text-sm text-gray-500 dark:text-gray-400">
             生成AIは不正確な場合があります。回答をカルテでご確認ください。
         </p>
     </div>

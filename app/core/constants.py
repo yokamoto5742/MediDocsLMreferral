@@ -62,7 +62,7 @@ MESSAGES = {
     "VERTEX_AI_API_ERROR": "Vertex AI API呼び出しエラー: {error}",
     "EMPTY_RESPONSE": "レスポンスが空です",
     "COPY_INSTRUCTION": "上記テキストボックスをクリックしてCtrl+Aで全選択、Ctrl+Cでコピーできます",
-    "PROCESSING_TIME": "処理時間",
+    "PROCESSING_TIME": "作成時間",
     "MODEL_SWITCHED": "入力が長いため、モデルを {} に自動切替しました",
     "API_ERROR": "API エラーが発生しました",
     "GENERATING": "生成中...",
