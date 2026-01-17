@@ -32,7 +32,7 @@ function appState() {
         timerInterval: null,
         error: null,
         activeTab: 0,
-        tabs: ['全文', '【主病名】', '【紹介目的】', '【既往歴】', '【症状経過】', '【治療経過】', '【現在の処方】', '【備考】'],
+        tabs: ['全文', '主病名', '紹介目的', '既往歴', '症状経過', '治療経過', '現在の処方', '備考'],
         currentScreen: 'input', // 'input' or 'output'
 
         async init() {
