@@ -30,6 +30,7 @@ function appState() {
         isGenerating: false,
         elapsedTime: 0,
         timerInterval: null,
+        showCopySuccess: false,
         error: null,
         activeTab: 0,
         tabs: ['全文', '主病名', '紹介目的', '既往歴', '症状経過', '治療経過', '現在の処方', '備考'],
@@ -136,9 +137,12 @@ function appState() {
         async copyToClipboard(text) {
             try {
                 await navigator.clipboard.writeText(text);
-                alert('テキストをコピーしました');
+                this.showCopySuccess = true;
+                setTimeout(() => {
+                    this.showCopySuccess = false;
+                }, 2000);
             } catch (e) {
-                alert('テキストのコピーに失敗しました');
+                this.error = 'テキストのコピーに失敗しました';
             }
         }
     };

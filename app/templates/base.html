@@ -33,6 +33,18 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body class="bg-gray-50 dark:bg-gray-900" x-data="appState()">
+    <div x-show="showCopySuccess"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform translate-y-2"
+         x-transition:enter-end="opacity-100 transform translate-y-0"
+         x-transition:leave="transition ease-in duration-300"
+         x-transition:leave-start="opacity-100 transform translate-y-0"
+         x-transition:leave-end="opacity-0 transform translate-y-2"
+         class="fixed bottom-5 right-5 z-50 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-xl"
+         x-cloak>
+        クリップボードにコピーしました
+    </div>
+
     <div class="flex h-screen">
         {% include "components/sidebar.html" %}
         <main class="flex-1 overflow-auto p-6">
