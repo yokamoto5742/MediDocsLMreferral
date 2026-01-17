@@ -136,9 +136,9 @@ function appState() {
         async copyToClipboard(text) {
             try {
                 await navigator.clipboard.writeText(text);
-                alert('コピーしました');
+                alert('テキストをコピーしました');
             } catch (e) {
-                alert('コピーに失敗しました');
+                alert('テキストのコピーに失敗しました');
             }
         }
     };
