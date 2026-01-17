@@ -92,7 +92,7 @@
         </div>
 
         <!-- タブコンテンツ -->
-        <div class="mt-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
+        <div class="mt-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md max-h-[60vh] overflow-y-auto">
             <pre x-show="activeTab === 0" class="whitespace-pre-wrap font-mono text-sm text-gray-900 dark:text-gray-100" x-text="result.outputSummary"></pre>
             <template x-for="(tab, index) in tabs.slice(1)" :key="tab">
                 <pre x-show="activeTab === index + 1" class="whitespace-pre-wrap font-mono text-sm text-gray-900 dark:text-gray-100"
