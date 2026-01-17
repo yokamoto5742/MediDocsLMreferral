@@ -62,6 +62,18 @@
     <!-- 出力画面 -->
     <template x-if="currentScreen === 'output'">
     <div>
+        <!-- ボタン -->
+        <div class="mb-6 flex gap-4">
+            <button type="button" @click="copyToClipboard(activeTab === 0 ? result.outputSummary : (result.parsedSummary[tabs[activeTab]] || ''))"
+                class="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600">
+                このタブをコピー
+            </button>
+            <button type="button" @click="backToInput()"
+                class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700">
+                クリアして戻る
+            </button>
+        </div>
+
         <div x-show="result.modelSwitched" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md text-sm text-yellow-800 dark:text-yellow-400">
             入力が長いため、モデルを <span x-text="result.modelUsed"></span> に自動切替しました
         </div>
@@ -89,24 +101,8 @@
         </div>
 
         <p x-show="result.processingTime" class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            処理時間: <span x-text="result.processingTime.toFixed(2)"></span>秒
+            処理時間: <span x-text="result.processingTime.toFixed(0)"></span>秒
         </p>
-
-        <!-- ボタン -->
-        <div class="mt-6 flex gap-4">
-            <button type="button" @click="copyToClipboard(result.outputSummary)"
-                class="px-6 py-2 bg-green-600 dark:bg-green-500 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600">
-                全文をコピー
-            </button>
-            <button type="button" @click="copyToClipboard(activeTab === 0 ? result.outputSummary : (result.parsedSummary[tabs[activeTab]] || ''))"
-                class="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600">
-                このタブをコピー
-            </button>
-            <button type="button" @click="backToInput()"
-                class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700">
-                入力画面に戻る
-            </button>
-        </div>
     </div>
     </template>
 </div>

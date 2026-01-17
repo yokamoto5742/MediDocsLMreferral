@@ -127,6 +127,7 @@ function appState() {
         },
 
         backToInput() {
+            this.clearForm();
             this.currentScreen = 'input';
             this.error = null;
         },
