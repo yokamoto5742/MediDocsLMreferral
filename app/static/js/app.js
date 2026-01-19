@@ -99,7 +99,6 @@ function appState() {
                     };
                     this.activeTab = 0;
                     this.currentScreen = 'output';
-                    await this.copyToClipboard(data.output_summary);
                 } else {
                     this.error = data.error_message || 'エラーが発生しました';
                 }
