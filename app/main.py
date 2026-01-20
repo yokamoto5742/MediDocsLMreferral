@@ -63,7 +63,7 @@ async def index(request: Request):
     )
 
 
-@app.get("/prompts/new", response_class=HTMLResponse)
+@app.get("/prompts/add", response_class=HTMLResponse)
 async def prompts_new_page(request: Request):
     """プロンプト新規作成ページ"""
     return templates.TemplateResponse(

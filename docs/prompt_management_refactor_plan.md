@@ -32,7 +32,7 @@
    ├─ 新規作成ボタン
    └─ プロンプト一覧テーブル（編集ボタンで別画面遷移）
 
-2. プロンプト新規作成ページ（/prompts/new）
+2. プロンプト新規作成ページ（/prompts/add）
    ├─ 新規作成フォーム
    └─ 保存・キャンセルボタン
 
@@ -62,7 +62,7 @@ def get_prompt(prompt_id: int, db: Session = Depends(get_db)):
 
 **追加するルート:**
 ```python
-@app.get("/prompts/new", response_class=HTMLResponse)
+@app.get("/prompts/add", response_class=HTMLResponse)
 async def prompts_new_page(request: Request):
     """プロンプト新規作成ページ"""
 
@@ -72,7 +72,7 @@ async def prompts_edit_page(request: Request, prompt_id: int):
 ```
 
 **注意事項:**
-- `/prompts/new` と `/prompts/edit/{prompt_id}` を `/prompts` より前に定義する必要がある
+- `/prompts/add` と `/prompts/edit/{prompt_id}` を `/prompts` より前に定義する必要がある
 - FastAPIのルート解決順序により、具体的なパスを先に定義
 
 ### 3. テンプレートファイルの作成・修正
@@ -96,7 +96,7 @@ async def prompts_edit_page(request: Request, prompt_id: int):
     </div>
     <!-- 新規作成ボタン -->
     <div class="mt-4 flex justify-end">
-        <a href="/prompts/new" class="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600">
+        <a href="/prompts/add" class="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600">
             新規プロンプト作成
         </a>
     </div>
@@ -259,7 +259,7 @@ def get_prompt_by_id(db: Session, prompt_id: int) -> Optional[Prompt]:
 ### 2. 画面遷移フロー
 ```
 プロンプト一覧 (/prompts)
-    ├─ [新規作成] → プロンプト新規作成 (/prompts/new)
+    ├─ [新規作成] → プロンプト新規作成 (/prompts/add)
     │                   ├─ [作成] → プロンプト一覧へリダイレクト
     │                   └─ [キャンセル] → プロンプト一覧へ戻る
     │
@@ -300,7 +300,7 @@ def get_prompt_by_id(db: Session, prompt_id: int) -> Optional[Prompt]:
    - サービス層の確認・追加
 
 2. **ルーティング** (`app/main.py`)
-   - /prompts/new ルート追加
+   - /prompts/add ルート追加
    - /prompts/edit/{prompt_id} ルート追加
 
 3. **テンプレート作成**
@@ -321,7 +321,7 @@ FastAPIでは、より具体的なパスを先に定義する必要がありま�
 
 ```python
 # 正しい順序
-@app.get("/prompts/new", response_class=HTMLResponse)
+@app.get("/prompts/add", response_class=HTMLResponse)
 async def prompts_new_page(request: Request):
     ...
 
