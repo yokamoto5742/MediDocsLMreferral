@@ -211,7 +211,7 @@ function statisticsPage() {
                 const params = new URLSearchParams();
                 if (this.filter.startDate) params.append('start_date', new Date(this.filter.startDate).toISOString());
                 if (this.filter.endDate) params.append('end_date', new Date(this.filter.endDate).toISOString());
-                if (this.filter.model) params.append('model', this.filter.model);
+                if (this.filter.model) params.append('model', this.getActualModelName(this.filter.model));
                 if (this.filter.documentType) params.append('document_type', this.filter.documentType);
 
                 const response = await fetch(`/api/statistics/aggregated?${params}`);
@@ -235,7 +235,7 @@ function statisticsPage() {
 
                 if (this.filter.startDate) params.append('start_date', new Date(this.filter.startDate).toISOString());
                 if (this.filter.endDate) params.append('end_date', new Date(this.filter.endDate).toISOString());
-                if (this.filter.model) params.append('model', this.filter.model);
+                if (this.filter.model) params.append('model', this.getActualModelName(this.filter.model));
                 if (this.filter.documentType) params.append('document_type', this.filter.documentType);
 
                 const response = await fetch(`/api/statistics/records?${params}`);
@@ -281,6 +281,14 @@ function statisticsPage() {
                 return 'Gemini_pro';
             }
             return model;
+        },
+
+        getActualModelName(displayName) {
+            // 表示名 Gemini_pro を実際のモデル名に変換
+            if (displayName === 'Gemini_pro') {
+                return '{{ gemini_model_name }}';
+            }
+            return displayName;
         }
     };
 }
