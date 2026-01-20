@@ -25,6 +25,11 @@ def get_prompt(
     )
 
 
+def get_prompt_by_id(db: Session, prompt_id: int) -> Prompt | None:
+    """IDでプロンプトを取得"""
+    return db.query(Prompt).filter(Prompt.id == prompt_id).first()
+
+
 def create_or_update_prompt(
     db: Session,
     department: str,

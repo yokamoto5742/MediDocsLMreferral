@@ -62,6 +62,24 @@ async def index(request: Request):
     )
 
 
+@app.get("/prompts/new", response_class=HTMLResponse)
+async def prompts_new_page(request: Request):
+    """プロンプト新規作成ページ"""
+    return templates.TemplateResponse(
+        "prompts_new.html",
+        {"request": request, **get_common_context("prompts")},
+    )
+
+
+@app.get("/prompts/edit/{prompt_id}", response_class=HTMLResponse)
+async def prompts_edit_page(request: Request, prompt_id: int):
+    """プロンプト編集ページ"""
+    return templates.TemplateResponse(
+        "prompts_edit.html",
+        {"request": request, "prompt_id": prompt_id, **get_common_context("prompts")},
+    )
+
+
 @app.get("/prompts", response_class=HTMLResponse)
 async def prompts_page(request: Request):
     """プロンプト管理ページ"""

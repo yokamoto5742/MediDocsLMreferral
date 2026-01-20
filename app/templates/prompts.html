@@ -10,8 +10,8 @@
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-                <label class="block text-sm font-medium text-white mb-1">診療科</label>
-                <select x-model="filter.department" @change="loadPrompts()" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">診療科</label>
+                <select x-model="filter.department" @change="applyFilters()" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                     <option value="">すべて</option>
                     {% for dept in departments %}
                     <option value="{{ dept }}">{{ '全科共通' if dept == 'default' else dept }}</option>
@@ -19,21 +19,27 @@
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-medium text-white mb-1">医師名</label>
-                <select x-model="filter.doctor" @change="loadPrompts()" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">医師名</label>
+                <select x-model="filter.doctor" @change="applyFilters()" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                     <option value="">すべて</option>
                     <option value="default">医師共通</option>
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-medium text-white mb-1">文書タイプ</label>
-                <select x-model="filter.documentType" @change="loadPrompts()" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">文書タイプ</label>
+                <select x-model="filter.documentType" @change="applyFilters()" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                     <option value="">すべて</option>
                     {% for type in document_types %}
                     <option value="{{ type }}">{{ type }}</option>
                     {% endfor %}
                 </select>
             </div>
+        </div>
+        <!-- 新規作成ボタン -->
+        <div class="mt-4 flex justify-end">
+            <a href="/prompts/new" class="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600">
+                新規プロンプト作成
+            </a>
         </div>
     </div>
 
@@ -42,61 +48,6 @@
 
     <!-- 成功メッセージ -->
     <div x-show="successMessage" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded mb-4" x-text="successMessage"></div>
-
-    <!-- プロンプト作成/編集フォーム -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4" x-text="editingPrompt ? 'プロンプト編集' : '新規プロンプト作成'"></h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-                <label class="block text-sm font-medium text-white mb-1">診療科 *</label>
-                <select x-model="form.department" :disabled="editingPrompt" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                    {% for dept in departments %}
-                    <option value="{{ dept }}">{{ '全科共通' if dept == 'default' else dept }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-white mb-1">医師名 *</label>
-                <input type="text" x-model="form.doctor" :disabled="editingPrompt"
-                       class="w-full border border-gray-300 rounded-md p-2"
-                       placeholder="default または 医師名">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-white mb-1">文書タイプ *</label>
-                <select x-model="form.documentType" :disabled="editingPrompt" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                    {% for type in document_types %}
-                    <option value="{{ type }}">{{ type }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-white mb-1">選択モデル</label>
-                <select x-model="form.selectedModel" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                    <option value="">デフォルト</option>
-                    {% for model in available_models %}
-                    <option value="{{ model }}">{{ model }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-white mb-1">プロンプト内容 *</label>
-            <textarea x-model="form.content" rows="8"
-                      class="w-full border border-gray-300 rounded-md p-2"
-                      placeholder="プロンプトの内容を入力してください"></textarea>
-        </div>
-        <div class="flex gap-2">
-            <button @click="savePrompt()" :disabled="isSaving"
-                    class="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50">
-                <span x-show="!isSaving" x-text="editingPrompt ? '更新' : '作成'"></span>
-                <span x-show="isSaving">保存中...</span>
-            </button>
-            <button x-show="editingPrompt" @click="cancelEdit()"
-                    class="bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-500">
-                キャンセル
-            </button>
-        </div>
-    </div>
 
     <!-- プロンプト一覧 -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
@@ -107,23 +58,23 @@
             <table class="w-full">
                 <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-white uppercase">診療科</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-white uppercase">医師名</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-white uppercase">文書タイプ</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-white uppercase">モデル</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-white uppercase">更新日時</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-white uppercase">操作</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">診療科</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">医師名</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">文書タイプ</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">モデル</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">更新日時</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">操作</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                     <template x-if="isLoading">
                         <tr>
-                            <td colspan="6" class="px-4 py-8 text-center text-white">読み込み中...</td>
+                            <td colspan="6" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">読み込み中...</td>
                         </tr>
                     </template>
                     <template x-if="!isLoading && filteredPrompts.length === 0">
                         <tr>
-                            <td colspan="6" class="px-4 py-8 text-center text-white">プロンプトがありません</td>
+                            <td colspan="6" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">プロンプトがありません</td>
                         </tr>
                     </template>
                     <template x-for="prompt in filteredPrompts" :key="prompt.id">
@@ -134,7 +85,7 @@
                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="prompt.selected_model || '-'"></td>
                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="formatDate(prompt.updated_at)"></td>
                             <td class="px-4 py-3 text-sm">
-                                <button @click="editPrompt(prompt)" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mr-3">編集</button>
+                                <a :href="`/prompts/edit/${prompt.id}`" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mr-3">編集</a>
                                 <button @click="deletePrompt(prompt.id)" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                                         :disabled="prompt.is_default">削除</button>
                             </td>
@@ -156,21 +107,31 @@ function promptsPage() {
             doctor: '',
             documentType: ''
         },
-        form: {
-            department: 'default',
-            doctor: 'default',
-            documentType: '他院への紹介',
-            selectedModel: '',
-            content: ''
-        },
-        editingPrompt: null,
         isLoading: false,
-        isSaving: false,
         error: null,
         successMessage: null,
 
         async init() {
+            this.checkQueryParams();
             await this.loadPrompts();
+        },
+
+        checkQueryParams() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('created') === '1') {
+                this.successMessage = 'プロンプトを作成しました';
+                this.clearQueryParams();
+            } else if (params.get('updated') === '1') {
+                this.successMessage = 'プロンプトを更新しました';
+                this.clearQueryParams();
+            } else if (params.get('deleted') === '1') {
+                this.successMessage = 'プロンプトを削除しました';
+                this.clearQueryParams();
+            }
+        },
+
+        clearQueryParams() {
+            window.history.replaceState({}, document.title, window.location.pathname);
         },
 
         async loadPrompts() {
@@ -197,61 +158,6 @@ function promptsPage() {
             });
         },
 
-        async savePrompt() {
-            if (!this.form.department || !this.form.doctor || !this.form.documentType || !this.form.content.trim()) {
-                this.error = 'すべての必須項目を入力してください';
-                return;
-            }
-
-            this.isSaving = true;
-            this.error = null;
-            this.successMessage = null;
-
-            try {
-                const response = await fetch('/api/prompts/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        department: this.form.department,
-                        doctor: this.form.doctor,
-                        document_type: this.form.documentType,
-                        selected_model: this.form.selectedModel || null,
-                        content: this.form.content
-                    })
-                });
-
-                if (response.ok) {
-                    this.successMessage = this.editingPrompt ? 'プロンプトを更新しました' : 'プロンプトを作成しました';
-                    await this.loadPrompts();
-                    this.resetForm();
-                } else {
-                    this.error = 'プロンプトの保存に失敗しました';
-                }
-            } catch (e) {
-                this.error = 'API エラーが発生しました';
-            } finally {
-                this.isSaving = false;
-            }
-        },
-
-        editPrompt(prompt) {
-            this.editingPrompt = prompt;
-            this.form = {
-                department: prompt.department,
-                doctor: prompt.doctor,
-                documentType: prompt.document_type,
-                selectedModel: prompt.selected_model || '',
-                content: prompt.content
-            };
-            this.error = null;
-            this.successMessage = null;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        },
-
-        cancelEdit() {
-            this.resetForm();
-        },
-
         async deletePrompt(promptId) {
             if (!confirm('このプロンプトを削除してもよろしいですか？')) return;
 
@@ -266,17 +172,6 @@ function promptsPage() {
             } catch (e) {
                 this.error = 'API エラーが発生しました';
             }
-        },
-
-        resetForm() {
-            this.form = {
-                department: 'default',
-                doctor: 'default',
-                documentType: '他院への紹介',
-                selectedModel: '',
-                content: ''
-            };
-            this.editingPrompt = null;
         },
 
         formatDate(dateStr) {
