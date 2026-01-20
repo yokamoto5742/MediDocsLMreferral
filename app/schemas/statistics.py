@@ -23,3 +23,16 @@ class UsageRecord(BaseModel):
     processing_time: float | None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AggregatedRecord(BaseModel):
+    """集計レコード"""
+    document_type: str
+    department: str
+    doctor: str
+    count: int
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+
+    model_config = ConfigDict(from_attributes=True)
