@@ -51,6 +51,12 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+    <script>
+        // テンプレートからJavaScriptへデータを渡す
+        {% if document_purpose_mapping %}
+        window.DOCUMENT_PURPOSE_MAPPING = {{ document_purpose_mapping | tojson }};
+        {% endif %}
+    </script>
     <script src="/static/js/app.js"></script>
 </body>
 </html>

@@ -38,6 +38,14 @@ function appState() {
 
         async init() {
             await this.updateDoctors();
+            // 初期表示時に紹介目的を設定
+            this.updateReferralPurpose();
+        },
+
+        updateReferralPurpose() {
+            if (window.DOCUMENT_PURPOSE_MAPPING && window.DOCUMENT_PURPOSE_MAPPING[this.settings.documentType]) {
+                this.form.referralPurpose = window.DOCUMENT_PURPOSE_MAPPING[this.settings.documentType];
+            }
         },
 
         async updateDoctors() {
