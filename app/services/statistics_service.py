@@ -14,9 +14,9 @@ def get_usage_summary(
     query = db.query(SummaryUsage)
 
     if start_date:
-        query = query.filter(SummaryUsage.created_at >= start_date)
+        query = query.filter(SummaryUsage.date >= start_date)
     if end_date:
-        query = query.filter(SummaryUsage.created_at <= end_date)
+        query = query.filter(SummaryUsage.date <= end_date)
     if model:
         query = query.filter(SummaryUsage.model == model)
 
@@ -41,7 +41,7 @@ def get_usage_records(
     """使用統計レコードを取得"""
     return (
         db.query(SummaryUsage)
-        .order_by(SummaryUsage.created_at.desc())
+        .order_by(SummaryUsage.date.desc())
         .offset(offset)
         .limit(limit)
         .all()

@@ -88,4 +88,4 @@ def test_get_usage_records_ordering(test_db, sample_usage_records):
     """使用統計レコード取得 - 降順ソート"""
     records = statistics_service.get_usage_records(test_db)
     if len(records) >= 2:
-        assert records[0].created_at >= records[1].created_at
+        assert records[0].date >= records[1].date

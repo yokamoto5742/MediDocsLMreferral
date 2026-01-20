@@ -11,13 +11,15 @@ class UsageSummary(BaseModel):
 
 class UsageRecord(BaseModel):
     id: int
-    department: str | None
-    doctor: str | None
+    date: datetime | None
+    app_type: str | None
     document_type: str | None
     model: str | None
+    department: str | None
+    doctor: str | None
     input_tokens: int | None
     output_tokens: int | None
+    total_tokens: int | None
     processing_time: float | None
-    created_at: datetime | None
 
     model_config = ConfigDict(from_attributes=True)
