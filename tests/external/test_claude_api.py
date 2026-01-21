@@ -380,8 +380,8 @@ class TestClaudeAPIClientIntegration:
     """ClaudeAPIClient 統合テスト"""
 
     @patch("app.external.claude_api.AnthropicBedrock")
-    @patch("app.external.base_api.get_prompt")
-    @patch("app.external.base_api.get_config")
+    @patch("app.services.prompt_service.get_prompt")
+    @patch("app.core.database.get_db_session")
     @patch.dict(
         os.environ,
         {
@@ -392,14 +392,15 @@ class TestClaudeAPIClientIntegration:
         },
     )
     def test_full_generate_summary_flow(
-        self, mock_get_config, mock_get_prompt, mock_anthropic_bedrock
+        self, mock_db_session, mock_get_prompt, mock_anthropic_bedrock
     ):
         """完全な文書生成フロー"""
+        from unittest.mock import MagicMock
+
         # モック設定
+        mock_db = MagicMock()
+        mock_db_session.return_value.__enter__.return_value = mock_db
         mock_get_prompt.return_value = None
-        mock_get_config.return_value = {
-            "PROMPTS": {"summary": "テストプロンプト"}
-        }
 
         mock_bedrock_client = MagicMock()
         mock_response = MagicMock()

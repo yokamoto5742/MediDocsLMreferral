@@ -1,24 +1,13 @@
-# MediDocsLM Referral
+# 診療情報提供書作成アプリ
 
-FastAPIベースの医療文書生成アプリケーション。複数のAI API（ClaudeとGemini）を使用して、患者カルテデータから医療紹介状を自動生成します。
-
-## 概要
-
-MediDocsLM Referralは、紹介状や医療報告書の作成を効率化するための高度な医療文書システムです。本アプリケーションは、最先端のAI言語モデルを活用して患者カルテ情報を解析し、カスタマイズ可能なテンプレートとプロンプトに基づいて構造化された医療文書を生成します。
+このアプリケーションは、生成AIを活用して診療情報提供書を効率的に作成するためのWebアプリケーションです。
 
 ## 機能
 
 ### コア機能
 - **複数のAIプロバイダーサポート**: Claude（Anthropic）とGemini（Google Vertex AI）の両方に統合
-- **自動モデル切り替え**: 入力が40,000文字を超えると、自動的にClaudeからGeminiに切り替え
-- **構造化文書生成**: 標準化されたセクションで医療文書を生成:
-  - 主病名
-  - 紹介目的
-  - 既往歴
-  - 症状経過
-  - 治療経過
-  - 現在の処方
-  - 備考
+- **自動モデル切り替え**: 入力が指定文字数を超えると、自動的にClaudeからGeminiに切り替え
+- **構造化文書生成**: 標準化されたセクションで医療文書を生成
 
 ### 文書管理
 - **複数の文書タイプ**:
@@ -35,7 +24,7 @@ MediDocsLM Referralは、紹介状や医療報告書の作成を効率化する�
 - **Webベース UI**: プロンプトの作成と編集のための使いやすいインターフェース
 
 ### 分析とモニタリング
-- **使用統計**: API使用状況、トークン消費、処理時間を追跡
+- **使用統計**: API使用状況、トークン数、処理時間を追跡
 - **パフォーマンスメトリクス**: レスポンス時間とモデルパフォーマンスを監視
 - **コスト追跡**: 異なるモデル間のAPIコストを監視
 
@@ -76,43 +65,41 @@ api_client = get_api_client(model_name, api_key)
 8. **データベースログ**: 使用統計とメタデータをPostgreSQLに保存
 9. **レスポンス**: 構造化された文書をユーザーインターフェースに返却
 
-### Key Components
+### 主要コンポーネント
 
-```
 app/
-├── api/            # FastAPI route handlers
-│   ├── router.py   # Main API router
-│   ├── summary.py  # Document generation endpoints
-│   ├── prompts.py  # Prompt management endpoints
-│   ├── statistics.py  # Analytics endpoints
-│   └── settings.py    # Settings endpoints
-├── core/           # Core configuration
-│   ├── config.py   # Environment settings
-│   ├── constants.py  # Application constants
-│   └── database.py   # Database connection
-├── external/       # External API integrations
-│   ├── api_factory.py  # API client factory
-│   ├── base_api.py     # Base API client
-│   ├── claude_api.py   # Claude/Bedrock integration
-│   └── gemini_api.py   # Gemini/Vertex AI integration
-├── models/         # Database models
-│   ├── prompt.py   # Prompt templates
-│   ├── usage.py    # Usage statistics
-│   └── setting.py  # Application settings
-├── schemas/        # Pydantic schemas
-│   ├── summary.py  # Request/response schemas
-│   ├── prompt.py   # Prompt schemas
-│   └── statistics.py  # Statistics schemas
-├── services/       # Business logic
-│   ├── summary_service.py  # Document generation
-│   ├── prompt_service.py   # Prompt management
-│   └── statistics_service.py  # Analytics
-├── utils/          # Utility functions
-│   ├── text_processor.py  # Text parsing
-│   ├── exceptions.py      # Custom exceptions
-│   └── error_handlers.py  # Error handling
-└── main.py         # FastAPI application
-```
+├── api/            # FastAPI ルートハンドラー
+│   ├── router.py   # メイン API ルーター
+│   ├── summary.py  # ドキュメント生成エンドポイント
+│   ├── prompts.py  # プロンプト管理エンドポイント
+│   ├── statistics.py  # 分析・統計エンドポイント
+│   └── settings.py    # 設定エンドポイント
+├── core/           # コア設定
+│   ├── config.py   # 環境設定
+│   ├── constants.py  # アプリケーション定数
+│   └── database.py   # データベース接続
+├── external/       # 外部 API 連携
+│   ├── api_factory.py  # API クライアントファクトリ
+│   ├── base_api.py     # ベース API クライアント
+│   ├── claude_api.py   # Claude/Bedrock 連携
+│   └── gemini_api.py   # Gemini/Vertex AI 連携
+├── models/         # データベースモデル
+│   ├── prompt.py   # プロンプトテンプレート
+│   ├── usage.py    # 利用統計
+│   └── setting.py  # アプリケーション設定
+├── schemas/        # Pydantic スキーマ
+│   ├── summary.py  # リクエスト/レスポンススキーマ
+│   ├── prompt.py   # プロンプトスキーマ
+│   └── statistics.py  # 統計スキーマ
+├── services/       # ビジネスロジック
+│   ├── summary_service.py  # ドキュメント生成ロジック
+│   ├── prompt_service.py   # プロンプト管理ロジック
+│   └── statistics_service.py  # 分析ロジック
+├── utils/          # ユーティリティ関数
+│   ├── text_processor.py  # テキスト解析
+│   ├── exceptions.py      # カスタム例外
+│   └── error_handlers.py  # エラーハンドリング
+└── main.py         # FastAPI アプリケーション本体
 
 ## セットアップとインストール
 
@@ -270,11 +257,6 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
-アプリケーションは以下のURLでアクセス可能:
-- Webインターフェース: `http://localhost:8000`
-- APIドキュメント: `http://localhost:8000/api/docs`
-- ReDoc: `http://localhost:8000/api/redoc`
-
 ### Webインターフェースの使用
 
 1. **メインページへのアクセス**: `http://localhost:8000` にアクセス
@@ -389,42 +371,6 @@ tests/
 - テキスト処理ユーティリティ
 - エラー処理
 
-## Project Structure
-
-```
-MediDocsLMreferral/
-├── .claude/                 # Claude Code configuration
-├── .git/                    # Git repository
-├── .venv/                   # Python virtual environment
-├── app/                     # Main application code
-│   ├── api/                 # API route handlers
-│   ├── core/                # Core configuration
-│   ├── external/            # External API clients
-│   ├── models/              # Database models
-│   ├── schemas/             # Pydantic schemas
-│   ├── services/            # Business logic
-│   ├── static/              # Static files (CSS, JS)
-│   ├── templates/           # Jinja2 HTML templates
-│   ├── utils/               # Utility functions
-│   └── main.py              # FastAPI application
-├── docs/                    # Documentation
-│   ├── CHANGELOG.md         # Version history
-│   ├── LICENSE              # License information
-│   └── README.md            # This file
-├── scripts/                 # Utility scripts
-├── tests/                   # Test suite
-├── .env                     # Environment variables (not in git)
-├── .env.example             # Example environment file
-├── .gitignore               # Git ignore rules
-├── CLAUDE.md                # Claude Code instructions
-├── config.ini               # Configuration file
-├── Procfile                 # Heroku deployment
-├── pyrightconfig.json       # Pyright type checker config
-├── pytest.ini               # Pytest configuration
-├── requirements.txt         # Python dependencies
-└── setup.sh                 # Setup script
-```
-
 ## 使用技術
 
 ### バックエンドフレームワーク
@@ -509,7 +455,7 @@ if input_length > 40000 and selected_model == "Claude":
 
 ## ライセンス
 
-[ここにライセンスを指定してください]
+このプロジェクトは[Apache License 2.0](docs/LICENSE)のもとで公開されています。
 
 ## サポート
 
@@ -527,10 +473,6 @@ if input_length > 40000 and selected_model == "Claude":
 - セキュリティパッチのために依存関係を最新に保つ
 - 本番医療現場で使用する前にAI生成コンテンツをレビュー
 
-## 医療免責事項
+## 免責事項
 
 このアプリケーションは、医療文書を作成するために生成AIを使用しています。すべてのAI生成コンテンツは、使用前に資格のある医療専門家によってレビューおよび検証される必要があります。このアプリケーションは文書作成を支援するツールであり、専門的な医学的判断に代わるものではありません。
-
----
-
-**注記**: このREADMEは現在のコードベース構造に基づいています。最新の開発ガイドラインについては、[CLAUDE.md](../CLAUDE.md)を参照してください。

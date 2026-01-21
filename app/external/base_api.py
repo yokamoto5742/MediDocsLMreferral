@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Tuple
 
-from app.core.constants import DEFAULT_DOCUMENT_TYPE
+from app.core.constants import DEFAULT_DOCUMENT_TYPE, DEFAULT_SUMMARY_PROMPT
+from app.core.database import get_db_session
+from app.services import prompt_service
 from app.utils.exceptions import APIError
-from utils.config import get_config
-from utils.prompt_manager import get_prompt
 
 
 class BaseAPIClient(ABC):
@@ -41,13 +41,15 @@ class BaseAPIClient(ABC):
         document_type: str = DEFAULT_DOCUMENT_TYPE,
         doctor: str = "default",
     ) -> str:
-        prompt_data = get_prompt(department, document_type, doctor)
-
-        if not prompt_data:
-            config = get_config()
-            prompt_template = config["PROMPTS"]["summary"]
-        else:
-            prompt_template = prompt_data["content"]
+        try:
+            with get_db_session() as db:
+                prompt_data = prompt_service.get_prompt(db, department, document_type, doctor)
+                if prompt_data:
+                    prompt_template = prompt_data.content
+                else:
+                    prompt_template = DEFAULT_SUMMARY_PROMPT
+        except Exception:
+            prompt_template = DEFAULT_SUMMARY_PROMPT
 
         prompt = f"{prompt_template}\n【カルテ情報】\n{medical_text}"
 
@@ -64,13 +66,14 @@ class BaseAPIClient(ABC):
     def get_model_name(
         self, department: str, document_type: str, doctor: str
     ) -> str | None:
-        prompt_data = get_prompt(department, document_type, doctor)
-
-        return (
-            prompt_data.get("selected_model")
-            if prompt_data and prompt_data.get("selected_model")
-            else self.default_model
-        )
+        try:
+            with get_db_session() as db:
+                prompt_data = prompt_service.get_prompt(db, department, document_type, doctor)
+                if prompt_data and prompt_data.model:
+                    return prompt_data.model
+        except Exception:
+            pass
+        return self.default_model
 
     def generate_summary(
         self,

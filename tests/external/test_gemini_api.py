@@ -367,11 +367,11 @@ class TestGeminiAPIClientIntegration:
     """GeminiAPIClient 統合テスト"""
 
     @patch("app.external.gemini_api.genai.Client")
-    @patch("app.external.base_api.get_prompt")
-    @patch("app.external.base_api.get_config")
+    @patch("app.services.prompt_service.get_prompt")
+    @patch("app.core.database.get_db_session")
     @patch("app.external.gemini_api.settings")
     def test_full_generate_summary_flow(
-        self, mock_settings, mock_get_config, mock_get_prompt, mock_genai_client
+        self, mock_settings, mock_db_session, mock_get_prompt, mock_genai_client
     ):
         """完全な文書生成フロー"""
         # 設定のモック
@@ -381,8 +381,9 @@ class TestGeminiAPIClientIntegration:
         mock_settings.gemini_thinking_level = "HIGH"
 
         # プロンプトのモック
+        mock_db = MagicMock()
+        mock_db_session.return_value.__enter__.return_value = mock_db
         mock_get_prompt.return_value = None
-        mock_get_config.return_value = {"PROMPTS": {"summary": "テストプロンプト"}}
 
         # クライアントとレスポンスのモック
         mock_client_instance = MagicMock()

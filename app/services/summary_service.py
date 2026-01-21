@@ -49,13 +49,16 @@ def determine_model(
     model_explicitly_selected: bool = False
 ) -> tuple[str, bool]:
     """モデル自動切替判定"""
-    # プロンプトからモデルを取得（一時的に古いutils/prompt_managerを使用）
+    # プロンプトからモデルを取得
     if not model_explicitly_selected:
         try:
-            from utils.prompt_manager import get_prompt
-            prompt_data = get_prompt(department, document_type, doctor)
-            if prompt_data and prompt_data.get("selected_model"):
-                requested_model = prompt_data["selected_model"]
+            from app.core.database import get_db_session
+            from app.services import prompt_service
+
+            with get_db_session() as db:
+                prompt_data = prompt_service.get_prompt(db, department, document_type, doctor)
+                if prompt_data and prompt_data.model:
+                    requested_model = prompt_data.model
         except Exception:
             # プロンプト取得に失敗しても処理を続行
             pass

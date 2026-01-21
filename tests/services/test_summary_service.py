@@ -137,12 +137,23 @@ class TestDetermineModel:
         assert model == "Gemini_Pro"
         assert switched is False
 
-    @patch("utils.prompt_manager.get_prompt")
+    @patch("app.services.prompt_service.get_prompt")
+    @patch("app.core.database.get_db_session")
     @patch("app.services.summary_service.settings")
-    def test_determine_model_from_prompt(self, mock_settings, mock_get_prompt):
+    def test_determine_model_from_prompt(self, mock_settings, mock_db_session, mock_get_prompt):
         """モデル決定 - プロンプトから取得"""
+        from unittest.mock import MagicMock
+
         mock_settings.max_token_threshold = 40000
-        mock_get_prompt.return_value = {"selected_model": "Gemini_Pro"}
+
+        # モックDBセッション
+        mock_db = MagicMock()
+        mock_db_session.return_value.__enter__.return_value = mock_db
+
+        # モックプロンプト
+        mock_prompt = MagicMock()
+        mock_prompt.model = "Gemini_Pro"
+        mock_get_prompt.return_value = mock_prompt
 
         model, switched = determine_model(
             requested_model="Claude",
