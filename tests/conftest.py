@@ -1,7 +1,9 @@
 """テストの共通設定"""
 
+from datetime import datetime
 import sys
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 from fastapi.testclient import TestClient
@@ -85,8 +87,10 @@ def sample_prompts(test_db):
 @pytest.fixture
 def sample_usage_records(test_db):
     """テスト用のサンプル使用統計"""
+    jst = ZoneInfo("Asia/Tokyo")
     records = [
         SummaryUsage(
+            date=datetime.now(jst),
             department="眼科",
             doctor="橋本義弘",
             document_type="他院への紹介",
@@ -96,6 +100,7 @@ def sample_usage_records(test_db):
             processing_time=2.5,
         ),
         SummaryUsage(
+            date=datetime.now(jst),
             department="default",
             doctor="default",
             document_type="返書",

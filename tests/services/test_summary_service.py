@@ -223,9 +223,21 @@ class TestSaveUsage:
         # DBへの追加が呼ばれたことを確認
         mock_db.add.assert_called_once()
 
+        # 追加されたUsageオブジェクトを検証
+        added_usage = mock_db.add.call_args[0][0]
+        assert added_usage.department == "眼科"
+        assert added_usage.doctor == "橋本義弘"
+        assert added_usage.document_type == "他院への紹介"
+        assert added_usage.model == "Claude"
+        assert added_usage.input_tokens == 1000
+        assert added_usage.output_tokens == 500
+        assert added_usage.total_tokens == 1500
+        assert added_usage.app_type == "referral_letter"
+        assert added_usage.processing_time == 2.5
+
     @patch("app.services.summary_service.get_db_session")
-    @patch("builtins.print")
-    def test_save_usage_failure_silent(self, mock_print, mock_get_db_session):
+    @patch("logging.error")
+    def test_save_usage_failure_silent(self, mock_logging_error, mock_get_db_session):
         """使用統計保存 - 失敗時にエラーを無視"""
         mock_db = MagicMock()
         mock_db.add.side_effect = Exception("DB接続エラー")
@@ -243,8 +255,8 @@ class TestSaveUsage:
         )
 
         # 警告メッセージが出力されることを確認
-        mock_print.assert_called_once()
-        assert "Failed to save usage statistics" in str(mock_print.call_args)
+        mock_logging_error.assert_called_once()
+        assert "Failed to save usage statistics" in str(mock_logging_error.call_args)
 
 
 class TestExecuteSummaryGeneration:

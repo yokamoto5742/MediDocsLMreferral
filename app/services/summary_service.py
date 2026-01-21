@@ -209,18 +209,23 @@ def save_usage(
     processing_time: float,
 ) -> None:
     """使用統計をDBに保存"""
+    import logging
+
     try:
         with get_db_session() as db:
             usage = SummaryUsage(
+                date=datetime.now(JST),
                 department=department,
                 doctor=doctor,
                 document_type=document_type,
                 model=model,
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
+                total_tokens=input_tokens + output_tokens,
+                app_type="referral_letter",
                 processing_time=processing_time,
             )
             db.add(usage)
     except Exception as e:
         # ログに記録するが、エラーは無視（統計保存失敗で処理全体を失敗させない）
-        print(f"Warning: Failed to save usage statistics: {e}")
+        logging.error(f"Failed to save usage statistics: {e}", exc_info=True)
