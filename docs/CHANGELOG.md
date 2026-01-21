@@ -1,113 +1,113 @@
-# Changelog
+# 変更履歴
 
-All notable changes to the MediDocsLM Referral Application will be documented in this file.
+MediDocsLM Referralアプリケーションのすべての重要な変更は、このファイルに記録されます。
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+このフォーマットは [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) に基づいており、
+このプロジェクトは [Semantic Versioning](https://semver.org/spec/v2.0.0.html) に準拠しています。
 
 ## [1.0.0] - 2026-01-21
 
-### Added
-- Initial stable release of MediDocsLM Referral Application
-- Streamlit-based medical document generation interface
-- Multi-AI provider support (Claude and Gemini)
-- Automatic model switching based on input length (Claude → Gemini for inputs > 40,000 characters)
-- PostgreSQL database integration for prompts, usage statistics, and settings
-- Factory pattern implementation for AI provider management
-- Hierarchical prompt system (Department → Doctor → Document Type)
-- Usage tracking and statistics for all AI API calls
-- Comprehensive test suite with 120 passing tests
+### 追加
+- MediDocsLM Referralアプリケーションの初回安定版リリース
+- Streamlitベースの医療文書生成インターフェース
+- 複数のAIプロバイダーサポート（ClaudeとGemini）
+- 入力長に基づく自動モデル切り替え（40,000文字を超える入力の場合、Claude → Gemini）
+- プロンプト、使用統計、設定のためのPostgreSQLデータベース統合
+- AIプロバイダー管理のためのFactoryパターン実装
+- 階層的プロンプトシステム（診療科 → 医師 → 文書タイプ）
+- すべてのAI API呼び出しの使用状況追跡と統計
+- 120のテストに合格する包括的なテストスイート
 
-### Changed
-- Environment variable standardization from `GEMINI_CREDENTIALS` to `GOOGLE_CREDENTIALS_JSON`
-- Text processing enhancements for better output formatting
-- Error handling improvements across all API clients
+### 変更
+- 環境変数を `GEMINI_CREDENTIALS` から `GOOGLE_CREDENTIALS_JSON` に標準化
+- より良い出力フォーマットのためのテキスト処理の強化
+- すべてのAPIクライアントでのエラー処理の改善
 
-## [Unreleased]
+## [未リリース]
 
-### Changed
-- Updated `pyrightconfig.json` configuration
-- Renamed test directories for better organization
+### 変更
+- `pyrightconfig.json` 構成を更新
+- より良い整理のためにテストディレクトリの名前を変更
 
-### Removed
-- Test strategy document file (migrated to separate documentation)
+### 削除
+- テスト戦略ドキュメントファイル（別ドキュメントに移行）
 
 ## [0.3.0] - 2025-09-19
 
-### Changed
-- **Environment Variable Standardization**: Replaced `GEMINI_CREDENTIALS` with `GOOGLE_CREDENTIALS_JSON` across entire codebase
-  - Updated `utils/config.py`: Changed environment variable definition
-  - Updated `services/summary_service.py`: Modified imports and credential validation
-  - Updated `ui_components/navigation.py`: Changed imports and model availability checks
-  - Updated `scripts/VertexAI_API.py`: Migrated to new credential variable
+### 変更
+- **環境変数の標準化**: コードベース全体で `GEMINI_CREDENTIALS` を `GOOGLE_CREDENTIALS_JSON` に置換
+  - `utils/config.py` を更新: 環境変数定義を変更
+  - `services/summary_service.py` を更新: インポートと認証情報検証を変更
+  - `ui_components/navigation.py` を更新: インポートとモデル可用性チェックを変更
+  - `scripts/VertexAI_API.py` を更新: 新しい認証情報変数に移行
 
-### Updated
-- All test files to use new `GOOGLE_CREDENTIALS_JSON` credential variable
-  - `tests/test_summary_service.py`: Updated mock patches
-  - `tests/test_config.py`: Updated test assertions
-  - `tests/conftest.py`: Updated test environment variables
-- Documentation to reflect new credential format
-  - `docs/README.md`: Updated environment variable examples
+### 更新
+- すべてのテストファイルを新しい `GOOGLE_CREDENTIALS_JSON` 認証情報変数を使用するように更新
+  - `tests/test_summary_service.py`: モックパッチを更新
+  - `tests/test_config.py`: テストアサーションを更新
+  - `tests/conftest.py`: テスト環境変数を更新
+- 新しい認証情報形式を反映するようにドキュメントを更新
+  - `docs/README.md`: 環境変数の例を更新
 
-### Fixed
-- Verified all 120 tests pass with new credential system
+### 修正
+- 新しい認証情報システムですべての120テストが合格することを確認
 
 ## [0.2.0] - 2025-01-16
 
-### Added
-- Vertex AI API integration for Gemini models
-- Vertex AI configuration to `utils/config.py`
-  - `GOOGLE_PROJECT_ID` environment variable
-  - `GOOGLE_LOCATION` environment variable
-- Vertex AI specific error messages to `utils/constants.py`
+### 追加
+- GeminiモデルのためのVertex AI API統合
+- `utils/config.py` へのVertex AI設定
+  - `GOOGLE_PROJECT_ID` 環境変数
+  - `GOOGLE_LOCATION` 環境変数
+- `utils/constants.py` へのVertex AI固有のエラーメッセージ
   - `GOOGLE_PROJECT_ID_MISSING`
   - `GOOGLE_LOCATION_MISSING`
   - `VERTEX_AI_INIT_ERROR`
   - `VERTEX_AI_API_ERROR`
 
-### Changed
-- **Gemini API Integration**: Migrated from Google AI to Vertex AI
-  - Updated `external_service/gemini_api.py` to use Vertex AI API
-  - Changed client initialization to use `vertexai=True` with project and location parameters
-  - Enhanced error handling with Vertex AI specific error messages
+### 変更
+- **Gemini API統合**: Google AIからVertex AIへ移行
+  - `external_service/gemini_api.py` をVertex AI APIを使用するように更新
+  - クライアント初期化をプロジェクトとロケーションパラメータで `vertexai=True` を使用するように変更
+  - Vertex AI固有のエラーメッセージでエラー処理を強化
 
-### Updated
-- Environment variable validation for `GOOGLE_PROJECT_ID` and `GOOGLE_LOCATION`
+### 更新
+- `GOOGLE_PROJECT_ID` と `GOOGLE_LOCATION` の環境変数検証
 
 ## [0.1.1] - 2025-01-16
 
-### Fixed
-- **Test Suite**: All 120 unit tests now pass successfully
-- `utils/env_loader.py`: Fixed output messages to match test expectations
-- `tests/test_prompt_manager.py`: Updated document type reference to match constants
-- `tests/test_summary_service.py`: Fixed exception handling test for queue-based error handling
+### 修正
+- **テストスイート**: すべての120ユニットテストが成功
+- `utils/env_loader.py`: テスト期待値に合わせて出力メッセージを修正
+- `tests/test_prompt_manager.py`: 定数に一致するように文書タイプ参照を更新
+- `tests/test_summary_service.py`: キューベースのエラー処理のための例外処理テストを修正
 
-### Updated
-- **Text Processing Enhancements** in `utils/text_processor.py`
-  - `format_output_summary`: Added removal of `#` symbols and half-width spaces
-  - `section_aliases`: Simplified mapping structure (removed complex brackets)
-  - `parse_output_summary`: Complete rewrite to handle colon/no-colon patterns properly
+### 更新
+- `utils/text_processor.py` での**テキスト処理の強化**
+  - `format_output_summary`: `#` 記号と半角スペースの除去を追加
+  - `section_aliases`: マッピング構造を簡素化（複雑な括弧を削除）
+  - `parse_output_summary`: コロン/コロンなしパターンを適切に処理するための完全な書き直し
 
-### Changed
-- Enhanced text processing functions for better output formatting
-- Improved section parsing logic to handle multiple format variations
+### 変更
+- より良い出力フォーマットのためにテキスト処理関数を強化
+- 複数のフォーマットバリエーションを処理するためにセクション解析ロジックを改善
 
 ## [0.1.0] - 2025-01-15
 
-### Added
-- Initial project structure and architecture
-- Core services and API client implementations
-- Database models and schema
-- Streamlit UI components
-- Basic test coverage
-- Environment configuration system
+### 追加
+- 初期プロジェクト構造とアーキテクチャ
+- コアサービスとAPIクライアント実装
+- データベースモデルとスキーマ
+- Streamlit UIコンポーネント
+- 基本的なテストカバレッジ
+- 環境設定システム
 
 ---
 
-## Version History Summary
+## バージョン履歴サマリー
 
-- **1.0.0** (2026-01-21): Stable release with comprehensive features and full test coverage
-- **0.3.0** (2025-09-19): Environment variable standardization
-- **0.2.0** (2025-01-16): Vertex AI integration
-- **0.1.1** (2025-01-16): Test fixes and text processing updates
-- **0.1.0** (2025-01-15): Initial release
+- **1.0.0** (2026-01-21): 包括的な機能と完全なテストカバレッジを備えた安定版リリース
+- **0.3.0** (2025-09-19): 環境変数の標準化
+- **0.2.0** (2025-01-16): Vertex AI統合
+- **0.1.1** (2025-01-16): テスト修正とテキスト処理の更新
+- **0.1.0** (2025-01-15): 初回リリース

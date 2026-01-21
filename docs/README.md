@@ -1,80 +1,80 @@
 # MediDocsLM Referral
 
-A FastAPI-based medical document generation application that uses multiple AI APIs (Claude and Gemini) to automatically generate medical referral documents from patient chart data.
+FastAPIベースの医療文書生成アプリケーション。複数のAI API（ClaudeとGemini）を使用して、患者カルテデータから医療紹介状を自動生成します。
 
-## Overview
+## 概要
 
-MediDocsLM Referral is an intelligent medical documentation system designed to streamline the creation of referral letters and medical reports. The application leverages advanced AI language models to parse patient chart information and generate structured medical documents according to customizable templates and prompts.
+MediDocsLM Referralは、紹介状や医療報告書の作成を効率化するための高度な医療文書システムです。本アプリケーションは、最先端のAI言語モデルを活用して患者カルテ情報を解析し、カスタマイズ可能なテンプレートとプロンプトに基づいて構造化された医療文書を生成します。
 
-## Features
+## 機能
 
-### Core Functionality
-- **Multi-AI Provider Support**: Integrates with both Claude (Anthropic) and Gemini (Google Vertex AI)
-- **Automatic Model Switching**: Intelligently switches from Claude to Gemini when input exceeds 40,000 characters
-- **Structured Document Generation**: Generates medical documents with standardized sections:
-  - Main diagnosis (主病名)
-  - Referral purpose (紹介目的)
-  - Medical history (既往歴)
-  - Symptom progression (症状経過)
-  - Treatment history (治療経過)
-  - Current prescriptions (現在の処方)
-  - Additional notes (備考)
+### コア機能
+- **複数のAIプロバイダーサポート**: Claude（Anthropic）とGemini（Google Vertex AI）の両方に統合
+- **自動モデル切り替え**: 入力が40,000文字を超えると、自動的にClaudeからGeminiに切り替え
+- **構造化文書生成**: 標準化されたセクションで医療文書を生成:
+  - 主病名
+  - 紹介目的
+  - 既往歴
+  - 症状経過
+  - 治療経過
+  - 現在の処方
+  - 備考
 
-### Document Management
-- **Multiple Document Types**:
-  - Referral to other institutions (他院への紹介)
-  - Counter-referral to referring physician (紹介元への逆紹介)
-  - Response letter (返書)
-  - Final response letter (最終返書)
-- **Department-Specific Customization**: Supports department-based configurations
-- **Doctor-Specific Prompts**: Hierarchical prompt system (Department → Doctor → Document Type)
+### 文書管理
+- **複数の文書タイプ**:
+  - 他院への紹介
+  - 紹介元への逆紹介
+  - 返書
+  - 最終返書
+- **診療科別カスタマイズ**: 診療科ベースの設定に対応
+- **医師別プロンプト**: 階層的プロンプトシステム（診療科 → 医師 → 文書タイプ）
 
-### Prompt Management
-- **Custom Prompt Templates**: Create and manage custom prompts for different scenarios
-- **Hierarchical Inheritance**: Department and doctor-specific prompt customization
-- **Web-Based UI**: Easy-to-use interface for prompt creation and editing
+### プロンプト管理
+- **カスタムプロンプトテンプレート**: さまざまなシナリオ用のカスタムプロンプトを作成・管理
+- **階層的継承**: 診療科と医師ごとのプロンプトカスタマイズ
+- **Webベース UI**: プロンプトの作成と編集のための使いやすいインターフェース
 
-### Analytics & Monitoring
-- **Usage Statistics**: Track API usage, token consumption, and processing times
-- **Performance Metrics**: Monitor response times and model performance
-- **Cost Tracking**: Monitor API costs across different models
+### 分析とモニタリング
+- **使用統計**: API使用状況、トークン消費、処理時間を追跡
+- **パフォーマンスメトリクス**: レスポンス時間とモデルパフォーマンスを監視
+- **コスト追跡**: 異なるモデル間のAPIコストを監視
 
-## Architecture Overview
+## アーキテクチャ概要
 
-### Design Patterns
+### デザインパターン
 
-**Factory Pattern**: `app/external/api_factory.py` manages AI provider instantiation
+**Factory Pattern**: `app/external/api_factory.py` がAIプロバイダーのインスタンス化を管理
 ```python
-# Dynamically creates appropriate API client based on model selection
+# モデル選択に基づいて適切なAPIクライアントを動的に作成
 api_client = get_api_client(model_name, api_key)
 ```
 
-**Service Layer**: `app/services/` contains business logic separated from API routes
-- `summary_service.py`: Document generation logic
-- `prompt_service.py`: Prompt management
-- `statistics_service.py`: Usage analytics
+**Service Layer**: `app/services/` にはAPIルートから分離されたビジネスロジックが含まれる
+- `summary_service.py`: 文書生成ロジック
+- `prompt_service.py`: プロンプト管理
+- `statistics_service.py`: 使用状況分析
 
-**Repository Pattern**: `app/models/` contains database models and data access
-- `prompt.py`: Prompt templates
-- `usage.py`: API usage statistics
-- `setting.py`: Application settings
+**Repository Pattern**: `app/models/` にはデータベースモデルとデータアクセスが含まれる
+- `prompt.py`: プロンプトテンプレート
+- `usage.py`: API使用統計
+- `setting.py`: アプリケーション設定
 
-**MVC Architecture**:
-- **Models**: SQLAlchemy ORM models in `app/models/`
-- **Views**: Jinja2 templates in `app/templates/`
-- **Controllers**: FastAPI routers in `app/api/`
+**MVC アーキテクチャ**:
+- **Models**: `app/models/` 内のSQLAlchemy ORMモデル
+- **Views**: `app/templates/` 内のJinja2テンプレート
+- **Controllers**: `app/api/` 内のFastAPIルーター
 
-### Data Flow
+### データフロー
 
-1. **User Input**: User enters chart data and selects document type via web interface
-2. **Request Processing**: FastAPI endpoint receives and validates input
-3. **Service Layer**: `SummaryService` coordinates document generation
-4. **AI Integration**: Factory pattern instantiates appropriate API client
-5. **Model Selection**: Auto-switches to Gemini if input exceeds Claude's optimal range
-6. **Document Generation**: AI generates structured medical document
-7. **Post-Processing**: Text processor parses output into sections
-8. **Database Logging**: Usage statistics and metadata stored in PostgreSQL
-9. **Response**: Structured document returned to user interface
+1. **ユーザー入力**: ユーザーがWebインターフェースからカルテデータを入力し、文書タイプを選択
+2. **リクエスト処理**: FastAPIエンドポイントが入力を受信・検証
+3. **サービスレイヤー**: `SummaryService` が文書生成を調整
+4. **AI統合**: Factoryパターンが適切なAPIクライアントをインスタンス化
+5. **モデル選択**: 入力がClaudeの最適範囲を超える場合、自動的にGeminiに切り替え
+6. **文書生成**: AIが構造化された医療文書を生成
+7. **後処理**: テキストプロセッサーが出力をセクションに解析
+8. **データベースログ**: 使用統計とメタデータをPostgreSQLに保存
+9. **レスポンス**: 構造化された文書をユーザーインターフェースに返却
 
 ### Key Components
 
@@ -114,63 +114,63 @@ app/
 └── main.py         # FastAPI application
 ```
 
-## Setup and Installation
+## セットアップとインストール
 
-### Prerequisites
+### 前提条件
 
-- Python 3.13+
-- PostgreSQL 12+
-- At least one AI API account:
-  - Claude API (Anthropic) or AWS Bedrock access
-  - Google Cloud Platform account with Vertex AI enabled
+- Python 3.13以上
+- PostgreSQL 12以上
+- 少なくとも1つのAI APIアカウント:
+  - Claude API（Anthropic）またはAWS Bedrockアクセス
+  - Vertex AIが有効化されたGoogle Cloud Platformアカウント
 
-### Installation Steps
+### インストール手順
 
-1. **Clone the repository**
+1. **リポジトリのクローン**
 ```bash
 git clone <repository-url>
 cd MediDocsLMreferral
 ```
 
-2. **Create virtual environment**
+2. **仮想環境の作成**
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+source .venv/bin/activate  # Windows の場合: .venv\Scripts\activate
 ```
 
-3. **Install dependencies**
+3. **依存関係のインストール**
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **Set up PostgreSQL database**
+4. **PostgreSQLデータベースのセットアップ**
 ```bash
-# Create database
+# データベースの作成
 createdb medidocs
 
-# Database tables will be created automatically on first run
+# データベーステーブルは初回実行時に自動作成されます
 ```
 
-5. **Configure environment variables**
+5. **環境変数の設定**
 ```bash
-# Copy example environment file
+# 環境変数ファイルのコピー
 cp .env.example .env
 
-# Edit .env with your credentials
+# 認証情報を使って .env を編集
 ```
 
-6. **Run database migrations** (if applicable)
+6. **データベースマイグレーションの実行**（該当する場合）
 ```bash
-# Tables are auto-created via SQLAlchemy on startup
+# テーブルは起動時にSQLAlchemyを介して自動作成されます
 ```
 
-## Environment Variables Configuration
+## 環境変数の設定
 
-Create a `.env` file in the project root with the following variables:
+プロジェクトルートに以下の変数を含む `.env` ファイルを作成してください:
 
-### Database Configuration
+### データベース設定
 ```env
-# PostgreSQL Database
+# PostgreSQL データベース
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_USER=postgres
@@ -178,25 +178,25 @@ POSTGRES_PASSWORD=your_password
 POSTGRES_DB=medidocs
 POSTGRES_SSL=false
 
-# Connection Pool Settings
+# コネクションプール設定
 DB_POOL_SIZE=5
 DB_MAX_OVERFLOW=10
 DB_POOL_TIMEOUT=30
 DB_POOL_RECYCLE=1800
 
-# Heroku Database URL (optional, overrides individual settings)
+# Heroku データベース URL（オプション、個別設定を上書き）
 DATABASE_URL=postgresql://user:password@host:port/database
 ```
 
-### Claude API Configuration
+### Claude API 設定
 
-**Option 1: Direct Claude API**
+**オプション 1: 直接Claude API**
 ```env
 CLAUDE_API_KEY=sk-ant-your-api-key
 CLAUDE_MODEL=claude-sonnet-4-5-20250929
 ```
 
-**Option 2: AWS Bedrock**
+**オプション 2: AWS Bedrock**
 ```env
 AWS_ACCESS_KEY_ID=your_aws_access_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret_key
@@ -204,37 +204,37 @@ AWS_REGION=ap-northeast-1
 ANTHROPIC_MODEL=anthropic.claude-3-5-sonnet-20241022-v2:0
 ```
 
-### Google Vertex AI Configuration
+### Google Vertex AI 設定
 ```env
-# Google Cloud Credentials (JSON format)
+# Google Cloud 認証情報（JSON形式）
 GOOGLE_CREDENTIALS_JSON={"type":"service_account","project_id":"your-project",...}
 
-# Or path to credentials file
+# または認証情報ファイルへのパス
 # GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json
 
-# Vertex AI Settings
+# Vertex AI 設定
 GOOGLE_PROJECT_ID=your-gcp-project-id
 GOOGLE_LOCATION=asia-northeast1
 GEMINI_MODEL=gemini-2.0-flash-exp
 GEMINI_THINKING_LEVEL=HIGH
 ```
 
-### Application Settings
+### アプリケーション設定
 ```env
-# Token Limits
+# トークン制限
 MAX_INPUT_TOKENS=200000
 MIN_INPUT_TOKENS=100
 MAX_TOKEN_THRESHOLD=100000
 
-# Features
+# 機能
 PROMPT_MANAGEMENT=true
 APP_TYPE=default
 SELECTED_AI_MODEL=Claude
 ```
 
-### Example .env File
+### .env ファイルの例
 ```env
-# Database
+# データベース
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_USER=medidocs
@@ -251,67 +251,67 @@ GOOGLE_PROJECT_ID=my-gcp-project
 GOOGLE_LOCATION=asia-northeast1
 GEMINI_MODEL=gemini-2.0-flash-exp
 
-# Application
+# アプリケーション
 MAX_INPUT_TOKENS=200000
 PROMPT_MANAGEMENT=true
 ```
 
-## Usage Instructions
+## 使用方法
 
-### Starting the Application
+### アプリケーションの起動
 
-**Development Mode:**
+**開発モード:**
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-**Production Mode:**
+**本番モード:**
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
-The application will be available at:
-- Web Interface: `http://localhost:8000`
-- API Documentation: `http://localhost:8000/api/docs`
+アプリケーションは以下のURLでアクセス可能:
+- Webインターフェース: `http://localhost:8000`
+- APIドキュメント: `http://localhost:8000/api/docs`
 - ReDoc: `http://localhost:8000/api/redoc`
 
-### Using the Web Interface
+### Webインターフェースの使用
 
-1. **Access the main page**: Navigate to `http://localhost:8000`
-2. **Enter patient information**:
-   - Select department and doctor
-   - Choose document type
-   - Enter chart data in the text area
-   - Add any additional information
-3. **Select AI model**: Choose between Claude or Gemini (or let auto-switching handle it)
-4. **Generate document**: Click the generate button
-5. **Review output**: Generated document appears in structured sections
-6. **Copy to clipboard**: Use Ctrl+A and Ctrl+C to copy the generated text
+1. **メインページへのアクセス**: `http://localhost:8000` にアクセス
+2. **患者情報の入力**:
+   - 診療科と医師を選択
+   - 文書タイプを選択
+   - テキストエリアにカルテデータを入力
+   - 追加情報を入力
+3. **AIモデルの選択**: ClaudeまたはGeminiを選択（または自動切り替えに任せる）
+4. **文書の生成**: 生成ボタンをクリック
+5. **出力の確認**: 生成された文書が構造化されたセクションで表示される
+6. **クリップボードにコピー**: Ctrl+AとCtrl+Cで生成されたテキストをコピー
 
-### Managing Prompts
+### プロンプトの管理
 
-1. Navigate to the **Prompts** page
-2. **Create new prompt**:
-   - Select department, doctor, and document type
-   - Enter custom prompt template
-   - Save the prompt
-3. **Edit existing prompts**: Click edit icon next to any prompt
-4. **Delete prompts**: Click delete icon (requires confirmation)
+1. **Prompts** ページにアクセス
+2. **新規プロンプトの作成**:
+   - 診療科、医師、文書タイプを選択
+   - カスタムプロンプトテンプレートを入力
+   - プロンプトを保存
+3. **既存プロンプトの編集**: プロンプトの横にある編集アイコンをクリック
+4. **プロンプトの削除**: 削除アイコンをクリック（確認が必要）
 
-### Viewing Statistics
+### 統計の表示
 
-1. Navigate to the **Statistics** page
-2. Select date range for analytics
-3. View metrics:
-   - Total API calls
-   - Token usage by model
-   - Average processing time
-   - Cost breakdown
-4. Export data for further analysis
+1. **Statistics** ページにアクセス
+2. 分析用の日付範囲を選択
+3. メトリクスの表示:
+   - 合計API呼び出し数
+   - モデル別トークン使用量
+   - 平均処理時間
+   - コスト内訳
+4. さらなる分析のためにデータをエクスポート
 
-### API Usage
+### APIの使用
 
-**Generate Document via API:**
+**API経由での文書生成:**
 ```bash
 curl -X POST "http://localhost:8000/api/summary/generate" \
   -H "Content-Type: application/json" \
@@ -325,69 +325,69 @@ curl -X POST "http://localhost:8000/api/summary/generate" \
   }'
 ```
 
-**Get Usage Statistics:**
+**使用統計の取得:**
 ```bash
 curl -X GET "http://localhost:8000/api/statistics?start_date=2026-01-01&end_date=2026-01-21"
 ```
 
-## Testing
+## テスト
 
-### Running Tests
+### テストの実行
 
-**Run all tests:**
+**すべてのテストを実行:**
 ```bash
 python -m pytest tests/ -v --tb=short
 ```
 
-**Run with coverage:**
+**カバレッジ付きで実行:**
 ```bash
 python -m pytest tests/ -v --tb=short --cov=app --cov-report=html
 ```
 
-**Run specific test file:**
+**特定のテストファイルを実行:**
 ```bash
 python -m pytest tests/services/test_summary_service.py -v
 ```
 
-**Run specific test:**
+**特定のテストを実行:**
 ```bash
 python -m pytest tests/services/test_summary_service.py::test_generate_summary -v
 ```
 
-### Test Structure
+### テスト構造
 
 ```
 tests/
-├── conftest.py              # Shared fixtures
-├── api/                     # API endpoint tests
+├── conftest.py              # 共有フィクスチャ
+├── api/                     # APIエンドポイントテスト
 │   ├── test_prompts.py
 │   ├── test_summary.py
 │   ├── test_statistics.py
 │   └── test_settings.py
-├── core/                    # Core functionality tests
+├── core/                    # コア機能テスト
 │   └── test_config.py
-├── external/                # External API tests
+├── external/                # 外部APIテスト
 │   ├── test_api_factory.py
 │   ├── test_base_api.py
 │   ├── test_claude_api.py
 │   └── test_gemini_api.py
-├── services/                # Business logic tests
+├── services/                # ビジネスロジックテスト
 │   ├── test_prompt_service.py
 │   ├── test_summary_service.py
 │   └── test_statistics_service.py
-└── test_utils/              # Utility tests
+└── test_utils/              # ユーティリティテスト
     └── test_text_processor.py
 ```
 
-### Test Coverage
+### テストカバレッジ
 
-The project maintains comprehensive test coverage with 120+ tests covering:
-- API endpoints
-- Service layer logic
-- External API integrations
-- Database operations
-- Text processing utilities
-- Error handling
+本プロジェクトは120以上のテストで包括的なテストカバレッジを維持:
+- APIエンドポイント
+- サービスレイヤーロジック
+- 外部API統合
+- データベース操作
+- テキスト処理ユーティリティ
+- エラー処理
 
 ## Project Structure
 
@@ -425,112 +425,112 @@ MediDocsLMreferral/
 └── setup.sh                 # Setup script
 ```
 
-## Technologies Used
+## 使用技術
 
-### Backend Framework
-- **FastAPI**: Modern, fast web framework for building APIs
-- **Uvicorn**: ASGI server for FastAPI
-- **Pydantic**: Data validation using Python type annotations
-- **SQLAlchemy**: SQL toolkit and ORM
+### バックエンドフレームワーク
+- **FastAPI**: API構築のためのモダンで高速なWebフレームワーク
+- **Uvicorn**: FastAPI用ASGIサーバー
+- **Pydantic**: Pythonの型アノテーションを使用したデータ検証
+- **SQLAlchemy**: SQLツールキットとORM
 
-### Database
-- **PostgreSQL**: Primary database for storing prompts, settings, and usage data
-- **psycopg2-binary**: PostgreSQL adapter for Python
+### データベース
+- **PostgreSQL**: プロンプト、設定、使用データを保存する主要データベース
+- **psycopg2-binary**: Python用PostgreSQLアダプター
 
-### AI/ML Integration
-- **Anthropic SDK**: Claude API integration
-- **Google Generative AI**: Gemini API integration
-- **Google Cloud AI Platform**: Vertex AI integration
-- **boto3**: AWS SDK for Bedrock integration
+### AI/ML統合
+- **Anthropic SDK**: Claude API統合
+- **Google Generative AI**: Gemini API統合
+- **Google Cloud AI Platform**: Vertex AI統合
+- **boto3**: Bedrock統合用AWS SDK
 
-### Frontend
-- **Jinja2**: Template engine for HTML rendering
-- **HTML/CSS/JavaScript**: Frontend technologies
+### フロントエンド
+- **Jinja2**: HTMLレンダリング用テンプレートエンジン
+- **HTML/CSS/JavaScript**: フロントエンド技術
 
-### Testing
-- **pytest**: Testing framework
-- **pytest-cov**: Coverage reporting
-- **pytest-mock**: Mocking library for tests
+### テスト
+- **pytest**: テストフレームワーク
+- **pytest-cov**: カバレッジレポート
+- **pytest-mock**: テスト用モックライブラリ
 
-### Development Tools
-- **python-dotenv**: Environment variable management
-- **pyright**: Static type checker for Python
-- **uv**: Fast Python package installer
+### 開発ツール
+- **python-dotenv**: 環境変数管理
+- **pyright**: Python用静的型チェッカー
+- **uv**: 高速Pythonパッケージインストーラー
 
-### Additional Libraries
-- **httpx**: HTTP client for API calls
-- **tenacity**: Retry library for API resilience
-- **pydantic-settings**: Settings management
-- **python-multipart**: Multipart form data parsing
+### 追加ライブラリ
+- **httpx**: API呼び出し用HTTPクライアント
+- **tenacity**: APIレジリエンス用リトライライブラリ
+- **pydantic-settings**: 設定管理
+- **python-multipart**: マルチパートフォームデータ解析
 
-## Key Business Logic
+## 主要なビジネスロジック
 
-### Automatic Model Switching
+### 自動モデル切り替え
 
-The application intelligently switches between AI models based on input length:
+アプリケーションは入力の長さに基づいてAIモデルを自動的に切り替えます:
 
 ```python
-# If input exceeds 40,000 characters and Claude is selected
+# 入力が40,000文字を超え、Claudeが選択されている場合
 if input_length > 40000 and selected_model == "Claude":
-    # Switch to Gemini for better handling of long inputs
+    # 長い入力をより適切に処理するためにGeminiに切り替え
     switch_to_model("Gemini_Pro")
 ```
 
-### Hierarchical Prompt System
+### 階層的プロンプトシステム
 
-Prompts are resolved in order of specificity:
-1. Doctor + Document Type specific prompt
-2. Department + Document Type specific prompt
-3. Default prompt for Document Type
+プロンプトは特異性の順序で解決されます:
+1. 医師 + 文書タイプ固有のプロンプト
+2. 診療科 + 文書タイプ固有のプロンプト
+3. 文書タイプのデフォルトプロンプト
 
-This allows for flexible customization while maintaining fallback defaults.
+これにより、フォールバックデフォルトを維持しながら柔軟なカスタマイズが可能です。
 
-### Usage Tracking
+### 使用状況の追跡
 
-Every API call is logged with:
-- Model used
-- Token counts (input/output)
-- Processing time
-- Timestamp
-- Department/Doctor/Document Type context
+すべてのAPI呼び出しは以下の情報とともにログに記録されます:
+- 使用されたモデル
+- トークン数（入力/出力）
+- 処理時間
+- タイムスタンプ
+- 診療科/医師/文書タイプのコンテキスト
 
-## Contributing
+## コントリビューション
 
-### Code Style
-- Follow PEP 8 guidelines
-- Use type hints for all functions
-- Import order: Standard library → Third-party → Local modules
-- Keep imports alphabetically sorted
+### コードスタイル
+- PEP 8ガイドラインに従う
+- すべての関数に型ヒントを使用
+- インポート順序: 標準ライブラリ → サードパーティ → ローカルモジュール
+- インポートをアルファベット順に保つ
 
-### Commit Messages
-- Use descriptive commit messages
-- Follow conventional commit format when possible
-- Include both Japanese and English descriptions if applicable
+### コミットメッセージ
+- 説明的なコミットメッセージを使用
+- 可能な限り従来のコミット形式に従う
+- 該当する場合は日本語と英語の説明を両方含める
 
-## License
+## ライセンス
 
-[Specify your license here]
+[ここにライセンスを指定してください]
 
-## Support
+## サポート
 
-For issues, questions, or contributions, please refer to the project repository.
+問題、質問、コントリビューションについては、プロジェクトリポジトリを参照してください。
 
-## Changelog
+## 変更履歴
 
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history and updates.
+詳細なバージョン履歴と更新については、[CHANGELOG.md](CHANGELOG.md)を参照してください。
 
-## Security Notes
+## セキュリティに関する注意事項
 
-- Never commit `.env` files containing credentials
-- Rotate API keys regularly
-- Use environment variables for all sensitive configuration
-- Keep dependencies up to date for security patches
-- Review AI-generated content before use in production medical settings
+- 認証情報を含む `.env` ファイルをコミットしない
+- APIキーを定期的にローテーション
+- すべての機密設定に環境変数を使用
+- セキュリティパッチのために依存関係を最新に保つ
+- 本番医療現場で使用する前にAI生成コンテンツをレビュー
 
-## Medical Disclaimer
+## 医療免責事項
 
-This application uses generative AI to create medical documents. All AI-generated content must be reviewed and verified by qualified medical professionals before use. The application is a tool to assist with documentation and should not replace professional medical judgment.
+このアプリケーションは、医療文書を作成するために生成AIを使用しています。すべてのAI生成コンテンツは、使用前に資格のある医療専門家によってレビューおよび検証される必要があります。このアプリケーションは文書作成を支援するツールであり、専門的な医学的判断に代わるものではありません。
 
 ---
 
-**Note**: This README is based on the current codebase structure. For the most up-to-date development guidelines, refer to [CLAUDE.md](../CLAUDE.md).
+**注記**: このREADMEは現在のコードベース構造に基づいています。最新の開発ガイドラインについては、[CLAUDE.md](../CLAUDE.md)を参照してください。
