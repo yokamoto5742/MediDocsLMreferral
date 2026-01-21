@@ -209,8 +209,15 @@ function statisticsPage() {
 
             try {
                 const params = new URLSearchParams();
-                if (this.filter.startDate) params.append('start_date', new Date(this.filter.startDate).toISOString());
-                if (this.filter.endDate) params.append('end_date', new Date(this.filter.endDate).toISOString());
+                if (this.filter.startDate) {
+                    // Asia/Tokyo タイムゾーンで開始日の 00:00:00 を設定
+                    params.append('start_date', this.filter.startDate + 'T00:00:00+09:00');
+                }
+                if (this.filter.endDate) {
+                    // Asia/Tokyo タイムゾーンで終了日の 23:59:59 を設定
+                    const endDateTime = new Date(this.filter.endDate + 'T23:59:59+09:00');
+                    params.append('end_date', endDateTime.toISOString());
+                }
                 if (this.filter.model) params.append('model', this.getActualModelName(this.filter.model));
                 if (this.filter.documentType) params.append('document_type', this.filter.documentType);
 
@@ -233,8 +240,15 @@ function statisticsPage() {
                     offset: this.pagination.offset
                 });
 
-                if (this.filter.startDate) params.append('start_date', new Date(this.filter.startDate).toISOString());
-                if (this.filter.endDate) params.append('end_date', new Date(this.filter.endDate).toISOString());
+                if (this.filter.startDate) {
+                    // Asia/Tokyo タイムゾーンで開始日の 00:00:00 を設定
+                    params.append('start_date', this.filter.startDate + 'T00:00:00+09:00');
+                }
+                if (this.filter.endDate) {
+                    // Asia/Tokyo タイムゾーンで終了日の 23:59:59 を設定
+                    const endDateTime = new Date(this.filter.endDate + 'T23:59:59+09:00');
+                    params.append('end_date', endDateTime.toISOString());
+                }
                 if (this.filter.model) params.append('model', this.getActualModelName(this.filter.model));
                 if (this.filter.documentType) params.append('document_type', this.filter.documentType);
 
