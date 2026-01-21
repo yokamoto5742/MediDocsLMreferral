@@ -71,8 +71,8 @@ def get_aggregated_records(
     return [
         {
             "document_type": r.document_type or "-",
-            "department": r.department or "全科共通",
-            "doctor": r.doctor or "医師共通",
+            "department": "全科共通" if r.department == "default" else (r.department or "全科共通"),
+            "doctor": "医師共通" if r.doctor == "default" else (r.doctor or "医師共通"),
             "count": r.count,
             "input_tokens": r.input_tokens or 0,
             "output_tokens": r.output_tokens or 0,

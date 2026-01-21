@@ -136,8 +136,8 @@
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="formatDateTime(record.date)"></td>
                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="record.document_type || '-'"></td>
-                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="record.department || '全科共通'"></td>
-                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="record.doctor || '医師共通'"></td>
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="record.department === 'default' ? '全科共通' : (record.department || '全科共通')"></td>
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="record.doctor === 'default' ? '医師共通' : (record.doctor || '医師共通')"></td>
                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="formatModelName(record.model)"></td>
                             <td class="px-4 py-3 text-sm text-right text-gray-900 dark:text-gray-100" x-text="formatNumber(record.input_tokens || 0)"></td>
                             <td class="px-4 py-3 text-sm text-right text-gray-900 dark:text-gray-100" x-text="formatNumber(record.output_tokens || 0)"></td>
