@@ -8,9 +8,9 @@ from utils.prompt_manager import get_prompt
 
 
 class BaseAPIClient(ABC):
-    def __init__(self, api_key: str, default_model: str):
-        self.api_key = api_key
-        self.default_model = default_model
+    def __init__(self, api_key: str | None, default_model: str | None):
+        self.api_key: str | None = api_key
+        self.default_model: str | None = default_model
 
     @abstractmethod
     def initialize(self) -> bool:
@@ -63,7 +63,7 @@ class BaseAPIClient(ABC):
 
     def get_model_name(
         self, department: str, document_type: str, doctor: str
-    ) -> str:
+    ) -> str | None:
         prompt_data = get_prompt(department, document_type, doctor)
 
         return (
@@ -88,6 +88,9 @@ class BaseAPIClient(ABC):
 
             if not model_name:
                 model_name = self.get_model_name(department, document_type, doctor)
+
+            if not model_name:
+                raise APIError("モデル名が指定されていません")
 
             prompt = self.create_summary_prompt(
                 medical_text,

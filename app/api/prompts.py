@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.schemas.prompt import PromptCreate, PromptUpdate, PromptResponse
+from app.schemas.prompt import PromptCreate, PromptResponse
 from app.services import prompt_service
 
 router = APIRouter(prefix="/prompts", tags=["prompts"])

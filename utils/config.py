@@ -5,7 +5,7 @@ from app.core.config import get_settings
 
 def get_config() -> dict:
     """旧形式のconfig辞書を返す互換関数"""
-    settings = get_settings()
+    _ = get_settings()
 
     # デフォルトプロンプトテンプレート
     default_summary_prompt = """以下のカルテ情報を基に、診療情報提供書の内容を生成してください。

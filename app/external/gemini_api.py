@@ -67,6 +67,9 @@ class GeminiAPIClient(BaseAPIClient):
 
     def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
         try:
+            if not self.client:
+                raise APIError("Clientが初期化されていません")
+
             thinking_level = (
                 types.ThinkingLevel.LOW
                 if settings.gemini_thinking_level == "LOW"
@@ -81,7 +84,7 @@ class GeminiAPIClient(BaseAPIClient):
             )
 
             if hasattr(response, "text"):
-                summary_text = response.text
+                summary_text = response.text or MESSAGES["EMPTY_RESPONSE"]
             else:
                 summary_text = str(response)
 
@@ -89,8 +92,10 @@ class GeminiAPIClient(BaseAPIClient):
             output_tokens = 0
 
             if hasattr(response, "usage_metadata"):
-                input_tokens = response.usage_metadata.prompt_token_count
-                output_tokens = response.usage_metadata.candidates_token_count
+                usage_metadata = response.usage_metadata
+                if usage_metadata:
+                    input_tokens = usage_metadata.prompt_token_count or 0
+                    output_tokens = usage_metadata.candidates_token_count or 0
 
             return summary_text, input_tokens, output_tokens
         except Exception as e:

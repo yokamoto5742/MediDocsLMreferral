@@ -1,9 +1,9 @@
 from fastapi import Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import ValidationError
 
 
-async def api_exception_handler(request: Request, exc: Exception):
+async def api_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """API例外ハンドラ"""
     return JSONResponse(
         status_code=500,
@@ -11,7 +11,7 @@ async def api_exception_handler(request: Request, exc: Exception):
     )
 
 
-async def validation_exception_handler(request: Request, exc: ValidationError):
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     """バリデーションエラーハンドラ"""
     return JSONResponse(
         status_code=422,

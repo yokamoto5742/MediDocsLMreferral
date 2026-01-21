@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
-from pydantic import ValidationError
 
 from app.api.router import api_router
 from app.core.config import get_settings
@@ -19,7 +19,7 @@ app = FastAPI(
 )
 
 # エラーハンドラーを登録
-app.add_exception_handler(ValidationError, validation_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore[arg-type]
 app.add_exception_handler(Exception, api_exception_handler)
 
 # 静的ファイル

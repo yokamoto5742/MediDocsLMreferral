@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from typing import Iterator
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -19,7 +20,7 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def get_db() -> Session:
+def get_db() -> Iterator[Session]:
     """FastAPI Depends 用"""
     db = SessionLocal()
     try:
@@ -29,7 +30,7 @@ def get_db() -> Session:
 
 
 @contextmanager
-def get_db_session():
+def get_db_session() -> Iterator[Session]:
     """サービス層用コンテキストマネージャ"""
     db = SessionLocal()
     try:

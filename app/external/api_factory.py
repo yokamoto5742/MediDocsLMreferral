@@ -42,7 +42,7 @@ class APIFactory:
         department: str = "default",
         document_type: str = DEFAULT_DOCUMENT_TYPE,
         doctor: str = "default",
-        model_name: str = None,
+        model_name: str | None = None,
     ):
         client = APIFactory.create_client(provider)
         return client.generate_summary(

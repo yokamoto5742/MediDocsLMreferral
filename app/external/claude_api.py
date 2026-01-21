@@ -2,6 +2,7 @@ import os
 from typing import Tuple
 
 from anthropic import AnthropicBedrock
+from anthropic.types import TextBlock
 from dotenv import load_dotenv
 
 from app.core.constants import MESSAGES
@@ -50,13 +51,19 @@ class ClaudeAPIClient(BaseAPIClient):
             # Amazon BedrockのClaude APIを呼び出し
             # model_nameパラメータは親クラスとの互換性のために受け取るが、
             # 実際はself.anthropic_modelを使用
+            if not self.client:
+                raise APIError("Clientが初期化されていません")
+
+            if not self.anthropic_model:
+                raise APIError("ANTHROPIC_MODELが設定されていません")
+
             response = self.client.messages.create(
                 model=self.anthropic_model,
                 max_tokens=6000,
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            if response.content:
+            if response.content and isinstance(response.content[0], TextBlock):
                 summary_text = response.content[0].text
             else:
                 summary_text = MESSAGES["EMPTY_RESPONSE"]

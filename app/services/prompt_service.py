@@ -41,8 +41,8 @@ def create_or_update_prompt(
     """プロンプトを作成または更新"""
     existing = get_prompt(db, department, document_type, doctor)
     if existing:
-        existing.content = content
-        existing.selected_model = selected_model
+        existing.content = content  # type: ignore[assignment]
+        existing.selected_model = selected_model  # type: ignore[assignment]
         return existing
 
     new_prompt = Prompt(

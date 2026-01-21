@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 from app.core.config import get_settings
 from app.core.database import get_db_session
-from app.external.api_factory import APIFactory, generate_summary
+from app.external.api_factory import generate_summary
 from app.models.usage import SummaryUsage
 from app.utils.text_processor import format_output_summary, parse_output_summary
 
@@ -74,9 +74,15 @@ def determine_model(
 def get_provider_and_model(selected_model: str) -> tuple[str, str]:
     """モデル名からプロバイダーとモデル名を取得"""
     if selected_model == "Claude":
-        return "claude", settings.claude_model or settings.anthropic_model
+        model = settings.claude_model or settings.anthropic_model
+        if not model:
+            raise ValueError("Claudeモデルが設定されていません")
+        return "claude", model
     elif selected_model == "Gemini_Pro":
-        return "gemini", settings.gemini_model
+        model = settings.gemini_model
+        if not model:
+            raise ValueError("Geminiモデルが設定されていません")
+        return "gemini", model
     else:
         raise ValueError(f"サポートされていないモデル: {selected_model}")
 
