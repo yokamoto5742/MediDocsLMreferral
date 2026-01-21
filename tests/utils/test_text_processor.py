@@ -1,0 +1,308 @@
+"""Text Processor のテスト"""
+
+import pytest
+
+from app.utils.text_processor import format_output_summary, parse_output_summary
+
+
+class TestFormatOutputSummary:
+    """format_output_summary 関数のテスト"""
+
+    def test_format_remove_asterisk(self):
+        """フォーマット - '*' 削除"""
+        input_text = "*主病名*: 高血圧症"
+        result = format_output_summary(input_text)
+        assert result == "主病名:高血圧症"
+
+    def test_format_remove_fullwidth_asterisk(self):
+        """フォーマット - '＊' 削除"""
+        input_text = "＊主病名＊：高血圧症"
+        result = format_output_summary(input_text)
+        assert result == "主病名：高血圧症"
+
+    def test_format_remove_hash(self):
+        """フォーマット - '#' 削除"""
+        input_text = "# 主病名: 糖尿病"
+        result = format_output_summary(input_text)
+        assert result == "主病名:糖尿病"
+
+    def test_format_remove_halfwidth_space(self):
+        """フォーマット - 半角スペース削除"""
+        input_text = "主病名 : 高血圧症"
+        result = format_output_summary(input_text)
+        assert result == "主病名:高血圧症"
+
+    def test_format_remove_all_special_characters(self):
+        """フォーマット - 複合パターン"""
+        input_text = "# *主病名* : 高血圧症"
+        result = format_output_summary(input_text)
+        assert result == "主病名:高血圧症"
+
+    def test_format_empty_string(self):
+        """フォーマット - 空文字列"""
+        input_text = ""
+        result = format_output_summary(input_text)
+        assert result == ""
+
+    def test_format_special_characters_only(self):
+        """フォーマット - 特殊文字のみ"""
+        input_text = "# * ＊  "
+        result = format_output_summary(input_text)
+        assert result == ""
+
+    def test_format_preserve_newlines(self):
+        """フォーマット - 改行は保持"""
+        input_text = "主病名: 高血圧症\n既往歴: なし"
+        result = format_output_summary(input_text)
+        assert result == "主病名:高血圧症\n既往歴:なし"
+
+    def test_format_preserve_fullwidth_characters(self):
+        """フォーマット - 全角文字は保持"""
+        input_text = "主病名：高血圧症"
+        result = format_output_summary(input_text)
+        assert result == "主病名：高血圧症"
+
+    def test_format_multiple_special_characters(self):
+        """フォーマット - 複数の特殊文字"""
+        input_text = "** # 主病名 ** : 糖尿病"
+        result = format_output_summary(input_text)
+        assert result == "主病名:糖尿病"
+
+
+class TestParseOutputSummary:
+    """parse_output_summary 関数のテスト"""
+
+    def test_parse_with_colon(self):
+        """パース - コロンあり形式"""
+        input_text = "主病名: 高血圧症"
+        result = parse_output_summary(input_text)
+
+        assert result["主病名"] == "高血圧症"
+        assert result["紹介目的"] == ""
+        assert result["既往歴"] == ""
+
+    def test_parse_with_fullwidth_colon(self):
+        """パース - 全角コロン形式"""
+        input_text = "主病名：高血圧症"
+        result = parse_output_summary(input_text)
+
+        assert result["主病名"] == "高血圧症"
+
+    def test_parse_without_colon(self):
+        """パース - コロンなし形式"""
+        input_text = "主病名 高血圧症"
+        result = parse_output_summary(input_text)
+
+        assert result["主病名"] == "高血圧症"
+
+    def test_parse_alias_conversion(self):
+        """パース - エイリアス変換"""
+        input_text = "治療内容: インスリン療法"
+        result = parse_output_summary(input_text)
+
+        # "治療内容" は "治療経過" にマッピングされる
+        assert result["治療経過"] == "インスリン療法"
+
+    def test_parse_alias_conversion_others(self):
+        """パース - その他エイリアス変換"""
+        input_text = "その他: 特記事項なし"
+        result = parse_output_summary(input_text)
+
+        # "その他" は "備考" にマッピングされる
+        assert result["備考"] == "特記事項なし"
+
+    def test_parse_multiline_section_content(self):
+        """パース - 複数行のセクション内容"""
+        input_text = """主病名: 高血圧症
+患者は60歳男性
+2型糖尿病も合併"""
+        result = parse_output_summary(input_text)
+
+        expected = "高血圧症\n患者は60歳男性\n2型糖尿病も合併"
+        assert result["主病名"] == expected
+
+    def test_parse_all_sections(self):
+        """パース - 全セクション抽出"""
+        input_text = """主病名: 高血圧症
+紹介目的: 精査加療依頼
+既往歴: 特記事項なし
+症状経過: 徐々に血圧上昇
+治療経過: 降圧薬開始
+現在の処方: アムロジピン5mg
+備考: 定期フォローアップ必要"""
+        result = parse_output_summary(input_text)
+
+        assert result["主病名"] == "高血圧症"
+        assert result["紹介目的"] == "精査加療依頼"
+        assert result["既往歴"] == "特記事項なし"
+        assert result["症状経過"] == "徐々に血圧上昇"
+        assert result["治療経過"] == "降圧薬開始"
+        assert result["現在の処方"] == "アムロジピン5mg"
+        assert result["備考"] == "定期フォローアップ必要"
+
+    def test_parse_empty_string(self):
+        """パース - 空文字列"""
+        input_text = ""
+        result = parse_output_summary(input_text)
+
+        # すべてのセクションが空文字列
+        assert result["主病名"] == ""
+        assert result["紹介目的"] == ""
+        assert result["既往歴"] == ""
+        assert result["症状経過"] == ""
+        assert result["治療経過"] == ""
+        assert result["現在の処方"] == ""
+        assert result["備考"] == ""
+
+    def test_parse_newline_only(self):
+        """パース - 改行のみ"""
+        input_text = "\n\n\n"
+        result = parse_output_summary(input_text)
+
+        # すべてのセクションが空文字列
+        assert result["主病名"] == ""
+
+    def test_parse_section_name_only(self):
+        """パース - セクション名のみ（内容なし）"""
+        input_text = "主病名:"
+        result = parse_output_summary(input_text)
+
+        assert result["主病名"] == ""
+
+    def test_parse_no_section_lines(self):
+        """パース - セクション名なしの行"""
+        input_text = """これはセクション名のない行
+主病名: 高血圧症
+また別の行"""
+        result = parse_output_summary(input_text)
+
+        # "これはセクション名のない行" は無視される
+        # "また別の行" は "主病名" セクションに追加される
+        assert result["主病名"] == "高血圧症\nまた別の行"
+
+    def test_parse_unknown_section_name(self):
+        """パース - 未知のセクション名"""
+        input_text = """主病名: 高血圧症
+未知のセクション: これは無視される
+既往歴: なし"""
+        result = parse_output_summary(input_text)
+
+        # 未知のセクションは "主病名" に追加される
+        assert "高血圧症" in result["主病名"]
+        assert result["既往歴"] == "なし"
+
+    def test_parse_mixed_colon_formats(self):
+        """パース - 混在したコロン形式"""
+        input_text = """主病名: 高血圧症
+紹介目的：精査依頼
+既往歴 糖尿病"""
+        result = parse_output_summary(input_text)
+
+        assert result["主病名"] == "高血圧症"
+        assert result["紹介目的"] == "精査依頼"
+        assert result["既往歴"] == "糖尿病"
+
+    def test_parse_section_with_colon_in_content(self):
+        """パース - 内容にコロンを含む"""
+        input_text = "主病名: 高血圧症: 重症"
+        result = parse_output_summary(input_text)
+
+        # 最初のコロン以降がすべて内容
+        assert result["主病名"] == "高血圧症: 重症"
+
+    def test_parse_alias_with_fullwidth_colon(self):
+        """パース - エイリアス（全角コロン）"""
+        input_text = "治療内容：インスリン療法"
+        result = parse_output_summary(input_text)
+
+        assert result["治療経過"] == "インスリン療法"
+
+    def test_parse_alias_without_colon(self):
+        """パース - エイリアス（コロンなし）"""
+        input_text = "補足 追加の情報"
+        result = parse_output_summary(input_text)
+
+        # "補足" は "備考" にマッピング
+        assert result["備考"] == "追加の情報"
+
+    def test_parse_section_continuation(self):
+        """パース - セクション継続"""
+        input_text = """主病名: 高血圧症
+継続行1
+継続行2
+既往歴: なし"""
+        result = parse_output_summary(input_text)
+
+        assert result["主病名"] == "高血圧症\n継続行1\n継続行2"
+        assert result["既往歴"] == "なし"
+
+    def test_parse_empty_lines_between_sections(self):
+        """パース - セクション間の空行"""
+        input_text = """主病名: 高血圧症
+
+既往歴: なし"""
+        result = parse_output_summary(input_text)
+
+        # 空行は無視される
+        assert result["主病名"] == "高血圧症"
+        assert result["既往歴"] == "なし"
+
+    def test_parse_whitespace_only_lines(self):
+        """パース - 空白のみの行"""
+        input_text = """主病名: 高血圧症
+
+既往歴: なし"""
+        result = parse_output_summary(input_text)
+
+        # 空白のみの行は strip() で空になり無視される
+        assert result["主病名"] == "高血圧症"
+        assert result["既往歴"] == "なし"
+
+    def test_parse_complex_multiline_content(self):
+        """パース - 複雑な複数行内容"""
+        input_text = """主病名: 高血圧症
+- 収縮期血圧 160mmHg
+- 拡張期血圧 100mmHg
+既往歴: 糖尿病"""
+        result = parse_output_summary(input_text)
+
+        expected = "高血圧症\n- 収縮期血圧 160mmHg\n- 拡張期血圧 100mmHg"
+        assert result["主病名"] == expected
+        assert result["既往歴"] == "糖尿病"
+
+    def test_parse_all_aliases(self):
+        """パース - すべてのエイリアス確認"""
+        input_text = """治療内容: 内容1
+その他: 内容2
+補足: 内容3
+メモ: 内容4"""
+        result = parse_output_summary(input_text)
+
+        # すべて "治療経過" または "備考" にマッピングされる
+        assert "内容1" in result["治療経過"]
+        # "その他", "補足", "メモ" は "備考" にマッピング
+        # 最後に出現した "メモ" の内容が保持される
+        assert "内容4" in result["備考"]
+
+    def test_parse_leading_trailing_spaces_in_content(self):
+        """パース - 内容の前後スペース"""
+        input_text = "主病名:   高血圧症   "
+        result = parse_output_summary(input_text)
+
+        # strip() されるため前後のスペースは削除される
+        assert result["主病名"] == "高血圧症"
+
+    def test_parse_no_space_after_colon(self):
+        """パース - コロン直後にスペースなし"""
+        input_text = "主病名:高血圧症"
+        result = parse_output_summary(input_text)
+
+        assert result["主病名"] == "高血圧症"
+
+    def test_parse_multiple_spaces_after_section_name(self):
+        """パース - セクション名後に複数スペース"""
+        input_text = "主病名    高血圧症"
+        result = parse_output_summary(input_text)
+
+        # "主病名 " でマッチして、残りが内容になる
+        assert result["主病名"] == "高血圧症"
