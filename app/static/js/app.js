@@ -34,7 +34,16 @@ function appState() {
         error: null,
         activeTab: 0,
         tabs: ['全文', '主病名', '紹介目的', '既往歴', '症状経過', '治療経過', '現在の処方', '備考'],
-        currentScreen: 'input', // 'input' or 'output'
+        currentScreen: 'input', // 'input', 'output', or 'evaluation'
+
+        // Evaluation state
+        evaluationResult: {
+            result: '',
+            processingTime: null
+        },
+        isEvaluating: false,
+        evaluationElapsedTime: 0,
+        evaluationTimerInterval: null,
 
         async init() {
             await this.updateDoctors();
@@ -139,6 +148,64 @@ function appState() {
             this.clearForm();
             this.currentScreen = 'input';
             this.error = null;
+        },
+
+        backToOutput() {
+            this.currentScreen = 'output';
+        },
+
+        startEvaluationTimer() {
+            this.evaluationElapsedTime = 0;
+            this.evaluationTimerInterval = setInterval(() => {
+                this.evaluationElapsedTime++;
+            }, 1000);
+        },
+
+        stopEvaluationTimer() {
+            clearInterval(this.evaluationTimerInterval);
+            this.evaluationTimerInterval = null;
+        },
+
+        async evaluateOutput() {
+            if (!this.result.outputSummary) {
+                this.error = '評価対象の出力がありません';
+                return;
+            }
+
+            this.isEvaluating = true;
+            this.error = null;
+            this.startEvaluationTimer();
+
+            try {
+                const response = await fetch('/api/evaluation/evaluate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        document_type: this.settings.documentType,
+                        input_text: this.form.medicalText,
+                        current_prescription: this.form.currentPrescription,
+                        additional_info: this.form.additionalInfo,
+                        output_summary: this.result.outputSummary
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    this.evaluationResult = {
+                        result: data.evaluation_result,
+                        processingTime: data.processing_time
+                    };
+                    this.currentScreen = 'evaluation';
+                } else {
+                    this.error = data.error_message || '評価中にエラーが発生しました';
+                }
+            } catch (e) {
+                this.error = 'API エラーが発生しました';
+            } finally {
+                this.stopEvaluationTimer();
+                this.isEvaluating = false;
+            }
         },
 
         async copyToClipboard(text) {

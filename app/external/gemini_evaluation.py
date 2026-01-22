@@ -1,5 +1,4 @@
 import json
-import os
 from typing import Tuple
 
 from google import genai
@@ -12,18 +11,20 @@ from app.external.base_api import BaseAPIClient
 from app.utils.exceptions import APIError
 
 
-class GeminiAPIClient(BaseAPIClient):
+class GeminiEvaluationClient(BaseAPIClient):
     def __init__(self):
-        super().__init__(None, GEMINI_EVALUATION_MODEL)
+        settings = get_settings()
+        super().__init__(None, settings.gemini_evaluation_model)
         self.client = None
+        self.settings = settings
 
     def initialize(self) -> bool:
         try:
-            if not GOOGLE_PROJECT_ID:
+            if not self.settings.google_project_id:
                 raise APIError(MESSAGES["VERTEX_AI_PROJECT_MISSING"])
 
-            google_credentials_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
-            
+            google_credentials_json = self.settings.google_credentials_json
+
             if google_credentials_json:
                 try:
                     credentials_dict = json.loads(google_credentials_json)
@@ -35,11 +36,11 @@ class GeminiAPIClient(BaseAPIClient):
 
                     self.client = genai.Client(
                         vertexai=True,
-                        project=GOOGLE_PROJECT_ID,
-                        location=GOOGLE_LOCATION,
+                        project=self.settings.google_project_id,
+                        location=self.settings.google_location,
                         credentials=credentials
                     )
-                    
+
                 except json.JSONDecodeError as e:
                     raise APIError(MESSAGES["VERTEX_AI_CREDENTIALS_JSON_PARSE_ERROR"].format(error=str(e)))
                 except KeyError as e:
@@ -49,21 +50,25 @@ class GeminiAPIClient(BaseAPIClient):
             else:
                 self.client = genai.Client(
                     vertexai=True,
-                    project=GOOGLE_PROJECT_ID,
-                    location=GOOGLE_LOCATION,
+                    project=self.settings.google_project_id,
+                    location=self.settings.google_location,
                 )
-            
+
             return True
         except APIError:
             raise
         except Exception as e:
             raise APIError(MESSAGES["VERTEX_AI_INIT_ERROR"].format(error=str(e)))
 
-    def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
+    def generate_content(self, prompt: str) -> Tuple[str, int, int]:
         try:
-            thinking_level = types.ThinkingLevel.LOW if GEMINI_THINKING_LEVEL == "LOW" else types.ThinkingLevel.HIGH
+            thinking_level = (
+                types.ThinkingLevel.LOW
+                if self.settings.gemini_thinking_level == "LOW"
+                else types.ThinkingLevel.HIGH
+            )
             response = self.client.models.generate_content(
-                model=model_name,
+                model=self.settings.gemini_evaluation_model,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     thinking_config=types.ThinkingConfig(
@@ -73,9 +78,9 @@ class GeminiAPIClient(BaseAPIClient):
             )
 
             if hasattr(response, 'text'):
-                summary_text = response.text
+                result_text = response.text
             else:
-                summary_text = str(response)
+                result_text = str(response)
 
             input_tokens = 0
             output_tokens = 0
@@ -84,6 +89,6 @@ class GeminiAPIClient(BaseAPIClient):
                 input_tokens = response.usage_metadata.prompt_token_count
                 output_tokens = response.usage_metadata.candidates_token_count
 
-            return summary_text, input_tokens, output_tokens
+            return result_text, input_tokens, output_tokens
         except Exception as e:
             raise APIError(MESSAGES["VERTEX_AI_API_ERROR"].format(error=str(e)))

@@ -68,11 +68,23 @@
                 class="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600">
                 コピー
             </button>
+            <button type="button" @click="evaluateOutput()" :disabled="isEvaluating"
+                class="px-6 py-2 bg-green-600 dark:bg-green-500 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span x-show="!isEvaluating">出力評価</span>
+                <span x-show="isEvaluating">評価中...</span>
+            </button>
             <button type="button" @click="backToInput()"
                 class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700">
                 クリアして戻る
             </button>
         </div>
+
+        <!-- 評価中の時間表示 -->
+        <template x-if="isEvaluating">
+        <div class="mb-4 text-base text-white">
+            評価時間: <span x-text="evaluationElapsedTime"></span>秒
+        </div>
+        </template>
 
         <div x-show="result.modelSwitched" class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md text-sm text-yellow-800 dark:text-yellow-400">
             入力が長いため、モデルを <span x-text="result.modelUsed"></span> に自動切替しました
@@ -106,6 +118,42 @@
 
         <p class="mt-6 text-sm text-white">
             生成AIは不正確な場合があります。回答をカルテでご確認ください。
+        </p>
+    </div>
+    </template>
+
+    <!-- 評価結果画面 -->
+    <template x-if="currentScreen === 'evaluation'">
+    <div>
+        <!-- ボタン -->
+        <div class="mb-6 flex gap-4">
+            <button type="button" @click="copyToClipboard(evaluationResult.result)"
+                class="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600">
+                コピー
+            </button>
+            <button type="button" @click="backToOutput()"
+                class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700">
+                出力結果に戻る
+            </button>
+        </div>
+
+        <!-- 評価結果表示 -->
+        <div class="border-b border-gray-200 dark:border-gray-700 mb-4">
+            <h3 class="px-4 py-2 font-medium text-sm text-blue-600 dark:text-blue-400 border-b-2 border-blue-500">
+                評価結果
+            </h3>
+        </div>
+
+        <div class="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md max-h-[60vh] overflow-y-auto">
+            <pre class="whitespace-pre-wrap font-mono text-base text-gray-900 dark:text-gray-100" x-text="evaluationResult.result"></pre>
+        </div>
+
+        <p x-show="evaluationResult.processingTime" class="mt-2 text-base text-white">
+            評価時間: <span x-text="evaluationResult.processingTime.toFixed(0)"></span>秒
+        </p>
+
+        <p class="mt-6 text-sm text-white">
+            生成AIは不正確な場合があります。評価結果は参考としてご確認ください。
         </p>
     </div>
     </template>

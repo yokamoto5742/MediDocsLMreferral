@@ -100,6 +100,24 @@ async def statistics_page(request: Request):
     )
 
 
+@app.get("/evaluation-prompts", response_class=HTMLResponse)
+async def evaluation_prompts_page(request: Request):
+    """評価プロンプト管理ページ"""
+    return templates.TemplateResponse(
+        "evaluation_prompts.html",
+        {"request": request, **get_common_context("prompts")},
+    )
+
+
+@app.get("/evaluation-prompts/edit/{document_type}", response_class=HTMLResponse)
+async def evaluation_prompts_edit_page(request: Request, document_type: str):
+    """評価プロンプト編集ページ"""
+    return templates.TemplateResponse(
+        "evaluation_prompts_edit.html",
+        {"request": request, "document_type": document_type, **get_common_context("prompts")},
+    )
+
+
 @app.get("/health")
 async def health_check():
     """ヘルスチェックエンドポイント"""
