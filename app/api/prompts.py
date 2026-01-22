@@ -1,3 +1,6 @@
+import logging
+import time
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -5,13 +8,18 @@ from app.core.database import get_db
 from app.schemas.prompt import PromptCreate, PromptResponse
 from app.services import prompt_service
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/prompts", tags=["prompts"])
 
 
 @router.get("/", response_model=list[PromptResponse])
 def list_prompts(db: Session = Depends(get_db)):
     """プロンプト一覧を取得"""
-    return prompt_service.get_all_prompts(db)
+    start_time = time.time()
+    prompts = prompt_service.get_all_prompts(db)
+    elapsed = time.time() - start_time
+    logger.info(f"get_all_prompts: {len(prompts)} prompts fetched in {elapsed:.3f}s")
+    return prompts
 
 
 @router.get("/{prompt_id}", response_model=PromptResponse)

@@ -3,8 +3,8 @@ from app.models.prompt import Prompt
 
 
 def get_all_prompts(db: Session) -> list[Prompt]:
-    """全プロンプトを取得"""
-    return db.query(Prompt).all()
+    """全プロンプトを取得（更新日時降順）"""
+    return db.query(Prompt).order_by(Prompt.updated_at.desc()).all()
 
 
 def get_prompt(
