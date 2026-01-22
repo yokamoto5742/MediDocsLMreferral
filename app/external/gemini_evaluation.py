@@ -60,7 +60,7 @@ class GeminiEvaluationClient(BaseAPIClient):
         except Exception as e:
             raise APIError(MESSAGES["VERTEX_AI_INIT_ERROR"].format(error=str(e)))
 
-    def generate_content(self, prompt: str) -> Tuple[str, int, int]:
+    def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
         try:
             thinking_level = (
                 types.ThinkingLevel.LOW
@@ -68,7 +68,7 @@ class GeminiEvaluationClient(BaseAPIClient):
                 else types.ThinkingLevel.HIGH
             )
             response = self.client.models.generate_content(
-                model=self.settings.gemini_evaluation_model,
+                model=model_name,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     thinking_config=types.ThinkingConfig(
