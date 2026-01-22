@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Float, Integer, String
+from sqlalchemy import Column, DateTime, Float, Index, Integer, String
 from sqlalchemy.sql import func
 
 from .base import Base
@@ -8,7 +8,7 @@ class SummaryUsage(Base):
     __tablename__ = "summary_usage"
 
     id = Column(Integer, primary_key=True)
-    date = Column(DateTime(timezone=True), server_default=func.now())
+    date = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     app_type = Column(String(100))
     document_type = Column("document_types", String(100))
     model = Column("model_detail", String(100))
@@ -18,3 +18,7 @@ class SummaryUsage(Base):
     output_tokens = Column(Integer)
     total_tokens = Column(Integer)
     processing_time = Column(Float)
+
+    __table_args__ = (
+        Index("ix_summary_usage_aggregation", "document_types", "department", "doctor"),
+    )

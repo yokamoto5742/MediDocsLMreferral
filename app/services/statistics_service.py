@@ -11,7 +11,12 @@ def get_usage_summary(
     model: str | None = None,
 ) -> dict:
     """使用統計サマリーを取得"""
-    query = db.query(SummaryUsage)
+    query = db.query(
+        func.count(SummaryUsage.id),
+        func.sum(SummaryUsage.input_tokens),
+        func.sum(SummaryUsage.output_tokens),
+        func.avg(SummaryUsage.processing_time),
+    )
 
     if start_date:
         query = query.filter(SummaryUsage.date >= start_date)
@@ -20,16 +25,13 @@ def get_usage_summary(
     if model:
         query = query.filter(SummaryUsage.model == model)
 
-    total_count = query.count()
-    total_input = query.with_entities(func.sum(SummaryUsage.input_tokens)).scalar() or 0
-    total_output = query.with_entities(func.sum(SummaryUsage.output_tokens)).scalar() or 0
-    avg_time = query.with_entities(func.avg(SummaryUsage.processing_time)).scalar() or 0
+    stats = query.first()
 
     return {
-        "total_count": total_count,
-        "total_input_tokens": total_input,
-        "total_output_tokens": total_output,
-        "average_processing_time": round(avg_time, 2),
+        "total_count": stats[0] or 0,
+        "total_input_tokens": stats[1] or 0,
+        "total_output_tokens": stats[2] or 0,
+        "average_processing_time": round(stats[3] or 0, 2),
     }
 
 

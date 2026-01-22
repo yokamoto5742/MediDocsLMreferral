@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Index, Integer, String, Text
 from sqlalchemy.sql import func
 
 from .base import Base
@@ -16,3 +16,7 @@ class Prompt(Base):
     is_default = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    __table_args__ = (
+        Index("ix_prompts_lookup", "department", "document_type", "doctor"),
+    )
