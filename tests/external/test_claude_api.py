@@ -4,6 +4,7 @@ import os
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from anthropic.types import TextBlock
 
 from app.core.constants import MESSAGES
 from app.external.claude_api import ClaudeAPIClient
@@ -206,7 +207,7 @@ class TestClaudeAPIClientGenerateContent:
         # モッククライアントを設定
         mock_client = MagicMock()
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text="生成されたサマリー")]
+        mock_response.content = [TextBlock(type="text", text="生成されたサマリー")]
         mock_response.usage.input_tokens = 1500
         mock_response.usage.output_tokens = 800
 
@@ -296,7 +297,7 @@ class TestClaudeAPIClientGenerateContent:
         """_generate_content - self.anthropic_model を使用"""
         mock_client = MagicMock()
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text="テキスト")]
+        mock_response.content = [TextBlock(type="text", text="テキスト")]
         mock_response.usage.input_tokens = 100
         mock_response.usage.output_tokens = 50
 
@@ -328,7 +329,7 @@ class TestClaudeAPIClientGenerateContent:
         """_generate_content - max_tokens が 6000 に設定"""
         mock_client = MagicMock()
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text="テキスト")]
+        mock_response.content = [TextBlock(type="text", text="テキスト")]
         mock_response.usage.input_tokens = 100
         mock_response.usage.output_tokens = 50
 
@@ -356,7 +357,7 @@ class TestClaudeAPIClientGenerateContent:
         """_generate_content - メッセージフォーマット確認"""
         mock_client = MagicMock()
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text="結果")]
+        mock_response.content = [TextBlock(type="text", text="結果")]
         mock_response.usage.input_tokens = 200
         mock_response.usage.output_tokens = 100
 
@@ -404,7 +405,7 @@ class TestClaudeAPIClientIntegration:
 
         mock_bedrock_client = MagicMock()
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text="生成された診療情報提供書")]
+        mock_response.content = [TextBlock(type="text", text="生成された診療情報提供書")]
         mock_response.usage.input_tokens = 2000
         mock_response.usage.output_tokens = 1000
 
@@ -461,7 +462,7 @@ class TestClaudeAPIClientEdgeCases:
         """_generate_content - 非常に長いプロンプト"""
         mock_client = MagicMock()
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text="サマリー")]
+        mock_response.content = [TextBlock(type="text", text="サマリー")]
         mock_response.usage.input_tokens = 50000
         mock_response.usage.output_tokens = 1000
 
@@ -488,7 +489,7 @@ class TestClaudeAPIClientEdgeCases:
         """_generate_content - 特殊文字を含むプロンプト"""
         mock_client = MagicMock()
         mock_response = MagicMock()
-        mock_response.content = [MagicMock(text="結果")]
+        mock_response.content = [TextBlock(type="text", text="結果")]
         mock_response.usage.input_tokens = 100
         mock_response.usage.output_tokens = 50
 

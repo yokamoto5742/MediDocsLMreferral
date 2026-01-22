@@ -40,24 +40,6 @@ class TestSettingsInitialization:
         assert settings.postgres_password == "testpass"
         assert settings.postgres_db == "testdb"
 
-    @pytest.mark.skip(reason="Requires .env file to be absent for true defaults")
-    def test_settings_default_values(self):
-        """設定 - デフォルト値"""
-        # Note: This test requires complete environment isolation
-        # In production, use pytest-env or docker for proper isolation
-        with patch.dict(os.environ, {}, clear=True):
-            settings = Settings()
-
-            assert settings.postgres_host == "localhost"
-            assert settings.postgres_port == 5432
-            assert settings.postgres_user == "postgres"
-            assert settings.postgres_password == ""
-            assert settings.postgres_db == "medidocs"
-            assert settings.postgres_ssl is False
-            assert settings.max_input_tokens == 200000
-            assert settings.min_input_tokens == 100
-            assert settings.max_token_threshold == 100000
-
     @patch.dict(
         os.environ,
         {
@@ -95,45 +77,6 @@ class TestSettingsInitialization:
 
 class TestGetDatabaseUrl:
     """get_database_url メソッドのテスト"""
-
-    @pytest.mark.skip(reason="Requires .env file to be absent")
-    def test_get_database_url_from_individual_settings(self):
-        """DB URL構築 - 個別設定から"""
-        with patch.dict(
-            os.environ,
-            {
-                "POSTGRES_HOST": "localhost",
-                "POSTGRES_PORT": "5432",
-                "POSTGRES_USER": "user",
-                "POSTGRES_PASSWORD": "pass",
-                "POSTGRES_DB": "db",
-            },
-            clear=True,
-        ):
-            settings = Settings()
-            url = settings.get_database_url()
-
-            assert url == "postgresql://user:pass@localhost:5432/db"
-
-    @pytest.mark.skip(reason="Requires .env file to be absent")
-    def test_get_database_url_with_ssl(self):
-        """DB URL構築 - SSL有効"""
-        with patch.dict(
-            os.environ,
-            {
-                "POSTGRES_HOST": "localhost",
-                "POSTGRES_PORT": "5432",
-                "POSTGRES_USER": "user",
-                "POSTGRES_PASSWORD": "pass",
-                "POSTGRES_DB": "db",
-                "POSTGRES_SSL": "true",
-            },
-            clear=True,
-        ):
-            settings = Settings()
-            url = settings.get_database_url()
-
-            assert url == "postgresql://user:pass@localhost:5432/db?sslmode=require"
 
     @patch.dict(
         os.environ,
@@ -182,28 +125,6 @@ class TestGetDatabaseUrl:
         # DATABASE_URL が優先される（個別設定は無視）
         assert url == "postgresql://user:pass@host:5432/db"
 
-    @pytest.mark.skip(reason="Requires .env file to be absent")
-    def test_get_database_url_without_ssl(self):
-        """DB URL構築 - SSL無効"""
-        with patch.dict(
-            os.environ,
-            {
-                "POSTGRES_HOST": "localhost",
-                "POSTGRES_PORT": "5432",
-                "POSTGRES_USER": "user",
-                "POSTGRES_PASSWORD": "pass",
-                "POSTGRES_DB": "db",
-                "POSTGRES_SSL": "false",
-            },
-            clear=True,
-        ):
-            settings = Settings()
-            url = settings.get_database_url()
-
-            # SSL パラメータなし
-            assert url == "postgresql://user:pass@localhost:5432/db"
-            assert "sslmode" not in url
-
 
 class TestGetSettings:
     """get_settings 関数のテスト"""
@@ -226,26 +147,6 @@ class TestGetSettings:
 class TestSettingsEdgeCases:
     """Settings エッジケース"""
 
-    @pytest.mark.skip(reason="Requires .env file to be absent")
-    def test_settings_empty_password(self):
-        """設定 - 空のパスワード"""
-        with patch.dict(
-            os.environ,
-            {
-                "POSTGRES_USER": "user",
-                "POSTGRES_PASSWORD": "",
-                "POSTGRES_HOST": "localhost",
-                "POSTGRES_PORT": "5432",
-                "POSTGRES_DB": "db",
-            },
-            clear=True,
-        ):
-            settings = Settings()
-            url = settings.get_database_url()
-
-            # 空のパスワードでも URL 構築可能
-            assert ":@" in url
-
     @patch.dict(
         os.environ,
         {
@@ -260,27 +161,6 @@ class TestSettingsEdgeCases:
 
         # ポートがない場合も正常に処理
         assert url == "postgresql://user:pass@host/db"
-
-    @pytest.mark.skip(reason="Requires .env file to be absent")
-    def test_get_database_url_special_characters(self):
-        """DB URL構築 - 特殊文字を含む"""
-        with patch.dict(
-            os.environ,
-            {
-                "POSTGRES_USER": "user@domain.com",
-                "POSTGRES_PASSWORD": "p@ss:word",
-                "POSTGRES_HOST": "localhost",
-                "POSTGRES_PORT": "5432",
-                "POSTGRES_DB": "db",
-            },
-            clear=True,
-        ):
-            settings = Settings()
-            url = settings.get_database_url()
-
-            # 特殊文字がそのまま含まれる（URL エンコードは不要）
-            assert "user@domain.com" in url
-            assert "p@ss:word" in url
 
     @patch.dict(
         os.environ,
