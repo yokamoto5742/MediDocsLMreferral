@@ -116,10 +116,19 @@
 
         <!-- タブコンテンツ -->
         <div class="mt-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md max-h-[60vh] overflow-y-auto">
-            <pre x-show="activeTab === 0" class="whitespace-pre-wrap font-mono text-base text-gray-900 dark:text-gray-100" x-text="result.outputSummary"></pre>
+            <textarea x-show="activeTab === 0"
+                x-model="result.outputSummary"
+                rows="20"
+                class="w-full border-0 bg-transparent font-mono text-base text-gray-900 dark:text-gray-100 focus:ring-0 resize-none"
+                style="min-height: 400px;">
+            </textarea>
             <template x-for="(tab, index) in tabs.slice(1)" :key="tab">
-                <pre x-show="activeTab === index + 1" class="whitespace-pre-wrap font-mono text-base text-gray-900 dark:text-gray-100"
-                     x-text="result.parsedSummary[tab] || ''"></pre>
+                <textarea x-show="activeTab === index + 1"
+                    x-model="result.parsedSummary[tab]"
+                    rows="20"
+                    class="w-full border-0 bg-transparent font-mono text-base text-gray-900 dark:text-gray-100 focus:ring-0 resize-none"
+                    style="min-height: 400px;">
+                </textarea>
             </template>
         </div>
 
@@ -156,7 +165,12 @@
         </div>
 
         <div class="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md max-h-[60vh] overflow-y-auto">
-            <pre class="whitespace-pre-wrap font-mono text-base text-gray-900 dark:text-gray-100" x-text="evaluationResult.result"></pre>
+            <textarea
+                x-model="evaluationResult.result"
+                rows="20"
+                class="w-full border-0 bg-transparent font-mono text-base text-gray-900 dark:text-gray-100 focus:ring-0 resize-none"
+                style="min-height: 400px;">
+            </textarea>
         </div>
 
         <p x-show="evaluationResult.processingTime" class="mt-2 text-base text-white">
