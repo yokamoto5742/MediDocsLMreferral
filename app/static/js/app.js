@@ -114,6 +114,11 @@ function appState() {
                         modelUsed: data.model_used,
                         modelSwitched: data.model_switched
                     };
+                    // 新規生成時は評価結果をクリア
+                    this.evaluationResult = {
+                        result: '',
+                        processingTime: null
+                    };
                     this.activeTab = 0;
                     this.currentScreen = 'output';
                 } else {
@@ -141,6 +146,10 @@ function appState() {
                 modelUsed: '',
                 modelSwitched: false
             };
+            this.evaluationResult = {
+                result: '',
+                processingTime: null
+            };
             this.error = null;
         },
 
@@ -152,6 +161,11 @@ function appState() {
 
         backToOutput() {
             this.currentScreen = 'output';
+        },
+
+        showEvaluation() {
+            // 保存済みの評価結果を表示
+            this.currentScreen = 'evaluation';
         },
 
         startEvaluationTimer() {
