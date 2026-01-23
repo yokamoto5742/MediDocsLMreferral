@@ -463,6 +463,39 @@ if input_length > 40000 and selected_model == "Claude":
 
 ## 変更履歴
 
+### 最近の主要な更新
+
+#### 2025-09-19 - 環境変数の標準化
+- **変更**: `GEMINI_CREDENTIALS` から `GOOGLE_CREDENTIALS_JSON` へ変更
+  - `app/core/config.py`: 環境変数定義を更新
+  - `app/services/summary_service.py`: インポートと認証情報検証を更新
+  - `app/external/gemini_api.py`: 新しい認証情報変数を使用
+- **更新**: すべてのテストファイルで新しい認証情報変数を使用
+  - `tests/services/test_summary_service.py`: モックパッチを更新
+  - `tests/core/test_config.py`: テストアサーションを更新
+  - `tests/conftest.py`: テスト環境変数を更新
+- **検証済**: 新しい認証情報システムで120のテスト全てがパス
+
+#### 2025-01-16 - テストコード修正とテキスト処理の強化
+- **修正**: すべての失敗していたユニットテストを修正（120のテスト全てがパス）
+- **更新**: `app/utils/text_processor.py` - テキスト処理機能を強化
+  - `format_output_summary`: `#` シンボルと半角スペースの削除を追加
+  - `section_aliases`: マッピング構造を簡素化（複雑なブラケットを削除）
+  - `parse_output_summary`: コロン/ノーコロンパターンを適切に処理するために完全に書き直し
+- **更新**: `app/utils/env_loader.py` - 出力メッセージをテストの期待値に合わせて修正
+- **修正**: テストファイルを実際の実装動作に合わせて調整
+
+#### 2025-01-16 - Vertex AI統合
+- **更新**: `app/external/gemini_api.py` でGoogle AIの代わりにVertex AI APIを使用
+  - プロジェクトとロケーションパラメータで `vertexai=True` を使用するようにクライアント初期化を変更
+  - `GOOGLE_PROJECT_ID` と `GOOGLE_LOCATION` の環境変数検証を追加
+  - Vertex AI固有のエラーメッセージによるエラーハンドリングを強化
+- **追加**: `app/core/config.py` にVertex AI設定を追加
+  - `GOOGLE_PROJECT_ID` と `GOOGLE_LOCATION` 環境変数
+- **追加**: `app/core/constants.py` にVertex AIエラーメッセージを追加
+  - `GOOGLE_PROJECT_ID_MISSING`, `GOOGLE_LOCATION_MISSING`
+  - `VERTEX_AI_INIT_ERROR`, `VERTEX_AI_API_ERROR`
+
 詳細なバージョン履歴と更新については、[CHANGELOG.md](CHANGELOG.md)を参照してください。
 
 ## セキュリティに関する注意事項
