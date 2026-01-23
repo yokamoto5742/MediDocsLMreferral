@@ -186,6 +186,13 @@ function appState() {
                 return;
             }
 
+            // 既に評価結果がある場合は確認ダイアログを表示
+            if (this.evaluationResult.result) {
+                if (!confirm('前回の評価をクリアして再評価しますか？')) {
+                    return;
+                }
+            }
+
             this.isEvaluating = true;
             this.error = null;
             this.startEvaluationTimer();
