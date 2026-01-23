@@ -31,8 +31,8 @@ DEFAULT_SECTION_NAMES = [
 # 治療経過: 内容 など(改行含む)
 # 治療経過（行全体がセクション名のみ）
 SECTION_DETECTION_PATTERNS = [
-    r'^[【\[■●\s]*{section}[】\]\s]*[::]?\s*(.*)$',
-    r'^{section}\s*[::]?\s*(.*)$',
+    r'^[【\[■●\s]*{section}[】\]\s]*[:：]?\s*(.*)$',
+    r'^{section}\s*[:：]?\s*(.*)$',
     r'^{section}\s*$',
 ]
 
