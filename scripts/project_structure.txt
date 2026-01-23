@@ -1,13 +1,14 @@
 ============================================================
 プロジェクト構造: MediDocsLMreferral
 パス: C:\Users\yokam\PycharmProjects\MediDocsLMreferral
-生成日時: 2026-01-13 18:37:18
+生成日時: 2026-01-23 19:15:57
 ============================================================
 
 └── MediDocsLMreferral
     ├── app
     │   ├── api
     │   │   ├── __init__.py
+    │   │   ├── evaluation.py
     │   │   ├── prompts.py
     │   │   ├── router.py
     │   │   ├── settings.py
@@ -23,20 +24,24 @@
     │   │   ├── api_factory.py
     │   │   ├── base_api.py
     │   │   ├── claude_api.py
-    │   │   └── gemini_api.py
+    │   │   ├── gemini_api.py
+    │   │   └── gemini_evaluation.py
     │   ├── models
     │   │   ├── __init__.py
     │   │   ├── base.py
+    │   │   ├── evaluation_prompt.py
     │   │   ├── prompt.py
     │   │   ├── setting.py
     │   │   └── usage.py
     │   ├── schemas
     │   │   ├── __init__.py
+    │   │   ├── evaluation.py
     │   │   ├── prompt.py
     │   │   ├── statistics.py
     │   │   └── summary.py
     │   ├── services
     │   │   ├── __init__.py
+    │   │   ├── evaluation_service.py
     │   │   ├── prompt_service.py
     │   │   ├── statistics_service.py
     │   │   └── summary_service.py
@@ -49,8 +54,12 @@
     │   │   ├── components
     │   │   │   └── sidebar.html
     │   │   ├── base.html
+    │   │   ├── evaluation_prompts.html
+    │   │   ├── evaluation_prompts_edit.html
     │   │   ├── index.html
     │   │   ├── prompts.html
+    │   │   ├── prompts_edit.html
+    │   │   ├── prompts_new.html
     │   │   └── statistics.html
     │   ├── utils
     │   │   ├── __init__.py
@@ -61,9 +70,8 @@
     │   └── main.py
     ├── docs
     │   ├── README.md
-    │   ├── LICENSE
-    │   ├── MIGRATION_GUIDE.md
-    │   └── Migration_plan.md
+    │   ├── CHANGELOG.md
+    │   └── LICENSE
     ├── scripts
     │   ├── project_structure.py
     │   └── project_structure.txt
@@ -72,4 +80,5 @@
     ├── requirements.txt
     ├── .python-version
     ├── CLAUDE.md
-    └── pyrightconfig.json
+    ├── pyrightconfig.json
+    └── setup.sh
