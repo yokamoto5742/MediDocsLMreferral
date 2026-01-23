@@ -119,18 +119,18 @@ git clone <repository-url>
 cd MediDocsLMreferral
 ```
 
-2. **仮想環境の作成**
+1. **仮想環境の作成**
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Windows の場合: .venv\Scripts\activate
 ```
 
-3. **依存関係のインストール**
+1. **依存関係のインストール**
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **PostgreSQLデータベースのセットアップ**
+1. **PostgreSQLデータベースのセットアップ**
 ```bash
 # データベースの作成
 createdb medidocs
@@ -138,7 +138,7 @@ createdb medidocs
 # データベーステーブルは初回実行時に自動作成されます
 ```
 
-5. **環境変数の設定**
+1. **環境変数の設定**
 ```bash
 # 環境変数ファイルのコピー
 cp .env.example .env
@@ -146,7 +146,7 @@ cp .env.example .env
 # 認証情報を使って .env を編集
 ```
 
-6. **データベースマイグレーションの実行**（該当する場合）
+1. **データベースマイグレーションの実行**（該当する場合）
 ```bash
 # テーブルは起動時にSQLAlchemyを介して自動作成されます
 ```
@@ -455,7 +455,7 @@ if input_length > 40000 and selected_model == "Claude":
 
 ## ライセンス
 
-このプロジェクトは[Apache License 2.0](docs/LICENSE)のもとで公開されています。
+このプロジェクトは[Apache License 2.0](LICENSE)のもとで公開されています。
 
 ## サポート
 
