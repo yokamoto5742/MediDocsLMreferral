@@ -163,7 +163,9 @@ def execute_evaluation(
         client = GeminiEvaluationClient()
         client.initialize()
 
-        evaluation_text, input_tokens, output_tokens = client.generate_content(full_prompt)
+        evaluation_text, input_tokens, output_tokens = client._generate_content(
+            full_prompt, settings.gemini_evaluation_model
+        )
         processing_time = time.time() - start_time
 
         return EvaluationResult(
