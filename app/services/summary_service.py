@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 import time
+from typing import cast
 from zoneinfo import ZoneInfo
 
 from app.core.config import get_settings
@@ -57,8 +58,10 @@ def determine_model(
 
             with get_db_session() as db:
                 prompt_data = prompt_service.get_prompt(db, department, document_type, doctor)
-                if prompt_data and prompt_data.model:
-                    requested_model = prompt_data.model
+                if prompt_data:
+                    selected = prompt_data.selected_model
+                    if selected is not None:
+                        requested_model = cast(str, selected)
         except Exception:
             # プロンプト取得に失敗しても処理を続行
             pass

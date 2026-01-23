@@ -1,5 +1,6 @@
 import time
 from dataclasses import dataclass
+from typing import cast
 
 from sqlalchemy.orm import Session
 
@@ -50,8 +51,9 @@ def create_or_update_evaluation_prompt(
     ).first()
 
     if existing:
-        existing.content = content
-        existing.is_active = True
+        # Use setattr to avoid pyright Column assignment errors
+        setattr(existing, 'content', content)
+        setattr(existing, 'is_active', True)
         message = MESSAGES["EVALUATION_PROMPT_UPDATED"]
     else:
         new_prompt = EvaluationPrompt(
@@ -146,7 +148,7 @@ def execute_evaluation(
                     document_type=document_type
                 )
             )
-        prompt_template = prompt_data.content
+        prompt_template = cast(str, prompt_data.content)
 
     # フルプロンプト構築
     full_prompt = build_evaluation_prompt(

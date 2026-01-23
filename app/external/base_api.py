@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple
+from typing import Optional, Tuple, cast
 
 from app.core.constants import DEFAULT_DOCUMENT_TYPE, DEFAULT_SUMMARY_PROMPT
 from app.core.database import get_db_session
@@ -69,8 +69,10 @@ class BaseAPIClient(ABC):
         try:
             with get_db_session() as db:
                 prompt_data = prompt_service.get_prompt(db, department, document_type, doctor)
-                if prompt_data and prompt_data.model:
-                    return prompt_data.model
+                if prompt_data:
+                    selected = prompt_data.selected_model
+                    if selected is not None:
+                        return cast(str, selected)
         except Exception:
             pass
         return self.default_model

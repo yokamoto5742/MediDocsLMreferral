@@ -62,6 +62,9 @@ class GeminiEvaluationClient(BaseAPIClient):
 
     def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
         try:
+            if self.client is None:
+                raise APIError("Client not initialized")
+
             thinking_level = (
                 types.ThinkingLevel.LOW
                 if self.settings.gemini_thinking_level == "LOW"
@@ -77,17 +80,19 @@ class GeminiEvaluationClient(BaseAPIClient):
                 )
             )
 
-            if hasattr(response, 'text'):
-                result_text = response.text
+            result_text = ""
+            if hasattr(response, 'text') and response.text is not None:
+                result_text = str(response.text)
             else:
                 result_text = str(response)
 
             input_tokens = 0
             output_tokens = 0
 
-            if hasattr(response, 'usage_metadata'):
-                input_tokens = response.usage_metadata.prompt_token_count
-                output_tokens = response.usage_metadata.candidates_token_count
+            if hasattr(response, 'usage_metadata') and response.usage_metadata is not None:
+                metadata = response.usage_metadata
+                input_tokens = int(metadata.prompt_token_count) if hasattr(metadata, 'prompt_token_count') and metadata.prompt_token_count is not None else 0
+                output_tokens = int(metadata.candidates_token_count) if hasattr(metadata, 'candidates_token_count') and metadata.candidates_token_count is not None else 0
 
             return result_text, input_tokens, output_tokens
         except Exception as e:

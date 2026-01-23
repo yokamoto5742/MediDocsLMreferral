@@ -27,11 +27,19 @@ def get_usage_summary(
 
     stats = query.first()
 
+    if stats is None:
+        return {
+            "total_count": 0,
+            "total_input_tokens": 0,
+            "total_output_tokens": 0,
+            "average_processing_time": 0.0,
+        }
+
     return {
-        "total_count": stats[0] or 0,
-        "total_input_tokens": stats[1] or 0,
-        "total_output_tokens": stats[2] or 0,
-        "average_processing_time": round(stats[3] or 0, 2),
+        "total_count": int(stats[0]) if stats[0] is not None else 0,
+        "total_input_tokens": int(stats[1]) if stats[1] is not None else 0,
+        "total_output_tokens": int(stats[2]) if stats[2] is not None else 0,
+        "average_processing_time": round(float(stats[3]), 2) if stats[3] is not None else 0.0,
     }
 
 

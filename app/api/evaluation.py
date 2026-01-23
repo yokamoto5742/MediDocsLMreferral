@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import cast
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -42,12 +45,12 @@ def get_all_evaluation_prompts(db: Session = Depends(get_db)):
     return EvaluationPromptListResponse(
         prompts=[
             EvaluationPromptResponse(
-                id=p.id,
-                document_type=p.document_type,
-                content=p.content,
-                is_active=p.is_active,
-                created_at=p.created_at,
-                updated_at=p.updated_at,
+                id=cast(int, p.id),
+                document_type=cast(str, p.document_type),
+                content=cast(str, p.content),
+                is_active=cast(bool, p.is_active),
+                created_at=cast(datetime | None, p.created_at),
+                updated_at=cast(datetime | None, p.updated_at),
             )
             for p in prompts
         ]
@@ -63,12 +66,12 @@ def get_evaluation_prompt(
     prompt = evaluation_service.get_evaluation_prompt(db, document_type)
     if prompt:
         return EvaluationPromptResponse(
-            id=prompt.id,
-            document_type=prompt.document_type,
-            content=prompt.content,
-            is_active=prompt.is_active,
-            created_at=prompt.created_at,
-            updated_at=prompt.updated_at,
+            id=cast(int, prompt.id),
+            document_type=cast(str, prompt.document_type),
+            content=cast(str, prompt.content),
+            is_active=cast(bool, prompt.is_active),
+            created_at=cast(datetime | None, prompt.created_at),
+            updated_at=cast(datetime | None, prompt.updated_at),
         )
     return EvaluationPromptResponse(
         document_type=document_type,
