@@ -40,10 +40,12 @@ api_client = get_api_client(model_name, api_key)
 **Service Layer**: `app/services/` にはAPIルートから分離されたビジネスロジックが含まれる
 - `summary_service.py`: 文書生成ロジック
 - `prompt_service.py`: プロンプト管理
+- `evaluation_service.py`: 出力評価ロジック
 - `statistics_service.py`: 使用状況分析
 
 **Repository Pattern**: `app/models/` にはデータベースモデルとデータアクセスが含まれる
 - `prompt.py`: プロンプトテンプレート
+- `evaluation_prompt.py`: 評価プロンプトテンプレート
 - `usage.py`: API使用統計
 - `setting.py`: アプリケーション設定
 
@@ -71,6 +73,7 @@ app/
 │   ├── router.py   # メイン API ルーター
 │   ├── summary.py  # ドキュメント生成エンドポイント
 │   ├── prompts.py  # プロンプト管理エンドポイント
+│   ├── evaluation.py  # 出力評価エンドポイント
 │   ├── statistics.py  # 分析・統計エンドポイント
 │   └── settings.py    # 設定エンドポイント
 ├── core/           # コア設定
@@ -81,18 +84,22 @@ app/
 │   ├── api_factory.py  # API クライアントファクトリ
 │   ├── base_api.py     # ベース API クライアント
 │   ├── claude_api.py   # Claude/Bedrock 連携
-│   └── gemini_api.py   # Gemini/Vertex AI 連携
+│   ├── gemini_api.py   # Gemini/Vertex AI 連携
+│   └── gemini_evaluation.py  # Gemini 評価 API
 ├── models/         # データベースモデル
 │   ├── prompt.py   # プロンプトテンプレート
+│   ├── evaluation_prompt.py  # 評価プロンプトテンプレート
 │   ├── usage.py    # 利用統計
 │   └── setting.py  # アプリケーション設定
 ├── schemas/        # Pydantic スキーマ
 │   ├── summary.py  # リクエスト/レスポンススキーマ
 │   ├── prompt.py   # プロンプトスキーマ
+│   ├── evaluation.py  # 評価スキーマ
 │   └── statistics.py  # 統計スキーマ
 ├── services/       # ビジネスロジック
 │   ├── summary_service.py  # ドキュメント生成ロジック
 │   ├── prompt_service.py   # プロンプト管理ロジック
+│   ├── evaluation_service.py  # 出力評価ロジック
 │   └── statistics_service.py  # 分析ロジック
 ├── utils/          # ユーティリティ関数
 │   ├── text_processor.py  # テキスト解析
@@ -343,6 +350,7 @@ tests/
 ├── api/                     # APIエンドポイントテスト
 │   ├── test_prompts.py
 │   ├── test_summary.py
+│   ├── test_evaluation.py
 │   ├── test_statistics.py
 │   └── test_settings.py
 ├── core/                    # コア機能テスト
@@ -351,10 +359,12 @@ tests/
 │   ├── test_api_factory.py
 │   ├── test_base_api.py
 │   ├── test_claude_api.py
-│   └── test_gemini_api.py
+│   ├── test_gemini_api.py
+│   └── test_gemini_evaluation.py
 ├── services/                # ビジネスロジックテスト
 │   ├── test_prompt_service.py
 │   ├── test_summary_service.py
+│   ├── test_evaluation_service.py
 │   └── test_statistics_service.py
 └── test_utils/              # ユーティリティテスト
     └── test_text_processor.py
