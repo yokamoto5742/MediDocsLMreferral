@@ -12,10 +12,10 @@ from app.utils.error_handlers import api_exception_handler, validation_exception
 settings = get_settings()
 
 app = FastAPI(
-    title="MediDocs API",
+    title="MediDocsLM API",
     version="1.0.0",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
+    docs_url=None, # 開発段階では "/api/docs"
+    redoc_url=None,
 )
 
 # エラーハンドラーを登録
