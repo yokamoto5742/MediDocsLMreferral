@@ -33,6 +33,5 @@ class AggregatedRecord(BaseModel):
     count: int
     input_tokens: int
     output_tokens: int
-    total_tokens: int
 
     model_config = ConfigDict(from_attributes=True)

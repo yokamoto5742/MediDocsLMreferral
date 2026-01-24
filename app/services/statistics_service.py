@@ -58,7 +58,6 @@ def get_aggregated_records(
         func.count(SummaryUsage.id).label("count"),
         func.sum(SummaryUsage.input_tokens).label("input_tokens"),
         func.sum(SummaryUsage.output_tokens).label("output_tokens"),
-        func.sum(SummaryUsage.total_tokens).label("total_tokens"),
     )
 
     if start_date:
@@ -86,7 +85,6 @@ def get_aggregated_records(
             "count": r.count,
             "input_tokens": r.input_tokens or 0,
             "output_tokens": r.output_tokens or 0,
-            "total_tokens": r.total_tokens or 0,
         }
         for r in results
     ]

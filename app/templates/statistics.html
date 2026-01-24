@@ -74,20 +74,17 @@
                         <th @click="sortAggregated('output_tokens')" class="px-4 py-3 text-right text-xs font-medium text-white uppercase cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
                             出力トークン <span x-text="getSortIcon(aggregatedSort, 'output_tokens')"></span>
                         </th>
-                        <th @click="sortAggregated('total_tokens')" class="px-4 py-3 text-right text-xs font-medium text-white uppercase cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
-                            合計トークン <span x-text="getSortIcon(aggregatedSort, 'total_tokens')"></span>
-                        </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                     <template x-if="isLoadingAggregated">
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-white">読み込み中...</td>
+                            <td colspan="6" class="px-4 py-8 text-center text-white">読み込み中...</td>
                         </tr>
                     </template>
                     <template x-if="!isLoadingAggregated && aggregatedRecords.length === 0">
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-white">データがありません</td>
+                            <td colspan="6" class="px-4 py-8 text-center text-white">データがありません</td>
                         </tr>
                     </template>
                     <template x-for="record in aggregatedRecords" :key="record.document_type + record.department + record.doctor">
@@ -98,7 +95,6 @@
                             <td class="px-4 py-3 text-sm text-right text-gray-900 dark:text-gray-100" x-text="record.count"></td>
                             <td class="px-4 py-3 text-sm text-right text-gray-900 dark:text-gray-100" x-text="formatNumber(record.input_tokens)"></td>
                             <td class="px-4 py-3 text-sm text-right text-gray-900 dark:text-gray-100" x-text="formatNumber(record.output_tokens)"></td>
-                            <td class="px-4 py-3 text-sm text-right text-gray-900 dark:text-gray-100" x-text="formatNumber(record.total_tokens)"></td>
                         </tr>
                     </template>
                 </tbody>
