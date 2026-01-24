@@ -152,7 +152,7 @@ class TestDetermineModel:
 
         # モックプロンプト
         mock_prompt = MagicMock()
-        mock_prompt.model = "Gemini_Pro"
+        mock_prompt.selected_model = "Gemini_Pro"
         mock_get_prompt.return_value = mock_prompt
 
         model, switched = determine_model(

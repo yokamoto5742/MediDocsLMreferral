@@ -71,10 +71,10 @@ api_client = get_api_client(model_name, api_key)
 app/
 ├── api/            # FastAPI ルートハンドラー
 │   ├── router.py   # メイン API ルーター
-│   ├── summary.py  # ドキュメント生成エンドポイント
+│   ├── summary.py  # 文書生成エンドポイント
 │   ├── prompts.py  # プロンプト管理エンドポイント
 │   ├── evaluation.py  # 出力評価エンドポイント
-│   ├── statistics.py  # 分析・統計エンドポイント
+│   ├── statistics.py  # 出力統計エンドポイント
 │   └── settings.py    # 設定エンドポイント
 ├── core/           # コア設定
 │   ├── config.py   # 環境設定
@@ -83,9 +83,9 @@ app/
 ├── external/       # 外部 API 連携
 │   ├── api_factory.py  # API クライアントファクトリ
 │   ├── base_api.py     # ベース API クライアント
-│   ├── claude_api.py   # Claude/Bedrock 連携
+│   ├── claude_api.py   # Claude/Amazon Bedrock 連携
 │   ├── gemini_api.py   # Gemini/Vertex AI 連携
-│   └── gemini_evaluation.py  # Gemini 評価 API
+│   └── gemini_evaluation.py  # 出力評価 API
 ├── models/         # データベースモデル
 │   ├── prompt.py   # プロンプトテンプレート
 │   ├── evaluation_prompt.py  # 評価プロンプトテンプレート
@@ -97,10 +97,10 @@ app/
 │   ├── evaluation.py  # 評価スキーマ
 │   └── statistics.py  # 統計スキーマ
 ├── services/       # ビジネスロジック
-│   ├── summary_service.py  # ドキュメント生成ロジック
+│   ├── summary_service.py  # 文書生成ロジック
 │   ├── prompt_service.py   # プロンプト管理ロジック
 │   ├── evaluation_service.py  # 出力評価ロジック
-│   └── statistics_service.py  # 分析ロジック
+│   └── statistics_service.py  # 出力統計ロジック
 ├── utils/          # ユーティリティ関数
 │   ├── text_processor.py  # テキスト解析
 │   ├── exceptions.py      # カスタム例外
@@ -112,9 +112,9 @@ app/
 ### 前提条件
 
 - Python 3.13以上
-- PostgreSQL 12以上
+- PostgreSQL 16以上
 - 少なくとも1つのAI APIアカウント:
-  - Claude API（Anthropic）またはAWS Bedrockアクセス
+  - AWS BedrockアクセスのClaude API 
   - Vertex AIが有効化されたGoogle Cloud Platformアカウント
 
 ### インストール手順
@@ -128,7 +128,7 @@ cd MediDocsLMreferral
 1. **仮想環境の作成**
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # Windows の場合: .venv\Scripts\activate
+source .venv\Scripts\activate
 ```
 
 1. **依存関係のインストール**
@@ -144,15 +144,7 @@ createdb medidocs
 # データベーステーブルは初回実行時に自動作成されます
 ```
 
-1. **環境変数の設定**
-```bash
-# 環境変数ファイルのコピー
-cp .env.example .env
-
-# 認証情報を使って .env を編集
-```
-
-1. **データベースマイグレーションの実行**（該当する場合）
+1. **データベースマイグレーションの実行**
 ```bash
 # テーブルは起動時にSQLAlchemyを介して自動作成されます
 ```
@@ -183,13 +175,7 @@ DATABASE_URL=postgresql://user:password@host:port/database
 
 ### Claude API 設定
 
-**オプション 1: 直接Claude API**
-```env
-CLAUDE_API_KEY=sk-ant-your-api-key
-CLAUDE_MODEL=claude-sonnet-4-5-20250929
-```
-
-**オプション 2: AWS Bedrock**
+**AWS Bedrock**
 ```env
 AWS_ACCESS_KEY_ID=your_aws_access_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret_key
@@ -202,13 +188,10 @@ ANTHROPIC_MODEL=anthropic.claude-3-5-sonnet-20241022-v2:0
 # Google Cloud 認証情報（JSON形式）
 GOOGLE_CREDENTIALS_JSON={"type":"service_account","project_id":"your-project",...}
 
-# または認証情報ファイルへのパス
-# GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json
-
 # Vertex AI 設定
 GOOGLE_PROJECT_ID=your-gcp-project-id
 GOOGLE_LOCATION=asia-northeast1
-GEMINI_MODEL=gemini-2.0-flash-exp
+GEMINI_MODEL=gemini-2.0-flash
 GEMINI_THINKING_LEVEL=HIGH
 ```
 
@@ -225,30 +208,6 @@ APP_TYPE=default
 SELECTED_AI_MODEL=Claude
 ```
 
-### .env ファイルの例
-```env
-# データベース
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_USER=medidocs
-POSTGRES_PASSWORD=secure_password_here
-POSTGRES_DB=medidocs_db
-
-# Claude API
-CLAUDE_API_KEY=sk-ant-xxxxxxxxxxxxx
-CLAUDE_MODEL=claude-sonnet-4-5-20250929
-
-# Google Vertex AI
-GOOGLE_CREDENTIALS_JSON={"type":"service_account","project_id":"my-gcp-project"}
-GOOGLE_PROJECT_ID=my-gcp-project
-GOOGLE_LOCATION=asia-northeast1
-GEMINI_MODEL=gemini-2.0-flash-exp
-
-# アプリケーション
-MAX_INPUT_TOKENS=200000
-PROMPT_MANAGEMENT=true
-```
-
 ## 使用方法
 
 ### アプリケーションの起動
@@ -260,7 +219,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 **本番モード:**
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
 ### Webインターフェースの使用
@@ -271,10 +230,10 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
    - 文書タイプを選択
    - テキストエリアにカルテデータを入力
    - 追加情報を入力
-3. **AIモデルの選択**: ClaudeまたはGeminiを選択（または自動切り替えに任せる）
+3. **AIモデルの選択**: ClaudeまたはGeminiを選択（または自動切り替え）
 4. **文書の生成**: 生成ボタンをクリック
-5. **出力の確認**: 生成された文書が構造化されたセクションで表示される
-6. **クリップボードにコピー**: Ctrl+AとCtrl+Cで生成されたテキストをコピー
+5. **出力結果の確認**: 生成された文書が構造化されたセクションで表示される
+6. **出力結果のコピー**: コピーボタンで出力結果のテキストをコピー
 
 ### プロンプトの管理
 
@@ -284,18 +243,16 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
    - カスタムプロンプトテンプレートを入力
    - プロンプトを保存
 3. **既存プロンプトの編集**: プロンプトの横にある編集アイコンをクリック
-4. **プロンプトの削除**: 削除アイコンをクリック（確認が必要）
+4. **プロンプトの削除**: 削除アイコンをクリック
 
 ### 統計の表示
 
 1. **Statistics** ページにアクセス
-2. 分析用の日付範囲を選択
+2. 統計用の日付範囲を選択
 3. メトリクスの表示:
    - 合計API呼び出し数
    - モデル別トークン使用量
    - 平均作成時間
-   - コスト内訳
-4. さらなる分析のためにデータをエクスポート
 
 ### APIの使用
 
@@ -393,10 +350,9 @@ tests/
 - **psycopg2-binary**: Python用PostgreSQLアダプター
 
 ### AI/ML統合
-- **Anthropic SDK**: Claude API統合
 - **Google Generative AI**: Gemini API統合
 - **Google Cloud AI Platform**: Vertex AI統合
-- **boto3**: Bedrock統合用AWS SDK
+- **boto3**: Amazon Bedrock統合用AWS SDK
 
 ### フロントエンド
 - **Jinja2**: HTMLレンダリング用テンプレートエンジン

@@ -149,7 +149,7 @@ class TestCreateSummaryPrompt:
 
         mock_prompt = MagicMock()
         mock_prompt.content = "カスタムプロンプトテンプレート"
-        mock_prompt.model = "gemini-1.5-pro-002"
+        mock_prompt.selected_model = "gemini-1.5-pro-002"
         mock_get_prompt.return_value = mock_prompt
 
         client = MockAPIClient()
@@ -231,7 +231,7 @@ class TestGetModelName:
 
         mock_prompt = MagicMock()
         mock_prompt.content = "プロンプト"
-        mock_prompt.model = "gemini-1.5-pro-002"
+        mock_prompt.selected_model = "gemini-1.5-pro-002"
         mock_get_prompt.return_value = mock_prompt
 
         client = MockAPIClient(default_model="claude-3-5-sonnet-20241022")
@@ -269,7 +269,7 @@ class TestGetModelName:
 
         mock_prompt = MagicMock()
         mock_prompt.content = "プロンプトのみ"
-        mock_prompt.model = None
+        mock_prompt.selected_model = None
         mock_get_prompt.return_value = mock_prompt
 
         client = MockAPIClient(default_model="default-model")
@@ -291,7 +291,7 @@ class TestGetModelName:
 
         mock_prompt = MagicMock()
         mock_prompt.content = "プロンプト"
-        mock_prompt.model = ""
+        mock_prompt.selected_model = ""
         mock_get_prompt.return_value = mock_prompt
 
         client = MockAPIClient(default_model="default-model")
@@ -355,7 +355,7 @@ class TestGenerateSummary:
 
         mock_prompt = MagicMock()
         mock_prompt.content = "プロンプト"
-        mock_prompt.model = "gemini-1.5-pro-002"
+        mock_prompt.selected_model = "gemini-1.5-pro-002"
         mock_get_prompt.return_value = mock_prompt
 
         client = MockAPIClient(default_model="default-model")

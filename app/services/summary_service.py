@@ -60,7 +60,7 @@ def determine_model(
                 prompt_data = prompt_service.get_prompt(db, department, document_type, doctor)
                 if prompt_data:
                     selected = prompt_data.selected_model
-                    if selected is not None:
+                    if selected:
                         requested_model = cast(str, selected)
         except Exception:
             # プロンプト取得に失敗しても処理を続行
