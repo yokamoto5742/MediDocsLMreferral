@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import func
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 from app.models.usage import SummaryUsage
 
@@ -74,7 +74,7 @@ def get_aggregated_records(
         query.group_by(
             SummaryUsage.document_type, SummaryUsage.department, SummaryUsage.doctor
         )
-        .order_by(SummaryUsage.document_type, SummaryUsage.department, SummaryUsage.doctor)
+        .order_by(desc("count"))
         .all()
     )
 
