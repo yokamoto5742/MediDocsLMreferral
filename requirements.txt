@@ -72,7 +72,7 @@ pydantic_core==2.41.5
 pydeck==0.9.1
 pymongo==4.11.3
 pyparsing==3.2.1
-pyright==1.1.407
+pyright==1.1.408
 pytest==8.3.5
 pytest-cov==6.1.1
 pytest-mock==3.14.1
