@@ -16,7 +16,7 @@ def get_summary(
     model: str | None = None,
     db: Session = Depends(get_db),
 ):
-    """使用統計サマリーを取得"""
+    """使用統計サマリを取得"""
     return statistics_service.get_usage_summary(db, start_date, end_date, model)
 
 
@@ -44,7 +44,7 @@ def get_records(
     offset: int = 0,
     db: Session = Depends(get_db),
 ):
-    """使用統計レコードを取得（フィルター追加）"""
+    """使用統計レコードを取得"""
     return statistics_service.get_usage_records(
         db, start_date, end_date, model, document_type, limit, offset
     )
