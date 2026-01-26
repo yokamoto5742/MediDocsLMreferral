@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     selected_ai_model: str = "Claude"
 
     def get_database_url(self) -> str:
-        """Heroku DATABASE_URL または個別設定から接続URLを構築"""
+        """データベース接続URLを構築"""
         if self.database_url:
             url = self.database_url
             # Heroku postgres:// → postgresql:// 変換
