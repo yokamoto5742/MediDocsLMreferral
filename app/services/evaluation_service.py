@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.constants import MESSAGES
 from app.core.database import get_db_session
-from app.external.gemini_evaluation import GeminiEvaluationClient
+from app.external.gemini_api import GeminiAPIClient
 from app.models.evaluation_prompt import EvaluationPrompt
 from app.utils.exceptions import APIError
 
@@ -162,7 +162,7 @@ def execute_evaluation(
     # 評価実行
     start_time = time.time()
     try:
-        client = GeminiEvaluationClient()
+        client = GeminiAPIClient(model_name=settings.gemini_evaluation_model)
         client.initialize()
 
         evaluation_text, input_tokens, output_tokens = client._generate_content(

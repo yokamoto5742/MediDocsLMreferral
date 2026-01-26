@@ -1,27 +1,32 @@
 import json
-import os
 from typing import Tuple
 
 from google import genai
 from google.genai import types
 from google.oauth2 import service_account
 
+from app.core.config import get_settings
 from app.core.constants import MESSAGES
 from app.external.base_api import BaseAPIClient
 from app.utils.exceptions import APIError
 
 
 class GeminiAPIClient(BaseAPIClient):
-    def __init__(self):
-        super().__init__(None, GEMINI_MODEL)
+    """Gemini API クライアント"""
+
+    def __init__(self, model_name: str | None = None):
+        settings = get_settings()
+        model = model_name or settings.gemini_model
+        super().__init__(None, model)
         self.client = None
+        self.settings = settings
 
     def initialize(self) -> bool:
         try:
-            if not GOOGLE_PROJECT_ID:
+            if not self.settings.google_project_id:
                 raise APIError(MESSAGES["VERTEX_AI_PROJECT_MISSING"])
 
-            google_credentials_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
+            google_credentials_json = self.settings.google_credentials_json
 
             if google_credentials_json:
                 try:
@@ -34,8 +39,8 @@ class GeminiAPIClient(BaseAPIClient):
 
                     self.client = genai.Client(
                         vertexai=True,
-                        project=GOOGLE_PROJECT_ID,
-                        location=GOOGLE_LOCATION,
+                        project=self.settings.google_project_id,
+                        location=self.settings.google_location,
                         credentials=credentials
                     )
 
@@ -48,8 +53,8 @@ class GeminiAPIClient(BaseAPIClient):
             else:
                 self.client = genai.Client(
                     vertexai=True,
-                    project=GOOGLE_PROJECT_ID,
-                    location=GOOGLE_LOCATION,
+                    project=self.settings.google_project_id,
+                    location=self.settings.google_location,
                 )
 
             return True
@@ -58,13 +63,16 @@ class GeminiAPIClient(BaseAPIClient):
         except Exception as e:
             raise APIError(MESSAGES["VERTEX_AI_INIT_ERROR"].format(error=str(e)))
 
-    def _generate_content(
-            self,
-            prompt: str,
-            model_name: str
-    ) -> Tuple[str, int, int]:
+    def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
         try:
-            thinking_level = types.ThinkingLevel.LOW if GEMINI_THINKING_LEVEL == "LOW" else types.ThinkingLevel.HIGH
+            if self.client is None:
+                raise APIError("Client not initialized")
+
+            thinking_level = (
+                types.ThinkingLevel.LOW
+                if self.settings.gemini_thinking_level == "LOW"
+                else types.ThinkingLevel.HIGH
+            )
             response = self.client.models.generate_content(
                 model=model_name,
                 contents=prompt,
@@ -75,18 +83,22 @@ class GeminiAPIClient(BaseAPIClient):
                 )
             )
 
-            if hasattr(response, 'text'):
-                summary_text = response.text
+            result_text = ""
+            if hasattr(response, 'text') and response.text is not None:
+                result_text = str(response.text)
             else:
-                summary_text = str(response)
+                result_text = str(response)
 
             input_tokens = 0
             output_tokens = 0
 
-            if hasattr(response, 'usage_metadata'):
-                input_tokens = response.usage_metadata.prompt_token_count
-                output_tokens = response.usage_metadata.candidates_token_count
+            if hasattr(response, 'usage_metadata') and response.usage_metadata is not None:
+                metadata = response.usage_metadata
+                if hasattr(metadata, 'prompt_token_count') and metadata.prompt_token_count is not None:
+                    input_tokens = int(metadata.prompt_token_count)
+                if hasattr(metadata, 'candidates_token_count') and metadata.candidates_token_count is not None:
+                    output_tokens = int(metadata.candidates_token_count)
 
-            return summary_text, input_tokens, output_tokens
+            return result_text, input_tokens, output_tokens
         except Exception as e:
             raise APIError(MESSAGES["VERTEX_AI_API_ERROR"].format(error=str(e)))

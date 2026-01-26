@@ -201,7 +201,7 @@ class TestBuildEvaluationPrompt:
 class TestExecuteEvaluation:
     """execute_evaluation 関数のテスト"""
 
-    @patch("app.services.evaluation_service.GeminiEvaluationClient")
+    @patch("app.services.evaluation_service.GeminiAPIClient")
     @patch("app.services.evaluation_service.get_db_session")
     @patch("app.services.evaluation_service.settings")
     def test_execute_evaluation_success(
@@ -307,7 +307,7 @@ class TestExecuteEvaluation:
         assert result.input_tokens == 0
         assert result.output_tokens == 0
 
-    @patch("app.services.evaluation_service.GeminiEvaluationClient")
+    @patch("app.services.evaluation_service.GeminiAPIClient")
     @patch("app.services.evaluation_service.get_db_session")
     @patch("app.services.evaluation_service.settings")
     def test_execute_evaluation_api_error(
@@ -345,7 +345,7 @@ class TestExecuteEvaluation:
         assert result.input_tokens == 0
         assert result.output_tokens == 0
 
-    @patch("app.services.evaluation_service.GeminiEvaluationClient")
+    @patch("app.services.evaluation_service.GeminiAPIClient")
     @patch("app.services.evaluation_service.get_db_session")
     @patch("app.services.evaluation_service.settings")
     def test_execute_evaluation_general_exception(
@@ -382,7 +382,7 @@ class TestExecuteEvaluation:
         assert result.input_tokens == 0
         assert result.output_tokens == 0
 
-    @patch("app.services.evaluation_service.GeminiEvaluationClient")
+    @patch("app.services.evaluation_service.GeminiAPIClient")
     @patch("app.services.evaluation_service.get_db_session")
     @patch("app.services.evaluation_service.settings")
     def test_execute_evaluation_with_all_fields(
