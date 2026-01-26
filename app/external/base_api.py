@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple, cast
+from typing import Optional, Tuple
 
 from app.core.constants import DEFAULT_DOCUMENT_TYPE, DEFAULT_SUMMARY_PROMPT
 from app.core.database import get_db_session
@@ -14,16 +14,16 @@ class BaseAPIClient(ABC):
 
     @abstractmethod
     def initialize(self) -> bool:
-        """APIクライアントを初期化します。成功時はTrueを返し、失敗時は例外を投げます。"""
+        """APIクライアントを初期化。"""
         pass
 
     @abstractmethod
     def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
         """
-        プロンプトから要約を生成します。
+        プロンプトから要約を生成
         Args:
             prompt: 生成用プロンプト
-            model_name: 使用するモデル名
+            model_name: 使用モデル名
         Returns:
             Tuple[str, int, int]: (生成された要約, 入力トークン数, 出力トークン数)
         Raises:
@@ -64,7 +64,10 @@ class BaseAPIClient(ABC):
         return prompt
 
     def get_model_name(
-        self, department: str, document_type: str, doctor: str
+        self,
+        department: str,
+        document_type: str,
+        doctor: str
     ) -> str | None:
         try:
             with get_db_session() as db:
@@ -72,7 +75,7 @@ class BaseAPIClient(ABC):
                 if prompt_data:
                     selected = prompt_data.selected_model
                     if selected:
-                        return cast(str, selected)
+                        return selected
         except Exception:
             pass
         return self.default_model

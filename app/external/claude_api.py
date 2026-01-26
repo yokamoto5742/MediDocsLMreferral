@@ -2,7 +2,6 @@ import os
 from typing import Tuple
 
 from anthropic import AnthropicBedrock
-from anthropic.types import TextBlock
 from dotenv import load_dotenv
 
 from app.core.constants import MESSAGES
@@ -24,17 +23,11 @@ class ClaudeAPIClient(BaseAPIClient):
 
     def initialize(self) -> bool:
         try:
-            if not all(
-                [self.aws_access_key_id, self.aws_secret_access_key, self.aws_region]
-            ):
-                raise APIError(
-                    "AWS認証情報が設定されていません。環境変数を確認してください。"
-                )
+            if not all([self.aws_access_key_id, self.aws_secret_access_key, self.aws_region]):
+                raise APIError(MESSAGES["AWS_CREDENTIALS_MISSING"])
 
             if not self.anthropic_model:
-                raise APIError(
-                    "ANTHROPIC_MODELが設定されていません。環境変数を確認してください。"
-                )
+                raise APIError(MESSAGES["ANTHROPIC_MODEL_MISSING"])
 
             self.client = AnthropicBedrock(
                 aws_access_key=self.aws_access_key_id,
@@ -44,26 +37,29 @@ class ClaudeAPIClient(BaseAPIClient):
             return True
 
         except Exception as e:
-            raise APIError(f"Amazon Bedrock Claude API初期化エラー: {str(e)}")
+            raise APIError(MESSAGES["BEDROCK_INIT_ERROR"].format(error=str(e)))
 
     def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
+        """
+        プロンプトから要約を生成
+        Args:
+            prompt: 生成用プロンプト
+            model_name: 使用するモデル名
+        Returns:
+            Tuple[str, int, int]: (生成された要約, 入力トークン数, 出力トークン数)
+        Raises:
+            APIError: API呼び出しに失敗した場合
+        """
         try:
-            # Amazon BedrockのClaude APIを呼び出し
-            # model_nameパラメータは親クラスとの互換性のために受け取るが、
-            # 実際はself.anthropic_modelを使用
-            if not self.client:
-                raise APIError("Clientが初期化されていません")
-
-            if not self.anthropic_model:
-                raise APIError("ANTHROPIC_MODELが設定されていません")
-
             response = self.client.messages.create(
-                model=self.anthropic_model,
+                model=model_name,
                 max_tokens=6000,
-                messages=[{"role": "user", "content": prompt}],
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
             )
 
-            if response.content and isinstance(response.content[0], TextBlock):
+            if response.content:
                 summary_text = response.content[0].text
             else:
                 summary_text = MESSAGES["EMPTY_RESPONSE"]
