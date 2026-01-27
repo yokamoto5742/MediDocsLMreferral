@@ -2,13 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.schemas.prompt import PromptCreate, PromptResponse
+from app.schemas.prompt import PromptCreate, PromptListItem, PromptResponse
 from app.services import prompt_service
 
 router = APIRouter(prefix="/prompts", tags=["prompts"])
 
 
-@router.get("/", response_model=list[PromptResponse])
+@router.get("/", response_model=list[PromptListItem])
 def list_prompts(db: Session = Depends(get_db)):
     """プロンプト一覧を取得"""
     prompts = prompt_service.get_all_prompts(db)

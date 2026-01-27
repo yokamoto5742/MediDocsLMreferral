@@ -1,7 +1,26 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
+
+from app.core.constants import DEFAULT_STATISTICS_PERIOD_DAYS
 from app.models.usage import SummaryUsage
+
+JST = ZoneInfo("Asia/Tokyo")
+
+
+def _apply_default_period(
+    start_date: datetime | None,
+    end_date: datetime | None,
+) -> tuple[datetime, datetime]:
+    """期間未指定時にデフォルト期間を適用"""
+    now = datetime.now(JST)
+    if end_date is None:
+        end_date = now
+    if start_date is None:
+        start_date = now - timedelta(days=DEFAULT_STATISTICS_PERIOD_DAYS)
+    return start_date, end_date
 
 
 def get_usage_summary(
@@ -11,6 +30,9 @@ def get_usage_summary(
     model: str | None = None,
 ) -> dict:
     """使用統計サマリーを取得"""
+    # デフォルト期間を適用
+    start_date, end_date = _apply_default_period(start_date, end_date)
+
     query = db.query(
         func.count(SummaryUsage.id),
         func.sum(SummaryUsage.input_tokens),
@@ -18,10 +40,8 @@ def get_usage_summary(
         func.avg(SummaryUsage.processing_time),
     )
 
-    if start_date:
-        query = query.filter(SummaryUsage.date >= start_date)
-    if end_date:
-        query = query.filter(SummaryUsage.date <= end_date)
+    query = query.filter(SummaryUsage.date >= start_date)
+    query = query.filter(SummaryUsage.date <= end_date)
     if model:
         query = query.filter(SummaryUsage.model == model)
 
@@ -51,6 +71,9 @@ def get_aggregated_records(
     document_type: str | None = None,
 ) -> list[dict]:
     """文書別に集計した統計データを取得"""
+    # デフォルト期間を適用
+    start_date, end_date = _apply_default_period(start_date, end_date)
+
     query = db.query(
         SummaryUsage.document_type,
         SummaryUsage.department,
@@ -60,10 +83,8 @@ def get_aggregated_records(
         func.sum(SummaryUsage.output_tokens).label("output_tokens"),
     )
 
-    if start_date:
-        query = query.filter(SummaryUsage.date >= start_date)
-    if end_date:
-        query = query.filter(SummaryUsage.date <= end_date)
+    query = query.filter(SummaryUsage.date >= start_date)
+    query = query.filter(SummaryUsage.date <= end_date)
     if model:
         query = query.filter(SummaryUsage.model == model)
     if document_type:
@@ -100,12 +121,13 @@ def get_usage_records(
     offset: int = 0,
 ) -> list[SummaryUsage]:
     """使用統計レコードを取得（フィルター追加）"""
+    # デフォルト期間を適用
+    start_date, end_date = _apply_default_period(start_date, end_date)
+
     query = db.query(SummaryUsage)
 
-    if start_date:
-        query = query.filter(SummaryUsage.date >= start_date)
-    if end_date:
-        query = query.filter(SummaryUsage.date <= end_date)
+    query = query.filter(SummaryUsage.date >= start_date)
+    query = query.filter(SummaryUsage.date <= end_date)
     if model:
         query = query.filter(SummaryUsage.model == model)
     if document_type:

@@ -16,9 +16,9 @@ class SummaryUsage(Base):
     doctor = Column(String(100))
     input_tokens = Column(Integer)
     output_tokens = Column(Integer)
-    total_tokens = Column(Integer)
     processing_time = Column(Float)
 
     __table_args__ = (
         Index("ix_summary_usage_aggregation", "document_types", "department", "doctor"),
+        Index("ix_summary_usage_date_document_type", "date", "document_types"),
     )

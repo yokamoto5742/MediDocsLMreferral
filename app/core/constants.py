@@ -17,6 +17,9 @@ DOCUMENT_TYPE_TO_PURPOSE_MAPPING = {
     "最終返書": "治療経過報告",
 }
 
+# 統計APIのデフォルト期間（日数）
+DEFAULT_STATISTICS_PERIOD_DAYS = 30
+
 DEFAULT_SECTION_NAMES = [
     "主病名",
     "紹介目的",

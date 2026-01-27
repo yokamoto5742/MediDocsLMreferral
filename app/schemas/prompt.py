@@ -26,3 +26,17 @@ class PromptResponse(PromptBase):
     updated_at: datetime | None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class PromptListItem(BaseModel):
+    """プロンプト一覧用の軽量スキーマ（content除外）"""
+    id: int
+    department: str
+    document_type: str
+    doctor: str
+    selected_model: str | None
+    is_default: bool
+    created_at: datetime | None
+    updated_at: datetime | None
+
+    model_config = ConfigDict(from_attributes=True)

@@ -19,7 +19,6 @@ class UsageRecord(BaseModel):
     doctor: str | None
     input_tokens: int | None
     output_tokens: int | None
-    total_tokens: int | None
     processing_time: float | None
 
     model_config = ConfigDict(from_attributes=True)
