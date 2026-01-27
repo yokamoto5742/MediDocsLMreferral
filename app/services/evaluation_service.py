@@ -1,5 +1,4 @@
 import time
-from typing import cast
 
 from sqlalchemy.orm import Session
 
@@ -18,7 +17,7 @@ def get_evaluation_prompt(db: Session, document_type: str) -> EvaluationPrompt |
     """評価プロンプトを取得"""
     return db.query(EvaluationPrompt).filter(
         EvaluationPrompt.document_type == document_type,
-        EvaluationPrompt.is_active == True  # noqa: E712
+        EvaluationPrompt.is_active == True
     ).first()
 
 
@@ -41,7 +40,6 @@ def create_or_update_evaluation_prompt(
     ).first()
 
     if existing:
-        # Use setattr to avoid pyright Column assignment errors
         setattr(existing, 'content', content)
         setattr(existing, 'is_active', True)
         message = MESSAGES["EVALUATION_PROMPT_UPDATED"]
@@ -77,13 +75,12 @@ def build_evaluation_prompt(
     additional_info: str,
     output_summary: str
 ) -> str:
-    """評価用のフルプロンプトを構築"""
     return f"""{prompt_template}
 
 【カルテ記載】
 {input_text}
 
-【退院時処方(現在の処方)】
+【現在の処方】
 {current_prescription}
 
 【追加情報】
@@ -102,7 +99,6 @@ def execute_evaluation(
     output_summary: str
 ) -> EvaluationResponse:
     """出力評価を実行"""
-    # 評価対象の検証
     if not output_summary:
         return EvaluationResponse(
             success=False,
@@ -113,7 +109,6 @@ def execute_evaluation(
             error_message=MESSAGES["EVALUATION_NO_OUTPUT"]
         )
 
-    # 評価モデルの検証
     if not settings.gemini_evaluation_model:
         return EvaluationResponse(
             success=False,
@@ -124,7 +119,6 @@ def execute_evaluation(
             error_message=MESSAGES["EVALUATION_MODEL_MISSING"]
         )
 
-    # 評価プロンプトの取得
     with get_db_session() as db:
         prompt_data = get_evaluation_prompt(db, document_type)
         if not prompt_data:
@@ -138,9 +132,8 @@ def execute_evaluation(
                     document_type=document_type
                 )
             )
-        prompt_template = cast(str, prompt_data.content)
+        prompt_template = prompt_data.content
 
-    # フルプロンプト構築
     full_prompt = build_evaluation_prompt(
         prompt_template,
         input_text,
@@ -149,7 +142,6 @@ def execute_evaluation(
         output_summary
     )
 
-    # 評価実行
     start_time = time.time()
     try:
         client = GeminiAPIClient(model_name=settings.gemini_evaluation_model)

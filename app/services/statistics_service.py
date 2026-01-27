@@ -29,8 +29,7 @@ def get_usage_summary(
     end_date: datetime | None = None,
     model: str | None = None,
 ) -> dict:
-    """使用統計サマリーを取得"""
-    # デフォルト期間を適用
+    """使用統計サマリを取得"""
     start_date, end_date = _apply_default_period(start_date, end_date)
 
     query = db.query(
@@ -70,8 +69,7 @@ def get_aggregated_records(
     model: str | None = None,
     document_type: str | None = None,
 ) -> list[dict]:
-    """文書別に集計した統計データを取得"""
-    # デフォルト期間を適用
+    """文書別集計統計データを取得"""
     start_date, end_date = _apply_default_period(start_date, end_date)
 
     query = db.query(
@@ -120,8 +118,7 @@ def get_usage_records(
     limit: int = 100,
     offset: int = 0,
 ) -> list[SummaryUsage]:
-    """使用統計レコードを取得（フィルター追加）"""
-    # デフォルト期間を適用
+    """使用統計レコードを取得"""
     start_date, end_date = _apply_default_period(start_date, end_date)
 
     query = db.query(SummaryUsage)
