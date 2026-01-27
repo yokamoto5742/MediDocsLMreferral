@@ -29,7 +29,7 @@ class PromptResponse(PromptBase):
 
 
 class PromptListItem(BaseModel):
-    """プロンプト一覧用の軽量スキーマ（content除外）"""
+    """contentを除外した一覧用"""
     id: int
     department: str
     document_type: str

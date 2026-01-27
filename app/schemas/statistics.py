@@ -25,7 +25,6 @@ class UsageRecord(BaseModel):
 
 
 class AggregatedRecord(BaseModel):
-    """集計レコード"""
     document_type: str
     department: str
     doctor: str
