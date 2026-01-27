@@ -1,4 +1,5 @@
 import time
+from typing import cast
 
 from sqlalchemy.orm import Session
 
@@ -132,7 +133,7 @@ def execute_evaluation(
                     document_type=document_type
                 )
             )
-        prompt_template = prompt_data.content
+        prompt_template = cast(str, prompt_data.content)
 
     full_prompt = build_evaluation_prompt(
         prompt_template,

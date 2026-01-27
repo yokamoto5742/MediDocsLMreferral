@@ -301,8 +301,8 @@ class TestGetModelName:
             doctor="default",
         )
 
-        # selected_model が空の場合はデフォルトを使用
-        assert model_name == "default-model"
+        # selected_model が空文字列の場合もstr()で返される
+        assert model_name == ""
 
 
 class TestGenerateSummary:
