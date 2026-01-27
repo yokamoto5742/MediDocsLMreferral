@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.core.constants import MESSAGES
+from app.schemas.evaluation import EvaluationResponse
 from app.services.evaluation_service import (
-    EvaluationResult,
     build_evaluation_prompt,
     create_or_update_evaluation_prompt,
     delete_evaluation_prompt,

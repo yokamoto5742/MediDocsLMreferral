@@ -18,20 +18,12 @@ router = APIRouter(prefix="/evaluation", tags=["evaluation"])
 @router.post("/evaluate", response_model=EvaluationResponse)
 def evaluate_output(request: EvaluationRequest):
     """出力評価API"""
-    result = evaluation_service.execute_evaluation(
+    return evaluation_service.execute_evaluation(
         document_type=request.document_type,
         input_text=request.input_text,
         current_prescription=request.current_prescription,
         additional_info=request.additional_info,
         output_summary=request.output_summary,
-    )
-    return EvaluationResponse(
-        success=result.success,
-        evaluation_result=result.evaluation_result,
-        input_tokens=result.input_tokens,
-        output_tokens=result.output_tokens,
-        processing_time=result.processing_time,
-        error_message=result.error_message,
     )
 
 

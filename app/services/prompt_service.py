@@ -5,7 +5,7 @@ from app.models.prompt import Prompt
 
 
 def get_all_prompts(db: Session) -> list[Prompt]:
-    """全プロンプトを取得（更新日時降順、content除外）"""
+    """全プロンプトを取得（更新日時降順）"""
     query = select(Prompt).order_by(Prompt.updated_at.desc())
     return list(db.execute(query).scalars().all())
 
@@ -44,8 +44,8 @@ def create_or_update_prompt(
     """プロンプトを作成または更新"""
     existing = get_prompt(db, department, document_type, doctor)
     if existing:
-        existing.content = content  # type: ignore[assignment]
-        existing.selected_model = selected_model  # type: ignore[assignment]
+        existing.content = content
+        existing.selected_model = selected_model
         return existing
 
     new_prompt = Prompt(

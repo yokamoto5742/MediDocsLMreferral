@@ -1,5 +1,4 @@
 import time
-from dataclasses import dataclass
 from typing import cast
 
 from sqlalchemy.orm import Session
@@ -9,19 +8,10 @@ from app.core.constants import MESSAGES
 from app.core.database import get_db_session
 from app.external.gemini_api import GeminiAPIClient
 from app.models.evaluation_prompt import EvaluationPrompt
+from app.schemas.evaluation import EvaluationResponse
 from app.utils.exceptions import APIError
 
 settings = get_settings()
-
-
-@dataclass
-class EvaluationResult:
-    success: bool
-    evaluation_result: str
-    input_tokens: int
-    output_tokens: int
-    processing_time: float
-    error_message: str | None = None
 
 
 def get_evaluation_prompt(db: Session, document_type: str) -> EvaluationPrompt | None:
@@ -110,27 +100,27 @@ def execute_evaluation(
     current_prescription: str,
     additional_info: str,
     output_summary: str
-) -> EvaluationResult:
+) -> EvaluationResponse:
     """出力評価を実行"""
     # 評価対象の検証
     if not output_summary:
-        return EvaluationResult(
+        return EvaluationResponse(
             success=False,
             evaluation_result="",
             input_tokens=0,
             output_tokens=0,
-            processing_time=0,
+            processing_time=0.0,
             error_message=MESSAGES["EVALUATION_NO_OUTPUT"]
         )
 
     # 評価モデルの検証
     if not settings.gemini_evaluation_model:
-        return EvaluationResult(
+        return EvaluationResponse(
             success=False,
             evaluation_result="",
             input_tokens=0,
             output_tokens=0,
-            processing_time=0,
+            processing_time=0.0,
             error_message=MESSAGES["EVALUATION_MODEL_MISSING"]
         )
 
@@ -138,12 +128,12 @@ def execute_evaluation(
     with get_db_session() as db:
         prompt_data = get_evaluation_prompt(db, document_type)
         if not prompt_data:
-            return EvaluationResult(
+            return EvaluationResponse(
                 success=False,
                 evaluation_result="",
                 input_tokens=0,
                 output_tokens=0,
-                processing_time=0,
+                processing_time=0.0,
                 error_message=MESSAGES["EVALUATION_PROMPT_NOT_SET"].format(
                     document_type=document_type
                 )
@@ -170,7 +160,7 @@ def execute_evaluation(
         )
         processing_time = time.time() - start_time
 
-        return EvaluationResult(
+        return EvaluationResponse(
             success=True,
             evaluation_result=evaluation_text,
             input_tokens=input_tokens,
@@ -179,7 +169,7 @@ def execute_evaluation(
         )
 
     except APIError as e:
-        return EvaluationResult(
+        return EvaluationResponse(
             success=False,
             evaluation_result="",
             input_tokens=0,
@@ -188,7 +178,7 @@ def execute_evaluation(
             error_message=str(e)
         )
     except Exception as e:
-        return EvaluationResult(
+        return EvaluationResponse(
             success=False,
             evaluation_result="",
             input_tokens=0,

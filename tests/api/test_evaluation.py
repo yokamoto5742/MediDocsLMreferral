@@ -6,13 +6,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi import status
 
-from app.services.evaluation_service import EvaluationResult
+from app.schemas.evaluation import EvaluationResponse
 
 
 @pytest.fixture
 def mock_evaluation_result_success():
-    """成功時のEvaluationResult"""
-    return EvaluationResult(
+    """成功時のEvaluationResponse"""
+    return EvaluationResponse(
         success=True,
         evaluation_result="評価結果: 良好です",
         input_tokens=1000,
@@ -23,13 +23,13 @@ def mock_evaluation_result_success():
 
 @pytest.fixture
 def mock_evaluation_result_failure():
-    """失敗時のEvaluationResult"""
-    return EvaluationResult(
+    """失敗時のEvaluationResponse"""
+    return EvaluationResponse(
         success=False,
         evaluation_result="",
         input_tokens=0,
         output_tokens=0,
-        processing_time=0,
+        processing_time=0.0,
         error_message="評価対象の出力がありません",
     )
 
@@ -99,12 +99,12 @@ def test_evaluate_output_no_output_error(client, test_db, mock_evaluation_result
 
 def test_evaluate_output_model_missing_error(client, test_db):
     """評価実行API - モデル未設定エラー"""
-    error_result = EvaluationResult(
+    error_result = EvaluationResponse(
         success=False,
         evaluation_result="",
         input_tokens=0,
         output_tokens=0,
-        processing_time=0,
+        processing_time=0.0,
         error_message="GEMINI_EVALUATION_MODEL環境変数が設定されていません",
     )
 

@@ -17,9 +17,6 @@ DOCUMENT_TYPE_TO_PURPOSE_MAPPING = {
     "最終返書": "治療経過報告",
 }
 
-# 統計APIのデフォルト期間（日数）
-DEFAULT_STATISTICS_PERIOD_DAYS = 30
-
 DEFAULT_SECTION_NAMES = [
     "主病名",
     "紹介目的",
@@ -29,6 +26,8 @@ DEFAULT_SECTION_NAMES = [
     "現在の処方",
     "備考"
 ]
+
+DEFAULT_STATISTICS_PERIOD_DAYS = 7
 
 DEFAULT_SUMMARY_PROMPT = """
 以下のカルテ情報を基に、診療情報提供書の内容を生成してください。
