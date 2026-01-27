@@ -1,13 +1,24 @@
+import sys
 from logging.config import fileConfig
+from pathlib import Path
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+
+# プロジェクトルートをsys.pathに追加
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+# アプリケーション設定とモデルをインポート
+from app.core.config import get_settings
+from app.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# データベースURLを環境変数から設定
+config.set_main_option("sqlalchemy.url", get_settings().get_database_url())
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -16,9 +27,7 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
