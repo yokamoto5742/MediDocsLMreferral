@@ -1,6 +1,4 @@
-"""BaseAPIClient のテスト"""
-
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -23,7 +21,7 @@ class MockAPIClient(BaseAPIClient):
 
     def _generate_content(self, prompt: str, model_name: str) -> tuple:
         """コンテンツ生成をシミュレート"""
-        return ("生成されたテキスト", 1000, 500)
+        return "生成されたテキスト", 1000, 500
 
 
 class TestBaseAPIClientInitialization:
@@ -101,12 +99,7 @@ class TestCreateSummaryPrompt:
         mock_get_prompt.return_value = None
 
         client = MockAPIClient()
-        prompt = client.create_summary_prompt(
-            medical_text="データ",
-            additional_info="",
-            referral_purpose="",
-            current_prescription="",
-        )
+        prompt = client.create_summary_prompt(medical_text="データ")
 
         assert "【カルテ情報】" in prompt
         assert "データ" in prompt
@@ -183,12 +176,7 @@ class TestCreateSummaryPrompt:
         mock_get_prompt.return_value = None
 
         client = MockAPIClient()
-        prompt = client.create_summary_prompt(
-            medical_text="テスト",
-            department="眼科",
-            document_type="他院への紹介",
-            doctor="default",
-        )
+        prompt = client.create_summary_prompt(medical_text="テスト", department="眼科", document_type="他院への紹介")
 
         # カスタムプロンプトがない場合はデフォルト使用
         assert "以下のカルテ情報を基に" in prompt
@@ -204,12 +192,7 @@ class TestCreateSummaryPrompt:
         mock_get_prompt.return_value = None
 
         client = MockAPIClient()
-        prompt = client.create_summary_prompt(
-            medical_text="データ",
-            department="default",
-            # document_type はデフォルト値を使用
-            doctor="default",
-        )
+        prompt = client.create_summary_prompt(medical_text="データ")
 
         # get_prompt が DEFAULT_DOCUMENT_TYPE で呼ばれることを確認
         assert mock_get_prompt.called
@@ -317,15 +300,9 @@ class TestGenerateSummary:
         mock_get_prompt.return_value = None
 
         client = MockAPIClient()
-        result = client.generate_summary(
-            medical_text="患者情報",
-            additional_info="追加情報",
-            referral_purpose="精査依頼",
-            current_prescription="処方",
-            department="default",
-            document_type="他院への紹介",
-            doctor="default",
-        )
+        result = client.generate_summary(medical_text="患者情報", additional_info="追加情報",
+                                         referral_purpose="精査依頼", current_prescription="処方",
+                                         document_type="他院への紹介")
 
         assert result == ("生成されたテキスト", 1000, 500)
         assert client.initialized is True
@@ -456,7 +433,7 @@ class TestBaseAPIClientAbstractMethods:
 
         class IncompleteClient(BaseAPIClient):
             def _generate_content(self, prompt: str, model_name: str) -> tuple:
-                return ("text", 100, 50)
+                return "text", 100, 50
 
         with pytest.raises(TypeError):
             IncompleteClient(api_key="test", default_model="test")

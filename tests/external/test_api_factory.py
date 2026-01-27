@@ -1,6 +1,4 @@
-"""API Factory のテスト"""
-
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -250,13 +248,7 @@ class TestAPIFactoryEdgeCases:
         """文書生成 - 空のオプションフィールド"""
         mock_generate.return_value = ("文書", 1000, 500)
 
-        result = APIFactory.generate_summary_with_provider(
-            provider="claude",
-            medical_text="患者データ",
-            additional_info="",
-            referral_purpose="",
-            current_prescription="",
-        )
+        result = APIFactory.generate_summary_with_provider(provider="claude", medical_text="患者データ")
 
         assert result == ("文書", 1000, 500)
 
@@ -270,11 +262,7 @@ class TestAPIFactoryEdgeCases:
         """文書生成 - model_name が None"""
         mock_generate.return_value = ("文書", 1000, 500)
 
-        result = APIFactory.generate_summary_with_provider(
-            provider="claude",
-            medical_text="データ",
-            model_name=None,
-        )
+        result = APIFactory.generate_summary_with_provider(provider="claude", medical_text="データ")
 
         assert result == ("文書", 1000, 500)
 

@@ -1,10 +1,7 @@
-"""Summary Service のテスト"""
-
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.schemas.summary import SummaryResponse
 from app.services.summary_service import (
     determine_model,
     execute_summary_generation,
@@ -155,14 +152,8 @@ class TestDetermineModel:
         mock_prompt.selected_model = "Gemini_Pro"
         mock_get_prompt.return_value = mock_prompt
 
-        model, switched = determine_model(
-            requested_model="Claude",
-            input_length=10000,
-            department="眼科",
-            document_type="他院への紹介",
-            doctor="橋本義弘",
-            model_explicitly_selected=False,
-        )
+        model, switched = determine_model(requested_model="Claude", input_length=10000, department="眼科",
+                                          document_type="他院への紹介", doctor="橋本義弘")
 
         # プロンプトで設定されたモデルが使用される
         assert model == "Gemini_Pro"

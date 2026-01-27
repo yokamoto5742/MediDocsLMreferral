@@ -1,11 +1,6 @@
-"""Evaluation Service のテスト"""
-
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from app.core.constants import MESSAGES
-from app.schemas.evaluation import EvaluationResponse
 from app.services.evaluation_service import (
     build_evaluation_prompt,
     create_or_update_evaluation_prompt,

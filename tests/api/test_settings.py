@@ -1,6 +1,3 @@
-"""Settings API のテスト"""
-
-import pytest
 from fastapi import status
 
 

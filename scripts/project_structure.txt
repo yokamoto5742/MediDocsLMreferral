@@ -1,7 +1,7 @@
 ============================================================
 プロジェクト構造: MediDocsLMreferral
 パス: C:\Users\yokam\PycharmProjects\MediDocsLMreferral
-生成日時: 2026-01-23 19:15:57
+生成日時: 2026-01-27 18:51:43
 ============================================================
 
 └── MediDocsLMreferral
@@ -24,8 +24,7 @@
     │   │   ├── api_factory.py
     │   │   ├── base_api.py
     │   │   ├── claude_api.py
-    │   │   ├── gemini_api.py
-    │   │   └── gemini_evaluation.py
+    │   │   └── gemini_api.py
     │   ├── models
     │   │   ├── __init__.py
     │   │   ├── base.py
@@ -80,5 +79,4 @@
     ├── requirements.txt
     ├── .python-version
     ├── CLAUDE.md
-    ├── pyrightconfig.json
-    └── setup.sh
+    └── pyrightconfig.json

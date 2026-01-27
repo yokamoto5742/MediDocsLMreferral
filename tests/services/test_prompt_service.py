@@ -1,6 +1,4 @@
-import pytest
 from app.services import prompt_service
-from app.models.prompt import Prompt
 
 
 def test_get_all_prompts_empty(test_db):

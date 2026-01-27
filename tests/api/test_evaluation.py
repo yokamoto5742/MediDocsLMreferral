@@ -1,5 +1,3 @@
-"""Evaluation API のテスト"""
-
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
@@ -42,8 +40,8 @@ def mock_evaluation_prompt():
     prompt.document_type = "他院への紹介"
     prompt.content = "評価プロンプト内容"
     prompt.is_active = True
-    prompt.created_at = datetime(2025, 1, 1, 12, 0, 0)
-    prompt.updated_at = datetime(2025, 1, 2, 12, 0, 0)
+    prompt.created_at = datetime(2025, 1, 1, 12)
+    prompt.updated_at = datetime(2025, 1, 2, 12)
     return prompt
 
 

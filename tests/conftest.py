@@ -1,5 +1,3 @@
-"""テストの共通設定"""
-
 from datetime import datetime
 import sys
 from pathlib import Path
@@ -59,14 +57,8 @@ def client(test_db):
 def sample_prompts(test_db):
     """テスト用のサンプルプロンプト"""
     prompts = [
-        Prompt(
-            department="default",
-            doctor="default",
-            document_type="他院への紹介",
-            content="デフォルトプロンプト",
-            selected_model=None,
-            is_default=True,
-        ),
+        Prompt(department="default", doctor="default", document_type="他院への紹介", content="デフォルトプロンプト",
+               is_default=True),
         Prompt(
             department="眼科",
             doctor="橋本義弘",

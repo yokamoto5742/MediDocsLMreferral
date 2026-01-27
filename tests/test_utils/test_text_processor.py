@@ -1,7 +1,3 @@
-"""Text Processor のテスト"""
-
-import pytest
-
 from app.utils.text_processor import format_output_summary, parse_output_summary
 
 

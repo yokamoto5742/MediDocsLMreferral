@@ -1,7 +1,7 @@
 """ClaudeAPIClient のテスト"""
 
 import os
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from anthropic.types import TextBlock
@@ -414,15 +414,9 @@ class TestClaudeAPIClientIntegration:
 
         # テスト実行
         client = ClaudeAPIClient()
-        result = client.generate_summary(
-            medical_text="患者情報",
-            additional_info="追加情報",
-            referral_purpose="精査依頼",
-            current_prescription="処方内容",
-            department="default",
-            document_type="他院への紹介",
-            doctor="default",
-        )
+        result = client.generate_summary(medical_text="患者情報", additional_info="追加情報",
+                                         referral_purpose="精査依頼", current_prescription="処方内容",
+                                         document_type="他院への紹介")
 
         assert result == ("生成された診療情報提供書", 2000, 1000)
 
