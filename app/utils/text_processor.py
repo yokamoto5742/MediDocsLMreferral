@@ -66,7 +66,6 @@ def parse_output_summary(summary_text):
             if remaining_content and current_section:
                 sections[current_section] = remaining_content
         elif current_section and line:
-            # セクションヘッダーではない行を現在のセクションに追加
             if sections[current_section]:
                 sections[current_section] += "\n" + line
             else:

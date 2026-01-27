@@ -4,7 +4,6 @@ from fastapi.responses import JSONResponse
 
 
 async def api_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """API例外ハンドラ"""
     return JSONResponse(
         status_code=500,
         content={"success": False, "error_message": str(exc)},
@@ -12,7 +11,6 @@ async def api_exception_handler(request: Request, exc: Exception) -> JSONRespons
 
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
-    """バリデーションエラーハンドラ"""
     return JSONResponse(
         status_code=422,
         content={"success": False, "error_message": str(exc)},
