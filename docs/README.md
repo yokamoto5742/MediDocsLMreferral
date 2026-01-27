@@ -33,8 +33,9 @@
 
 **Factory Pattern**: `app/external/api_factory.py` がAIプロバイダーのインスタンス化を管理
 ```python
-# モデル選択に基づいて適切なAPIクライアントを動的に作成
-api_client = get_api_client(model_name, api_key)
+# APIプロバイダーに基づいて適切なクライアントを動的に作成
+client = APIFactory.create_client(APIProvider.CLAUDE)
+result = client.generate_summary(medical_text, additional_info, ...)
 ```
 
 **Service Layer**: `app/services/` にはAPIルートから分離されたビジネスロジックが含まれる
@@ -66,6 +67,23 @@ api_client = get_api_client(model_name, api_key)
 8. **データベースログ**: 使用統計とメタデータをPostgreSQLに保存
 9. **レスポンス**: 構造化された文書をユーザーインターフェースに返却
 
+### APIクライアントアーキテクチャ
+
+**ベースAPI パターン** (`app/external/base_api.py`):
+- すべてのAIプロバイダーに共通のインターフェースを定義
+- tenacityを使用した指数バックオフ付き再試行ロジック
+- プロバイダー間で統一されたエラーハンドリング
+
+**Claude 統合** (`app/external/claude_api.py`):
+-  AWS Bedrockに対応
+- `anthropic` SDK または `boto3` を自動選択
+- 環境変数に基づいて接続方式を判定
+
+**Gemini 統合** (`app/external/gemini_api.py`):
+- Google Cloud Vertex AIを使用
+- Gemini Pro/Flashモデル対応
+- 推論深度レベルの設定可能
+
 ### 主要コンポーネント
 
 app/
@@ -84,8 +102,7 @@ app/
 │   ├── api_factory.py  # API クライアントファクトリ
 │   ├── base_api.py     # ベース API クライアント
 │   ├── claude_api.py   # Claude/Amazon Bedrock 連携
-│   ├── gemini_api.py   # Gemini/Vertex AI 連携
-│   └── gemini_evaluation.py  # 出力評価 API
+│   └── gemini_api.py   # Gemini/Vertex AI 連携
 ├── models/         # データベースモデル
 │   ├── prompt.py   # プロンプトテンプレート
 │   ├── evaluation_prompt.py  # 評価プロンプトテンプレート
@@ -181,6 +198,7 @@ AWS_ACCESS_KEY_ID=your_aws_access_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret_key
 AWS_REGION=ap-northeast-1
 ANTHROPIC_MODEL=anthropic.claude-3-5-sonnet-20241022-v2:0
+CLAUDE_API_KEY=your_anthropic_api_key  # (オプション：直接API使用時)
 ```
 
 ### Google Vertex AI 設定
@@ -220,6 +238,13 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 **本番モード:**
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+### 型チェック
+
+Pyrightを使用した静的型チェック：
+```bash
+pyright
 ```
 
 ### Webインターフェースの使用
@@ -299,6 +324,25 @@ python -m pytest tests/services/test_summary_service.py -v
 python -m pytest tests/services/test_summary_service.py::test_generate_summary -v
 ```
 
+### データベースマイグレーション
+
+Alembicを使用してデータベーススキーマを管理します：
+
+**新しいマイグレーション作成:**
+```bash
+alembic revision --autogenerate -m "description"
+```
+
+**マイグレーション実行:**
+```bash
+alembic upgrade head
+```
+
+**マイグレーションを戻す:**
+```bash
+alembic downgrade -1
+```
+
 ### テスト構造
 
 ```
@@ -330,12 +374,18 @@ tests/
 ### テストカバレッジ
 
 本プロジェクトは120以上のテストで包括的なテストカバレッジを維持:
-- APIエンドポイント
-- サービスレイヤーロジック
-- 外部API統合
-- データベース操作
+- APIエンドポイント統合テスト
+- サービスレイヤーロジック（ユニットテスト）
+- 外部API統合テスト（モック使用）
+- データベース操作テスト
 - テキスト処理ユーティリティ
-- エラー処理
+- エラーハンドリング
+- エッジケースと例外処理
+
+新機能追加時は、以下の順序でテストを追加してください：
+1. サービスレイヤーテスト（TDD推奨）
+2. API統合テスト
+3. 必要に応じて外部APIテスト（pytest-mockでモック）
 
 ## 使用技術
 
@@ -378,7 +428,10 @@ tests/
 
 ### 自動モデル切り替え
 
-MAX_TOKEN_THRESHOLDで指定した入力文字数に基づいてAIモデルをGemini_Proに自動的に切り替えます。
+`summary_service.py` の `determine_model()` で自動実装:
+- 入力が `MAX_TOKEN_THRESHOLD`（デフォルト 100,000文字）を超え、Claudeが選択されている場合、自動的にGeminiに切り替え
+- Geminiが設定されていない場合はエラーを返す
+- 閾値は環境変数 `MAX_TOKEN_THRESHOLD` で調整可能
 
 ### 階層的プロンプトシステム
 
@@ -386,12 +439,13 @@ MAX_TOKEN_THRESHOLDで指定した入力文字数に基づいてAIモデルをGe
 1. 医師 + 文書タイプ固有のプロンプト
 2. 診療科 + 文書タイプ固有のプロンプト
 3. 文書タイプのデフォルトプロンプト
+4. `config.ini` のシステムデフォルト
 
-これにより、フォールバックデフォルトを維持しながら柔軟なカスタマイズが可能です。
+柔軟なカスタマイズとデフォルトフォールバックの両立を実現。
 
 ### 使用状況の追跡
 
-すべてのAPI呼び出しは以下の情報とともにログに記録されます:
+すべてのAPI呼び出しは以下の情報とともに PostgreSQL に記録:
 - 使用されたモデル
 - トークン数（入力/出力）
 - 作成時間
@@ -402,14 +456,16 @@ MAX_TOKEN_THRESHOLDで指定した入力文字数に基づいてAIモデルをGe
 
 ### コードスタイル
 - PEP 8ガイドラインに従う
-- すべての関数に型ヒントを使用
+- すべての関数に型ヒント（パラメータと戻り値）を使用
 - インポート順序: 標準ライブラリ → サードパーティ → ローカルモジュール
-- インポートをアルファベット順に保つ
+- 各グループ内でアルファベット順にソート（importが先、fromは後）
+- 関数サイズは50行以下を目標
+- コメントは複雑なロジックのみ日本語で記述（文末に句点不要）
 
 ### コミットメッセージ
-- 説明的なコミットメッセージを使用
-- 可能な限り従来のコミット形式に従う
-- 該当する場合は日本語と英語の説明を両方含める
+- 従来のコミット形式を使用（✨ feat, 🐛 fix, 📝 docs, ♻️ refactor, ✅ test）
+- 変更内容と理由を日本語で記述
+- 変更範囲は最小限に
 
 ## ライセンス
 

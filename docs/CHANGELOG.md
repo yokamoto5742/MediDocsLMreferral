@@ -5,6 +5,27 @@
 このフォーマットは [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) に基づいており、
 このプロジェクトは [Semantic Versioning](https://semver.org/spec/v2.0.0.html) に準拠しています。
 
+## [1.4.0] - 2026-01-27
+
+### 追加
+- `app/models/prompt.py`: 型ヒントを追加
+- `app/models/evaluation_prompt.py`: 型ヒントを追加
+- `app/services/evaluation_service.py`: prompt_data.contentに型キャストを追加
+
+### 変更
+- `app/services/summary_service.py`: SummaryResultをSummaryResponseに置き換え
+- `app/services/evaluation_service.py`: プロンプト構築の退院時処方を現在の処方に変更
+- `docs/README.md`: APIクライアントアーキテクチャ、開発コマンド、型チェック（Pyright）、コントリビューションガイドを更新
+
+### 修正
+- `app/static/js/app.js`: コメントの表記ゆれを修正
+- `tests/api/test_base_api.py`: 空文字列のテストケースを修正
+- `tests/services/test_evaluation_service.py`: 退院時処方の表記を修正
+
+### リファクタリング
+- `tests/`: 不要な引数を削除し、テストを簡潔にする
+- `app/utils/text_processor.py`, `app/utils/error_handlers.py`: 不要なコメントを削除
+
 ## [1.1.0] - 2026-01-23
 
 ### 修正
@@ -34,5 +55,6 @@
 
 ## バージョン履歴
 
+- **1.4.0** (2026-01-27): 型ヒント追加、スキーマ最適化、ドキュメント更新
 - **1.1.0** (2026-01-23): テスト修正とテキスト処理強化
 - **1.0.0** (2026-01-21): 包括的な機能と完全なテストカバレッジを備えた安定版リリース
