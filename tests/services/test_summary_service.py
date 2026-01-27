@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+from app.schemas.summary import SummaryResponse
 from app.services.summary_service import (
-    SummaryResult,
     determine_model,
     execute_summary_generation,
     get_provider_and_model,

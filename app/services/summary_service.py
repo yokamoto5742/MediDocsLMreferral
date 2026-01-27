@@ -1,29 +1,16 @@
-from dataclasses import dataclass
-from datetime import datetime
 import time
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from app.core.config import get_settings
 from app.core.database import get_db_session
 from app.external.api_factory import generate_summary
 from app.models.usage import SummaryUsage
+from app.schemas.summary import SummaryResponse
 from app.utils.text_processor import format_output_summary, parse_output_summary
 
 JST = ZoneInfo("Asia/Tokyo")
 settings = get_settings()
-
-
-@dataclass
-class SummaryResult:
-    success: bool
-    output_summary: str
-    parsed_summary: dict[str, str]
-    input_tokens: int
-    output_tokens: int
-    processing_time: float
-    model_used: str
-    model_switched: bool
-    error_message: str | None = None
 
 
 def validate_input(medical_text: str) -> tuple[bool, str | None]:
@@ -102,12 +89,12 @@ def execute_summary_generation(
     document_type: str,
     model: str,
     model_explicitly_selected: bool = False,
-) -> SummaryResult:
+) -> SummaryResponse:
     """文書生成を実行"""
     # 入力検証
     is_valid, error_msg = validate_input(medical_text)
     if not is_valid:
-        return SummaryResult(
+        return SummaryResponse(
             success=False,
             output_summary="",
             parsed_summary={},
@@ -126,7 +113,7 @@ def execute_summary_generation(
             model, total_length, department, document_type, doctor, model_explicitly_selected
         )
     except ValueError as e:
-        return SummaryResult(
+        return SummaryResponse(
             success=False,
             output_summary="",
             parsed_summary={},
@@ -142,7 +129,7 @@ def execute_summary_generation(
     try:
         provider, model_name = get_provider_and_model(final_model)
     except ValueError as e:
-        return SummaryResult(
+        return SummaryResponse(
             success=False,
             output_summary="",
             parsed_summary={},
@@ -169,7 +156,7 @@ def execute_summary_generation(
             model_name=model_name,
         )
     except Exception as e:
-        return SummaryResult(
+        return SummaryResponse(
             success=False,
             output_summary="",
             parsed_summary={},
@@ -198,7 +185,7 @@ def execute_summary_generation(
         processing_time=processing_time,
     )
 
-    return SummaryResult(
+    return SummaryResponse(
         success=True,
         output_summary=formatted_summary,
         parsed_summary=parsed_summary,

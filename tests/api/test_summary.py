@@ -5,13 +5,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi import status
 
-from app.services.summary_service import SummaryResult
+from app.schemas.summary import SummaryResponse
 
 
 @pytest.fixture
 def mock_summary_result_success():
-    """成功時のSummaryResult"""
-    return SummaryResult(
+    """成功時のSummaryResponse"""
+    return SummaryResponse(
         success=True,
         output_summary="主病名: 糖尿病\n治療経過: インスリン治療中",
         parsed_summary={
@@ -28,8 +28,8 @@ def mock_summary_result_success():
 
 @pytest.fixture
 def mock_summary_result_failure():
-    """失敗時のSummaryResult"""
-    return SummaryResult(
+    """失敗時のSummaryResponse"""
+    return SummaryResponse(
         success=False,
         output_summary="",
         parsed_summary={},
@@ -44,8 +44,8 @@ def mock_summary_result_failure():
 
 @pytest.fixture
 def mock_summary_result_model_switched():
-    """モデル切り替え時のSummaryResult"""
-    return SummaryResult(
+    """モデル切り替え時のSummaryResponse"""
+    return SummaryResponse(
         success=True,
         output_summary="主病名: 高血圧症",
         parsed_summary={"主病名": "高血圧症"},
