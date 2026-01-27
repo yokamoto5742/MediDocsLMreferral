@@ -294,7 +294,7 @@ class TestClaudeAPIClientGenerateContent:
         },
     )
     def test_generate_content_uses_anthropic_model(self):
-        """_generate_content - self.anthropic_model を使用"""
+        """_generate_content - 渡された model_name パラメータを使用"""
         mock_client = MagicMock()
         mock_response = MagicMock()
         mock_response.content = [TextBlock(type="text", text="テキスト")]
@@ -306,15 +306,15 @@ class TestClaudeAPIClientGenerateContent:
         client = ClaudeAPIClient()
         client.client = mock_client
 
-        # model_name パラメータに別のモデルを渡しても、
-        # 実際は self.anthropic_model が使用される
+        # model_name パラメータに渡した値が使用される
+        test_model = "different-model-name"
         client._generate_content(
-            prompt="プロンプト", model_name="different-model-name"
+            prompt="プロンプト", model_name=test_model
         )
 
-        # self.anthropic_model が使用されることを確認
+        # 渡された model_name が使用されることを確認
         call_args = mock_client.messages.create.call_args
-        assert call_args[1]["model"] == "claude-3-5-sonnet-20241022"
+        assert call_args[1]["model"] == test_model
 
     @patch.dict(
         os.environ,

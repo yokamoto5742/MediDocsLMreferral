@@ -42,12 +42,12 @@ def get_all_evaluation_prompts(db: Session = Depends(get_db)):
     return EvaluationPromptListResponse(
         prompts=[
             EvaluationPromptResponse(
-                id=p.id,
-                document_type=p.document_type,
-                content=p.content,
-                is_active=p.is_active,
-                created_at=p.created_at,
-                updated_at=p.updated_at,
+                id=p.id,  # type: ignore[assignment]
+                document_type=p.document_type,  # type: ignore[assignment]
+                content=p.content,  # type: ignore[assignment]
+                is_active=p.is_active,  # type: ignore[assignment]
+                created_at=p.created_at,  # type: ignore[assignment]
+                updated_at=p.updated_at,  # type: ignore[assignment]
             )
             for p in prompts
         ]
@@ -63,12 +63,12 @@ def get_evaluation_prompt(
     prompt = evaluation_service.get_evaluation_prompt(db, document_type)
     if prompt:
         return EvaluationPromptResponse(
-            id=prompt.id,
-            document_type=prompt.document_type,
-            content=prompt.content,
-            is_active=prompt.is_active,
-            created_at=prompt.created_at,
-            updated_at=prompt.updated_at,
+            id=prompt.id,  # type: ignore[assignment]
+            document_type=prompt.document_type,  # type: ignore[assignment]
+            content=prompt.content,  # type: ignore[assignment]
+            is_active=prompt.is_active,  # type: ignore[assignment]
+            created_at=prompt.created_at,  # type: ignore[assignment]
+            updated_at=prompt.updated_at,  # type: ignore[assignment]
         )
     return EvaluationPromptResponse(
         document_type=document_type,

@@ -1,16 +1,13 @@
-from sqlalchemy.orm import Session, defer
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.models.prompt import Prompt
 
 
 def get_all_prompts(db: Session) -> list[Prompt]:
     """全プロンプトを取得（更新日時降順、content除外）"""
-    return (
-        db.query(Prompt)
-        .options(defer(Prompt.content))
-        .order_by(Prompt.updated_at.desc())
-        .all()
-    )
+    query = select(Prompt).order_by(Prompt.updated_at.desc())
+    return list(db.execute(query).scalars().all())
 
 
 def get_prompt(

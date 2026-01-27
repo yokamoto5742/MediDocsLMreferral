@@ -2,6 +2,7 @@ import os
 from typing import Tuple
 
 from anthropic import AnthropicBedrock
+from anthropic.types import TextBlock
 from dotenv import load_dotenv
 
 from app.core.constants import MESSAGES
@@ -51,6 +52,9 @@ class ClaudeAPIClient(BaseAPIClient):
             APIError: API呼び出しに失敗した場合
         """
         try:
+            if self.client is None:
+                raise APIError("Claude API クライアントが初期化されていません")
+
             response = self.client.messages.create(
                 model=model_name,
                 max_tokens=6000,
@@ -59,10 +63,12 @@ class ClaudeAPIClient(BaseAPIClient):
                 ]
             )
 
+            summary_text = MESSAGES["EMPTY_RESPONSE"]
             if response.content:
-                summary_text = response.content[0].text
-            else:
-                summary_text = MESSAGES["EMPTY_RESPONSE"]
+                for content_block in response.content:
+                    if isinstance(content_block, TextBlock):
+                        summary_text = content_block.text
+                        break
 
             input_tokens = response.usage.input_tokens
             output_tokens = response.usage.output_tokens
