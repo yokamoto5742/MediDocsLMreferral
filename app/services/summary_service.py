@@ -1,5 +1,6 @@
 import time
 from datetime import datetime
+import logging
 from zoneinfo import ZoneInfo
 
 from app.core.config import get_settings
@@ -207,7 +208,6 @@ def save_usage(
     processing_time: float,
 ) -> None:
     """使用統計をDBに保存"""
-    import logging
 
     try:
         with get_db_session() as db:
