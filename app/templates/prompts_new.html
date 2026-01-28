@@ -21,7 +21,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">診療科 *</label>
-                <select x-model="form.department" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                <select x-model="form.department" @change="updateDoctors()" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                     {% for dept in departments %}
                     <option value="{{ dept }}">{{ '全科共通' if dept == 'default' else dept }}</option>
                     {% endfor %}
@@ -29,9 +29,11 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">医師名 *</label>
-                <input type="text" x-model="form.doctor"
-                       class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                       placeholder="default または 医師名">
+                <select x-model="form.doctor" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                    <template x-for="doc in doctors" :key="doc">
+                        <option :value="doc" x-text="doc === 'default' ? '医師共通' : doc"></option>
+                    </template>
+                </select>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">文書タイプ *</label>
@@ -81,8 +83,26 @@ function promptNewPage() {
             selectedModel: '',
             content: ''
         },
+        doctors: ['default'],
         isSaving: false,
         error: null,
+
+        async init() {
+            await this.updateDoctors();
+        },
+
+        async updateDoctors() {
+            try {
+                const response = await fetch(`/api/settings/doctors/${this.form.department}`);
+                const data = await response.json();
+                this.doctors = data.doctors;
+                if (!this.doctors.includes(this.form.doctor)) {
+                    this.form.doctor = this.doctors[0];
+                }
+            } catch (e) {
+                this.doctors = ['default'];
+            }
+        },
 
         async savePrompt() {
             if (!this.form.department || !this.form.doctor || !this.form.documentType || !this.form.content.trim()) {

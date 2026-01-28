@@ -11,7 +11,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">診療科</label>
-                <select x-model="filter.department" @change="applyFilters()" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                <select x-model="filter.department" @change="updateDoctors(); applyFilters();" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                     <option value="">すべて</option>
                     {% for dept in departments %}
                     <option value="{{ dept }}">{{ '全科共通' if dept == 'default' else dept }}</option>
@@ -22,7 +22,9 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">医師名</label>
                 <select x-model="filter.doctor" @change="applyFilters()" class="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                     <option value="">すべて</option>
-                    <option value="default">医師共通</option>
+                    <template x-for="doc in doctors" :key="doc">
+                        <option :value="doc" x-text="doc === 'default' ? '医師共通' : doc"></option>
+                    </template>
                 </select>
             </div>
             <div>
@@ -115,6 +117,7 @@ function promptsPage() {
     return {
         prompts: [],
         filteredPrompts: [],
+        doctors: ['default'],
         filter: {
             department: 'default',
             doctor: 'default',
@@ -130,7 +133,25 @@ function promptsPage() {
 
         async init() {
             this.checkQueryParams();
+            await this.updateDoctors();
             await this.loadPrompts();
+        },
+
+        async updateDoctors() {
+            if (!this.filter.department) {
+                this.doctors = ['default'];
+                return;
+            }
+            try {
+                const response = await fetch(`/api/settings/doctors/${this.filter.department}`);
+                const data = await response.json();
+                this.doctors = data.doctors;
+                if (this.filter.doctor && !this.doctors.includes(this.filter.doctor)) {
+                    this.filter.doctor = '';
+                }
+            } catch (e) {
+                this.doctors = ['default'];
+            }
         },
 
         checkQueryParams() {

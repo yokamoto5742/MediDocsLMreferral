@@ -2,7 +2,7 @@ DEFAULT_DEPARTMENT = ["default", "眼科"]
 DEFAULT_DOCTOR = ["default"]
 
 DEPARTMENT_DOCTORS_MAPPING = {
-    "default": ["default", "医師共通"],
+    "default": ["default"],
     "眼科": ["default", "橋本義弘"],
 }
 
