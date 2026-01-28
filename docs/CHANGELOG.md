@@ -5,6 +5,56 @@
 このフォーマットは [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) に基づいており、
 このプロジェクトは [Semantic Versioning](https://semver.org/spec/v2.0.0.html) に準拠しています。
 
+## [1.5.0] - 2026-01-28
+
+### 追加
+- **フロントエンド環境構築**: Vite + TypeScript + Tailwind CSSのモダンなビルド環境を導入
+  - `frontend/`: フロントエンド専用ディレクトリ作成
+  - `frontend/src/types.ts`: バックエンドスキーマと対応する型定義
+  - `frontend/src/app.ts`: 型安全なAlpine.jsアプリケーション
+  - `frontend/src/main.ts`: エントリーポイント
+  - `frontend/src/styles/main.css`: Tailwind CSS + カスタムスタイル（@apply使用）
+  - `frontend/src/alpinejs.d.ts`: Alpine.js型定義
+  - `frontend/vite.config.ts`: Vite設定（プロキシ、ビルド設定）
+  - `frontend/tailwind.config.js`: Tailwind設定
+  - `frontend/postcss.config.js`: PostCSS設定
+  - `frontend/tsconfig.json`: TypeScript設定
+  - `frontend/package.json`: フロントエンド依存関係管理
+  - `frontend/README.md`: フロントエンドセットアップガイド
+- **Jinja2コンポーネント**: 画面ごとの分割
+  - `app/templates/components/input_screen.html`: 入力画面
+  - `app/templates/components/output_screen.html`: 出力画面
+  - `app/templates/components/evaluation_screen.html`: 評価画面
+- **Jinja2マクロ**: 共通UIコンポーネント
+  - `app/templates/macros.html`: テキストエリア、ボタン、アラートのマクロ
+- **ヘルパー関数**: Alpine.jsロジック整理
+  - `app/static/js/app.js`: `getCurrentTabContent()`, `copyCurrentTab()`, `isActiveTab()`, `getTabClass()`追加
+- **ドキュメント**:
+  - `html_refactoring_plan.md`: HTMLリファクタリング計画書
+  - `FRONTEND_MIGRATION.md`: フロントエンド移行ガイド
+
+### 変更
+- `app/templates/index.html`: 187行→9行に削減（includeのみ）
+- `app/static/css/style.css`: 共通CSSクラス追加（`.form-textarea`, `.btn-primary`等）
+- `app/templates/base.html`: Vite版とCDN版の切り替えコメント追加
+- `.gitignore`: フロントエンドビルド成果物を除外（`app/static/dist/`, `node_modules/`）
+
+### リファクタリング
+- **HTML整理**: Tailwind CSSクラスの重複を削減（10箇所以上→0）
+- **ロジック分離**: HTML内の三項演算子をJavaScript関数に移動
+- **型安全性**: TypeScriptによる型チェック導入
+
+### 技術スタック更新
+- TypeScript 5.3.0
+- Vite 5.0.0
+- Tailwind CSS 3.4.0
+- Alpine.js 3.13.0（型定義追加）
+
+### 備考
+- CDN版（フェーズ1-3）が現在稼働中
+- Vite版（フェーズ4）はビルド済み、いつでも切り替え可能
+- HMR対応の開発環境が利用可能
+
 ## [1.4.0] - 2026-01-27
 
 ### 追加
