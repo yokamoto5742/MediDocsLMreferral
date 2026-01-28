@@ -4,12 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}診療情報提供書作成アプリ{% endblock %}</title>
+
+    <!-- フェーズ4: Vite版（本番用） - npm run buildでビルド後に有効化 -->
+    <!-- <link rel="stylesheet" href="/static/dist/css/main.css"> -->
+
+    <!-- フェーズ1-3: CDN版（現在有効） -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class'
         }
     </script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <script>
         // ダークモード検出スクリプト（DOM読み込み前に実行）
         (function() {
@@ -28,8 +36,6 @@
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateDarkMode);
         })();
     </script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body class="bg-gray-50 dark:bg-gray-900" x-data="appState()">
     <div x-show="showCopySuccess"
@@ -56,6 +62,11 @@
         window.DOCUMENT_PURPOSE_MAPPING = {{ document_purpose_mapping | tojson }};
         {% endif %}
     </script>
+
+    <!-- フェーズ4: Vite版（本番用） - npm run buildでビルド後に有効化 -->
+    <!-- <script type="module" src="/static/dist/js/main.js"></script> -->
+
+    <!-- フェーズ1-3: 既存app.js（現在有効） -->
     <script src="/static/js/app.js"></script>
 </body>
 </html>

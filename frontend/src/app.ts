@@ -1,4 +1,53 @@
-function appState() {
+import type {
+    Settings,
+    FormData,
+    GenerationResult,
+    EvaluationResult,
+    SummaryResponse,
+    EvaluationResponse,
+    DoctorsResponse
+} from './types';
+
+type ScreenType = 'input' | 'output' | 'evaluation';
+
+interface AppState {
+    settings: Settings;
+    doctors: string[];
+    form: FormData;
+    result: GenerationResult;
+    isGenerating: boolean;
+    elapsedTime: number;
+    timerInterval: ReturnType<typeof setInterval> | null;
+    showCopySuccess: boolean;
+    error: string | null;
+    activeTab: number;
+    tabs: readonly string[];
+    currentScreen: ScreenType;
+    evaluationResult: EvaluationResult;
+    isEvaluating: boolean;
+    evaluationElapsedTime: number;
+    evaluationTimerInterval: ReturnType<typeof setInterval> | null;
+    init(): Promise<void>;
+    updateReferralPurpose(): void;
+    updateDoctors(): Promise<void>;
+    startTimer(): void;
+    stopTimer(): void;
+    generateSummary(): Promise<void>;
+    clearForm(): void;
+    backToInput(): void;
+    backToOutput(): void;
+    showEvaluation(): void;
+    startEvaluationTimer(): void;
+    stopEvaluationTimer(): void;
+    evaluateOutput(): Promise<void>;
+    copyToClipboard(text: string): Promise<void>;
+    getCurrentTabContent(): string;
+    copyCurrentTab(): void;
+    isActiveTab(index: number): boolean;
+    getTabClass(index: number): string;
+}
+
+export function appState(): AppState {
     return {
         // Settings
         settings: {
@@ -33,8 +82,8 @@ function appState() {
         showCopySuccess: false,
         error: null,
         activeTab: 0,
-        tabs: ['全文', '主病名', '紹介目的', '既往歴', '症状経過', '治療経過', '現在の処方', '備考'],
-        currentScreen: 'input', // 'input', 'output', or 'evaluation'
+        tabs: ['全文', '主病名', '紹介目的', '既往歴', '症状経過', '治療経過', '現在の処方', '備考'] as const,
+        currentScreen: 'input',
 
         // Evaluation state
         evaluationResult: {
@@ -47,7 +96,6 @@ function appState() {
 
         async init() {
             await this.updateDoctors();
-            // 初期表示で紹介目的を設定
             this.updateReferralPurpose();
         },
 
@@ -59,7 +107,7 @@ function appState() {
 
         async updateDoctors() {
             const response = await fetch(`/api/settings/doctors/${this.settings.department}`);
-            const data = await response.json();
+            const data = await response.json() as DoctorsResponse;
             this.doctors = data.doctors;
             if (!this.doctors.includes(this.settings.doctor)) {
                 this.settings.doctor = this.doctors[0];
@@ -74,8 +122,10 @@ function appState() {
         },
 
         stopTimer() {
-            clearInterval(this.timerInterval);
-            this.timerInterval = null;
+            if (this.timerInterval !== null) {
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+            }
         },
 
         async generateSummary() {
@@ -104,15 +154,15 @@ function appState() {
                     })
                 });
 
-                const data = await response.json();
+                const data = await response.json() as SummaryResponse;
 
                 if (data.success) {
                     this.result = {
-                        outputSummary: data.output_summary,
-                        parsedSummary: data.parsed_summary,
-                        processingTime: data.processing_time,
-                        modelUsed: data.model_used,
-                        modelSwitched: data.model_switched
+                        outputSummary: data.output_summary || '',
+                        parsedSummary: data.parsed_summary || {},
+                        processingTime: data.processing_time || null,
+                        modelUsed: data.model_used || '',
+                        modelSwitched: data.model_switched || false
                     };
                     // 新規生成時は評価結果をクリア
                     this.evaluationResult = {
@@ -164,7 +214,6 @@ function appState() {
         },
 
         showEvaluation() {
-            // 保存済みの評価結果を表示
             this.currentScreen = 'evaluation';
         },
 
@@ -176,8 +225,10 @@ function appState() {
         },
 
         stopEvaluationTimer() {
-            clearInterval(this.evaluationTimerInterval);
-            this.evaluationTimerInterval = null;
+            if (this.evaluationTimerInterval !== null) {
+                clearInterval(this.evaluationTimerInterval);
+                this.evaluationTimerInterval = null;
+            }
         },
 
         async evaluateOutput() {
@@ -210,12 +261,12 @@ function appState() {
                     })
                 });
 
-                const data = await response.json();
+                const data = await response.json() as EvaluationResponse;
 
                 if (data.success) {
                     this.evaluationResult = {
-                        result: data.evaluation_result,
-                        processingTime: data.processing_time
+                        result: data.evaluation_result || '',
+                        processingTime: data.processing_time || null
                     };
                     this.currentScreen = 'evaluation';
                 } else {
@@ -229,7 +280,7 @@ function appState() {
             }
         },
 
-        async copyToClipboard(text) {
+        async copyToClipboard(text: string) {
             try {
                 await navigator.clipboard.writeText(text);
                 this.showCopySuccess = true;
@@ -241,27 +292,23 @@ function appState() {
             }
         },
 
-        // フェーズ3: ヘルパー関数
-        // 現在表示中のタブコンテンツを取得
-        getCurrentTabContent() {
+        // ヘルパー関数
+        getCurrentTabContent(): string {
             if (this.activeTab === 0) {
                 return this.result.outputSummary;
             }
             return this.result.parsedSummary[this.tabs[this.activeTab]] || '';
         },
 
-        // 現在のタブをコピー
         copyCurrentTab() {
             this.copyToClipboard(this.getCurrentTabContent());
         },
 
-        // タブがアクティブかどうか
-        isActiveTab(index) {
+        isActiveTab(index: number): boolean {
             return this.activeTab === index;
         },
 
-        // タブのCSSクラスを取得
-        getTabClass(index) {
+        getTabClass(index: number): string {
             return this.isActiveTab(index)
                 ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400'
                 : 'border-transparent text-white hover:text-gray-700 dark:hover:text-gray-300';
