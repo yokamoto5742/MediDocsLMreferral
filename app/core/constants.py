@@ -1,3 +1,12 @@
+from enum import Enum
+
+
+class ModelType(str, Enum):
+    """AIモデルタイプ"""
+    CLAUDE = "Claude"
+    GEMINI_PRO = "Gemini_Pro"
+
+
 DEFAULT_DEPARTMENT = ["default", "眼科"]
 DEFAULT_DOCTOR = ["default"]
 

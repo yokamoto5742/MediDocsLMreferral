@@ -5,6 +5,28 @@
 このフォーマットは [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) に基づいており、
 このプロジェクトは [Semantic Versioning](https://semver.org/spec/v2.0.0.html) に準拠しています。
 
+## [1.5.2] - 2026-01-29
+
+### リファクタリング
+- **DRY原則の適用**: `app/services/summary_service.py`にエラーレスポンス生成ヘルパー関数`_error_response`を導入し、重複コードを削減
+- **マジックストリング削除**: `app/core/constants.py`に`ModelType` Enumを追加し、"Claude"、"Gemini_Pro"などの文字列リテラルを統一
+  - `app/services/summary_service.py`: `ModelType`と`APIProvider` Enumを使用
+  - `app/schemas/summary.py`: デフォルト値を`ModelType.CLAUDE.value`に変更
+  - `app/core/config.py`: `selected_ai_model`のデフォルト値を`ModelType.CLAUDE.value`に変更
+  - `app/main.py`: `get_available_models`関数で`ModelType` Enumを使用
+  - `app/api/summary.py`: `get_available_models`関数で`ModelType` Enumを使用
+- **冗長コード削除**: `app/api/summary.py`の`generate_summary`エンドポイントで、`SummaryResponse`の冗長な再構築を削除
+- **型ヒント追加**: `app/utils/text_processor.py`の`format_output_summary`と`parse_output_summary`関数に型ヒントを追加
+- **ロジック集約**: モデル名取得ロジックを`app/services/prompt_service.py`の`get_selected_model`関数に集約
+  - `app/services/summary_service.py`の`determine_model`関数で使用
+  - `app/external/base_api.py`の`get_model_name`関数で使用
+  - 重複していたデータベース呼び出しを統一
+
+### 修正
+- テストファイルの更新: リファクタリングに合わせてモックのパスとテストロジックを修正
+  - `tests/api/test_settings.py`: `test_get_doctors_default_department`の期待値を修正
+  - `tests/external/test_base_api.py`: `@patch`のパスを更新、`get_selected_model`を使用
+
 ## [1.5.1] - 2026-01-29
 
 ### 追加

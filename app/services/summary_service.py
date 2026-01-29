@@ -1,17 +1,33 @@
+import logging
 import time
 from datetime import datetime
-import logging
 from zoneinfo import ZoneInfo
 
 from app.core.config import get_settings
+from app.core.constants import ModelType
 from app.core.database import get_db_session
-from app.external.api_factory import generate_summary
+from app.external.api_factory import APIProvider, generate_summary
 from app.models.usage import SummaryUsage
 from app.schemas.summary import SummaryResponse
 from app.utils.text_processor import format_output_summary, parse_output_summary
 
 JST = ZoneInfo("Asia/Tokyo")
 settings = get_settings()
+
+
+def _error_response(error_msg: str, model: str, model_switched: bool = False) -> SummaryResponse:
+    """エラーレスポンスを生成するヘルパー関数"""
+    return SummaryResponse(
+        success=False,
+        output_summary="",
+        parsed_summary={},
+        input_tokens=0,
+        output_tokens=0,
+        processing_time=0,
+        model_used=model,
+        model_switched=model_switched,
+        error_message=error_msg,
+    )
 
 
 def validate_input(medical_text: str) -> tuple[bool, str | None]:
@@ -40,23 +56,20 @@ def determine_model(
     # プロンプトからモデルを取得
     if not model_explicitly_selected:
         try:
-            from app.core.database import get_db_session
-            from app.services import prompt_service
+            from app.services.prompt_service import get_selected_model
 
             with get_db_session() as db:
-                prompt_data = prompt_service.get_prompt(db, department, document_type, doctor)
-                if prompt_data:
-                    selected = prompt_data.selected_model
-                    if selected is not None:
-                        requested_model = str(selected)
+                selected = get_selected_model(db, department, document_type, doctor)
+                if selected is not None:
+                    requested_model = selected
         except Exception:
             # プロンプト取得に失敗しても処理を続行
             pass
 
     # 入力長による自動切替
-    if input_length > settings.max_token_threshold and requested_model == "Claude":
+    if input_length > settings.max_token_threshold and requested_model == ModelType.CLAUDE:
         if settings.gemini_model:
-            return "Gemini_Pro", True
+            return ModelType.GEMINI_PRO, True
         else:
             # Geminiが利用できない場合はエラー
             raise ValueError("入力が長すぎますが、Geminiモデルが設定されていません")
@@ -66,16 +79,16 @@ def determine_model(
 
 def get_provider_and_model(selected_model: str) -> tuple[str, str]:
     """モデル名からプロバイダーとモデル名を取得"""
-    if selected_model == "Claude":
+    if selected_model == ModelType.CLAUDE:
         model = settings.claude_model or settings.anthropic_model
         if not model:
             raise ValueError("Claudeモデルが設定されていません")
-        return "claude", model
-    elif selected_model == "Gemini_Pro":
+        return APIProvider.CLAUDE.value, model
+    elif selected_model == ModelType.GEMINI_PRO:
         model = settings.gemini_model
         if not model:
             raise ValueError("Geminiモデルが設定されていません")
-        return "gemini", model
+        return APIProvider.GEMINI.value, model
     else:
         raise ValueError(f"サポートされていないモデル: {selected_model}")
 
@@ -95,17 +108,7 @@ def execute_summary_generation(
     # 入力検証
     is_valid, error_msg = validate_input(medical_text)
     if not is_valid:
-        return SummaryResponse(
-            success=False,
-            output_summary="",
-            parsed_summary={},
-            input_tokens=0,
-            output_tokens=0,
-            processing_time=0,
-            model_used=model,
-            model_switched=False,
-            error_message=error_msg,
-        )
+        return _error_response(error_msg, model)
 
     # モデル決定
     total_length = len(medical_text) + len(additional_info or "")
@@ -114,33 +117,13 @@ def execute_summary_generation(
             model, total_length, department, document_type, doctor, model_explicitly_selected
         )
     except ValueError as e:
-        return SummaryResponse(
-            success=False,
-            output_summary="",
-            parsed_summary={},
-            input_tokens=0,
-            output_tokens=0,
-            processing_time=0,
-            model_used=model,
-            model_switched=False,
-            error_message=str(e),
-        )
+        return _error_response(str(e), model)
 
     # プロバイダーとモデル名を取得
     try:
         provider, model_name = get_provider_and_model(final_model)
     except ValueError as e:
-        return SummaryResponse(
-            success=False,
-            output_summary="",
-            parsed_summary={},
-            input_tokens=0,
-            output_tokens=0,
-            processing_time=0,
-            model_used=final_model,
-            model_switched=model_switched,
-            error_message=str(e),
-        )
+        return _error_response(str(e), final_model, model_switched)
 
     # AI API 呼び出し
     start_time = time.time()
@@ -157,17 +140,7 @@ def execute_summary_generation(
             model_name=model_name,
         )
     except Exception as e:
-        return SummaryResponse(
-            success=False,
-            output_summary="",
-            parsed_summary={},
-            input_tokens=0,
-            output_tokens=0,
-            processing_time=0,
-            model_used=final_model,
-            model_switched=model_switched,
-            error_message=str(e),
-        )
+        return _error_response(str(e), final_model, model_switched)
 
     processing_time = time.time() - start_time
 

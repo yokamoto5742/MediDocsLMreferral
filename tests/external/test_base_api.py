@@ -45,8 +45,8 @@ class TestBaseAPIClientInitialization:
 class TestCreateSummaryPrompt:
     """create_summary_prompt メソッドのテスト"""
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
+    @patch("app.external.base_api.get_prompt")
+    @patch("app.external.base_api.get_db_session")
     def test_create_summary_prompt_minimal(self, mock_db_session, mock_get_prompt):
         """プロンプト生成 - 最小パラメータ"""
         mock_db = MagicMock()
@@ -61,8 +61,8 @@ class TestCreateSummaryPrompt:
         assert "患者情報" in prompt
         assert "【追加情報】" in prompt
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
+    @patch("app.external.base_api.get_prompt")
+    @patch("app.external.base_api.get_db_session")
     def test_create_summary_prompt_all_params(self, mock_db_session, mock_get_prompt):
         """プロンプト生成 - 全パラメータ"""
         mock_db = MagicMock()
@@ -88,8 +88,8 @@ class TestCreateSummaryPrompt:
         assert "処方内容" in prompt
         assert "【追加情報】追加情報" in prompt
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
+    @patch("app.external.base_api.get_prompt")
+    @patch("app.external.base_api.get_db_session")
     def test_create_summary_prompt_empty_optional_fields(
         self, mock_db_session, mock_get_prompt
     ):
@@ -110,8 +110,8 @@ class TestCreateSummaryPrompt:
         # 追加情報は空でも含まれる
         assert "【追加情報】" in prompt
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
+    @patch("app.external.base_api.get_prompt")
+    @patch("app.external.base_api.get_db_session")
     def test_create_summary_prompt_whitespace_optional_fields(
         self, mock_db_session, mock_get_prompt
     ):
@@ -133,8 +133,8 @@ class TestCreateSummaryPrompt:
         assert "【紹介目的】\n  \n  " not in prompt
         assert "【現在の処方】\n\t" not in prompt
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
+    @patch("app.external.base_api.get_prompt")
+    @patch("app.external.base_api.get_db_session")
     def test_create_summary_prompt_with_custom_prompt(self, mock_db_session, mock_get_prompt):
         """プロンプト生成 - カスタムプロンプト使用"""
         mock_db = MagicMock()
@@ -165,8 +165,8 @@ class TestCreateSummaryPrompt:
         assert call_args[2] == "他院への紹介"
         assert call_args[3] == "橋本義弘"
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
+    @patch("app.external.base_api.get_prompt")
+    @patch("app.external.base_api.get_db_session")
     def test_create_summary_prompt_fallback_to_default(
         self, mock_db_session, mock_get_prompt
     ):
@@ -178,11 +178,13 @@ class TestCreateSummaryPrompt:
         client = MockAPIClient()
         prompt = client.create_summary_prompt(medical_text="テスト", department="眼科", document_type="他院への紹介")
 
-        # カスタムプロンプトがない場合はデフォルト使用
+        # カスタムプロンプトがない場合はDEFAULT_SUMMARY_PROMPTを使用
         assert "以下のカルテ情報を基に" in prompt
+        assert "【カルテ情報】" in prompt
+        assert "テスト" in prompt
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
+    @patch("app.external.base_api.get_prompt")
+    @patch("app.external.base_api.get_db_session")
     def test_create_summary_prompt_default_document_type(
         self, mock_db_session, mock_get_prompt
     ):
@@ -194,28 +196,29 @@ class TestCreateSummaryPrompt:
         client = MockAPIClient()
         prompt = client.create_summary_prompt(medical_text="データ")
 
-        # get_prompt が DEFAULT_DOCUMENT_TYPE で呼ばれることを確認
+        # get_promptが呼ばれ、DEFAULT_DOCUMENT_TYPEで呼ばれることを確認
         assert mock_get_prompt.called
         call_args = mock_get_prompt.call_args[0]
         assert call_args[1] == "default"
         assert call_args[2] == DEFAULT_DOCUMENT_TYPE
         assert call_args[3] == "default"
+        # 生成されたプロンプトにカルテ情報が含まれることを確認
+        assert "【カルテ情報】" in prompt
+        assert "データ" in prompt
 
 
 class TestGetModelName:
     """get_model_name メソッドのテスト"""
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
-    def test_get_model_name_from_prompt(self, mock_db_session, mock_get_prompt):
+    @patch("app.external.base_api.get_selected_model")
+    @patch("app.external.base_api.get_db_session")
+    def test_get_model_name_from_prompt(self, mock_db_session, mock_get_selected_model):
         """モデル名取得 - プロンプトから"""
         mock_db = MagicMock()
         mock_db_session.return_value.__enter__.return_value = mock_db
 
-        mock_prompt = MagicMock()
-        mock_prompt.content = "プロンプト"
-        mock_prompt.selected_model = "gemini-1.5-pro-002"
-        mock_get_prompt.return_value = mock_prompt
+        # get_selected_model がモデル名を返す
+        mock_get_selected_model.return_value = "gemini-1.5-pro-002"
 
         client = MockAPIClient(default_model="claude-3-5-sonnet-20241022")
         model_name = client.get_model_name(
@@ -226,13 +229,14 @@ class TestGetModelName:
 
         assert model_name == "gemini-1.5-pro-002"
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
-    def test_get_model_name_default_fallback(self, mock_db_session, mock_get_prompt):
+    @patch("app.external.base_api.get_selected_model")
+    @patch("app.external.base_api.get_db_session")
+    def test_get_model_name_default_fallback(self, mock_db_session, mock_get_selected_model):
         """モデル名取得 - デフォルトへのフォールバック"""
         mock_db = MagicMock()
         mock_db_session.return_value.__enter__.return_value = mock_db
-        mock_get_prompt.return_value = None
+        # get_selected_model がNoneを返す（プロンプトが見つからない場合）
+        mock_get_selected_model.return_value = None
 
         client = MockAPIClient(default_model="claude-3-5-sonnet-20241022")
         model_name = client.get_model_name(
@@ -243,17 +247,15 @@ class TestGetModelName:
 
         assert model_name == "claude-3-5-sonnet-20241022"
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
-    def test_get_model_name_no_selected_model_in_prompt(self, mock_db_session, mock_get_prompt):
+    @patch("app.external.base_api.get_selected_model")
+    @patch("app.external.base_api.get_db_session")
+    def test_get_model_name_no_selected_model_in_prompt(self, mock_db_session, mock_get_selected_model):
         """モデル名取得 - プロンプトにselected_modelがない"""
         mock_db = MagicMock()
         mock_db_session.return_value.__enter__.return_value = mock_db
 
-        mock_prompt = MagicMock()
-        mock_prompt.content = "プロンプトのみ"
-        mock_prompt.selected_model = None
-        mock_get_prompt.return_value = mock_prompt
+        # get_selected_model がNoneを返す（selected_modelがない場合）
+        mock_get_selected_model.return_value = None
 
         client = MockAPIClient(default_model="default-model")
         model_name = client.get_model_name(
@@ -265,17 +267,15 @@ class TestGetModelName:
         # selected_model がない場合はデフォルトを使用
         assert model_name == "default-model"
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
-    def test_get_model_name_empty_selected_model(self, mock_db_session, mock_get_prompt):
+    @patch("app.external.base_api.get_selected_model")
+    @patch("app.external.base_api.get_db_session")
+    def test_get_model_name_empty_selected_model(self, mock_db_session, mock_get_selected_model):
         """モデル名取得 - selected_modelが空"""
         mock_db = MagicMock()
         mock_db_session.return_value.__enter__.return_value = mock_db
 
-        mock_prompt = MagicMock()
-        mock_prompt.content = "プロンプト"
-        mock_prompt.selected_model = ""
-        mock_get_prompt.return_value = mock_prompt
+        # get_selected_model は空文字列の場合 None を返す（prompt_service.pyの実装）
+        mock_get_selected_model.return_value = None
 
         client = MockAPIClient(default_model="default-model")
         model_name = client.get_model_name(
@@ -284,15 +284,15 @@ class TestGetModelName:
             doctor="default",
         )
 
-        # selected_model が空文字列の場合もstr()で返される
-        assert model_name == ""
+        # selected_model が空文字列の場合はget_selected_modelがNoneを返し、デフォルトモデルが使用される
+        assert model_name == "default-model"
 
 
 class TestGenerateSummary:
     """generate_summary メソッドのテスト"""
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
+    @patch("app.external.base_api.get_prompt")
+    @patch("app.external.base_api.get_db_session")
     def test_generate_summary_success(self, mock_db_session, mock_get_prompt):
         """文書生成 - 正常系"""
         mock_db = MagicMock()
@@ -307,8 +307,8 @@ class TestGenerateSummary:
         assert result == ("生成されたテキスト", 1000, 500)
         assert client.initialized is True
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
+    @patch("app.external.base_api.get_prompt")
+    @patch("app.external.base_api.get_db_session")
     def test_generate_summary_with_model_name(self, mock_db_session, mock_get_prompt):
         """文書生成 - model_name 指定"""
         mock_db = MagicMock()
@@ -323,8 +323,8 @@ class TestGenerateSummary:
 
         assert result == ("生成されたテキスト", 1000, 500)
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
+    @patch("app.external.base_api.get_prompt")
+    @patch("app.external.base_api.get_db_session")
     def test_generate_summary_without_model_name(self, mock_db_session, mock_get_prompt):
         """文書生成 - model_name なし（デフォルト使用）"""
         mock_db = MagicMock()
@@ -359,8 +359,8 @@ class TestGenerateSummary:
 
         assert "初期化エラー" in str(exc_info.value)
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
+    @patch("app.external.base_api.get_prompt")
+    @patch("app.external.base_api.get_db_session")
     def test_generate_summary_generate_content_failure(
         self, mock_db_session, mock_get_prompt
     ):
@@ -382,8 +382,8 @@ class TestGenerateSummary:
         assert "FailingGenerateClient" in str(exc_info.value)
         assert "生成エラー" in str(exc_info.value)
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
+    @patch("app.external.base_api.get_prompt")
+    @patch("app.external.base_api.get_db_session")
     def test_generate_summary_api_error_propagation(
         self, mock_db_session, mock_get_prompt
     ):
@@ -405,8 +405,8 @@ class TestGenerateSummary:
         # APIError はそのまま伝播される
         assert "API呼び出しエラー" in str(exc_info.value)
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
+    @patch("app.external.base_api.get_prompt")
+    @patch("app.external.base_api.get_db_session")
     def test_generate_summary_minimal_params(self, mock_db_session, mock_get_prompt):
         """文書生成 - 最小パラメータ"""
         mock_db = MagicMock()
@@ -452,8 +452,8 @@ class TestBaseAPIClientAbstractMethods:
 class TestBaseAPIClientEdgeCases:
     """BaseAPIClient のエッジケース"""
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
+    @patch("app.external.base_api.get_prompt")
+    @patch("app.external.base_api.get_db_session")
     def test_create_summary_prompt_very_long_medical_text(
         self, mock_db_session, mock_get_prompt
     ):
@@ -469,8 +469,8 @@ class TestBaseAPIClientEdgeCases:
         assert "以下のカルテ情報を基に" in prompt
         assert long_text in prompt
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
+    @patch("app.external.base_api.get_prompt")
+    @patch("app.external.base_api.get_db_session")
     def test_create_summary_prompt_special_characters(
         self, mock_db_session, mock_get_prompt
     ):
@@ -485,13 +485,14 @@ class TestBaseAPIClientEdgeCases:
 
         assert special_text in prompt
 
-    @patch("app.services.prompt_service.get_prompt")
-    @patch("app.core.database.get_db_session")
-    def test_get_model_name_with_none_prompt(self, mock_db_session, mock_get_prompt):
-        """モデル名取得 - get_prompt が None を返す"""
+    @patch("app.external.base_api.get_selected_model")
+    @patch("app.external.base_api.get_db_session")
+    def test_get_model_name_with_none_prompt(self, mock_db_session, mock_get_selected_model):
+        """モデル名取得 - get_selected_model が None を返す"""
         mock_db = MagicMock()
         mock_db_session.return_value.__enter__.return_value = mock_db
-        mock_get_prompt.return_value = None
+        # get_selected_model がNoneを返す（プロンプトが見つからない場合）
+        mock_get_selected_model.return_value = None
 
         client = MockAPIClient(default_model="fallback-model")
         model_name = client.get_model_name(

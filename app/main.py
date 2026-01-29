@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 
 from app.api.router import api_router
 from app.core.config import get_settings
-from app.core.constants import DEFAULT_DEPARTMENT, DOCUMENT_TYPES, DOCUMENT_TYPE_TO_PURPOSE_MAPPING, TAB_NAMES
+from app.core.constants import DEFAULT_DEPARTMENT, DOCUMENT_TYPES, DOCUMENT_TYPE_TO_PURPOSE_MAPPING, ModelType, TAB_NAMES
 from app.utils.error_handlers import api_exception_handler, validation_exception_handler
 
 settings = get_settings()
@@ -36,10 +36,10 @@ def get_available_models() -> list[str]:
     """利用可能なモデル一覧を取得"""
     models = []
     if settings.anthropic_model or settings.claude_api_key:
-        models.append("Claude")
+        models.append(ModelType.CLAUDE.value)
     if settings.gemini_model:
-        models.append("Gemini_Pro")
-    return models if models else ["Claude"]
+        models.append(ModelType.GEMINI_PRO.value)
+    return models if models else [ModelType.CLAUDE.value]
 
 
 def get_common_context(active_page: str = "index") -> dict:

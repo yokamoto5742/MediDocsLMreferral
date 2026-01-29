@@ -2,6 +2,8 @@ from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.core.constants import ModelType
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -45,7 +47,7 @@ class Settings(BaseSettings):
     max_token_threshold: int = 100000
     prompt_management: bool = True
     app_type: str = "default"
-    selected_ai_model: str = "Claude"
+    selected_ai_model: str = ModelType.CLAUDE.value
 
     def get_database_url(self) -> str:
         """データベース接続URLを構築"""

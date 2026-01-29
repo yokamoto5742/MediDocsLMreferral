@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+from app.core.constants import ModelType
+
 
 class SummaryRequest(BaseModel):
     referral_purpose: str = ""
@@ -9,7 +11,7 @@ class SummaryRequest(BaseModel):
     department: str = "default"
     doctor: str = "default"
     document_type: str = "他院への紹介"
-    model: str = "Claude"
+    model: str = ModelType.CLAUDE.value
     model_explicitly_selected: bool = False
 
 

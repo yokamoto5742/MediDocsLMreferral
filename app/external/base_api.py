@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 
 from app.core.constants import DEFAULT_DOCUMENT_TYPE, DEFAULT_SUMMARY_PROMPT
 from app.core.database import get_db_session
-from app.services import prompt_service
+from app.services.prompt_service import get_prompt, get_selected_model
 from app.utils.exceptions import APIError
 
 
@@ -43,7 +43,7 @@ class BaseAPIClient(ABC):
     ) -> str:
         try:
             with get_db_session() as db:
-                prompt_data = prompt_service.get_prompt(db, department, document_type, doctor)
+                prompt_data = get_prompt(db, department, document_type, doctor)
                 if prompt_data:
                     prompt_template = prompt_data.content
                 else:
@@ -69,13 +69,12 @@ class BaseAPIClient(ABC):
         document_type: str,
         doctor: str
     ) -> str | None:
+        """プロンプトから選択されたモデル名を取得、なければデフォルトモデルを返す"""
         try:
             with get_db_session() as db:
-                prompt_data = prompt_service.get_prompt(db, department, document_type, doctor)
-                if prompt_data:
-                    selected = prompt_data.selected_model
-                    if selected is not None:
-                        return str(selected)
+                selected = get_selected_model(db, department, document_type, doctor)
+                if selected is not None:
+                    return selected
         except Exception:
             pass
         return self.default_model

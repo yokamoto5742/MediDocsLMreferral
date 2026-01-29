@@ -33,6 +33,19 @@ def get_prompt_by_id(db: Session, prompt_id: int) -> Prompt | None:
     return db.query(Prompt).filter(Prompt.id == prompt_id).first()
 
 
+def get_selected_model(
+    db: Session,
+    department: str,
+    document_type: str,
+    doctor: str
+) -> str | None:
+    """プロンプトから選択されたモデル名を取得"""
+    prompt = get_prompt(db, department, document_type, doctor)
+    if prompt and prompt.selected_model:
+        return str(prompt.selected_model)
+    return None
+
+
 def create_or_update_prompt(
     db: Session,
     department: str,

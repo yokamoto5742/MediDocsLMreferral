@@ -10,7 +10,8 @@ section_aliases = {
 }
 
 
-def format_output_summary(summary_text):
+def format_output_summary(summary_text: str) -> str:
+    """AI出力のフォーマットを整形"""
     processed_text = (
         summary_text.replace('*', '')
         .replace('＊', '')
@@ -21,7 +22,8 @@ def format_output_summary(summary_text):
     return processed_text
 
 
-def parse_output_summary(summary_text):
+def parse_output_summary(summary_text: str) -> dict[str, str]:
+    """AI出力をセクションごとに分割してパース"""
     sections = {section: "" for section in DEFAULT_SECTION_NAMES}
     lines = summary_text.split('\n')
     current_section = None

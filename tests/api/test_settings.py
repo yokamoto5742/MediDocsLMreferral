@@ -32,7 +32,8 @@ def test_get_doctors_default_department(client, test_db):
     assert "doctors" in data
     assert isinstance(data["doctors"], list)
     assert "default" in data["doctors"]
-    assert "医師共通" in data["doctors"]
+    # constants.pyのDEPARTMENT_DOCTORS_MAPPING["default"]に合わせる
+    assert data["doctors"] == ["default"]
 
 
 def test_get_doctors_specific_department(client, test_db):
