@@ -1,7 +1,7 @@
 ============================================================
 プロジェクト構造: MediDocsLMreferral
 パス: C:\Users\yokam\PycharmProjects\MediDocsLMreferral
-生成日時: 2026-01-27 18:51:43
+生成日時: 2026-01-29 16:15:51
 ============================================================
 
 └── MediDocsLMreferral
@@ -45,17 +45,19 @@
     │   │   ├── statistics_service.py
     │   │   └── summary_service.py
     │   ├── static
-    │   │   ├── css
-    │   │   │   └── style.css
-    │   │   └── js
-    │   │       └── app.js
     │   ├── templates
     │   │   ├── components
+    │   │   │   ├── evaluation_screen.html
+    │   │   │   ├── input_screen.html
+    │   │   │   ├── output_screen.html
     │   │   │   └── sidebar.html
+    │   │   ├── fragments
+    │   │   │   └── statistics_records_tbody.html
     │   │   ├── base.html
     │   │   ├── evaluation_prompts.html
     │   │   ├── evaluation_prompts_edit.html
     │   │   ├── index.html
+    │   │   ├── macros.html
     │   │   ├── prompts.html
     │   │   ├── prompts_edit.html
     │   │   ├── prompts_new.html
@@ -68,9 +70,23 @@
     │   ├── __init__.py
     │   └── main.py
     ├── docs
-    │   ├── README.md
     │   ├── CHANGELOG.md
     │   └── LICENSE
+    ├── frontend
+    │   ├── src
+    │   │   ├── styles
+    │   │   │   └── main.css
+    │   │   ├── alpinejs.d.ts
+    │   │   ├── app.ts
+    │   │   ├── main.ts
+    │   │   └── types.ts
+    │   ├── DEVELOPMENT.md
+    │   ├── package-lock.json
+    │   ├── package.json
+    │   ├── postcss.config.js
+    │   ├── tailwind.config.js
+    │   ├── tsconfig.json
+    │   └── vite.config.ts
     ├── scripts
     │   ├── project_structure.py
     │   └── project_structure.txt
@@ -79,4 +95,6 @@
     ├── requirements.txt
     ├── .python-version
     ├── CLAUDE.md
-    └── pyrightconfig.json
+    ├── package.json
+    ├── pyrightconfig.json
+    └── README.md
