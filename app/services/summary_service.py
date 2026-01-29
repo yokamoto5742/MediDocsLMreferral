@@ -108,7 +108,7 @@ def execute_summary_generation(
     # 入力検証
     is_valid, error_msg = validate_input(medical_text)
     if not is_valid:
-        return _error_response(error_msg, model)
+        return _error_response(error_msg or "入力エラーが発生しました", model)
 
     # モデル決定
     total_length = len(medical_text) + len(additional_info or "")
