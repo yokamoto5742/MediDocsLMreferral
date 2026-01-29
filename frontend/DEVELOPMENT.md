@@ -45,42 +45,6 @@ npm run build
 
 ビルド成果物は`../app/static/dist/`に出力されます。
 
-## base.htmlの切り替え
-
-ビルド後、`app/templates/base.html`で以下のコメントを切り替えてVite版を有効化してください。
-
-**フェーズ1-3（CDN版・現在有効）:**
-```html
-<!-- フェーズ4: Vite版（本番用） -->
-<!-- <link rel="stylesheet" href="/static/dist/css/main.css"> -->
-
-<!-- フェーズ1-3: CDN版（現在有効） -->
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="/static/css/style.css">
-<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-```
-
-**フェーズ4（Vite版）:**
-```html
-<!-- フェーズ4: Vite版（本番用） -->
-<link rel="stylesheet" href="/static/dist/css/main.css">
-
-<!-- フェーズ1-3: CDN版 -->
-<!-- <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="/static/css/style.css">
-<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script> -->
-```
-
-JavaScriptも同様に切り替え:
-
-```html
-<!-- フェーズ4: Vite版（本番用） -->
-<script type="module" src="/static/dist/js/main.js"></script>
-
-<!-- フェーズ1-3: 既存app.js -->
-<!-- <script src="/static/js/app.js"></script> -->
-```
-
 ## ディレクトリ構造
 
 ```

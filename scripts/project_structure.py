@@ -18,7 +18,7 @@ class ProjectStructureGenerator:
         }
 
         self.important_files = {
-            'README.md', 'requirements.txt',
+            'DEVELOPMENT.md', 'requirements.txt',
             'setup.py', 'pyproject.toml', 'Dockerfile',
             'config.ini', 'alembic.ini', '.env', 'Procfile'
         }

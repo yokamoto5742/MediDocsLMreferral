@@ -5,18 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}診療情報提供書作成アプリ{% endblock %}</title>
 
-    <!-- フェーズ4: Vite版（本番用） -->
     <link rel="stylesheet" href="/static/dist/css/main.css">
-
-    <!-- フェーズ1-3: CDN版 -->
-    <!-- <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class'
-        }
-    </script>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script> -->
 
     <script>
         // ダークモード検出スクリプト（DOM読み込み前に実行）
@@ -63,10 +52,7 @@
         {% endif %}
     </script>
 
-    <!-- フェーズ4: Vite版（本番用） -->
     <script type="module" src="/static/dist/js/main.js"></script>
 
-    <!-- フェーズ1-3: 既存app.js -->
-    <!-- <script src="/static/js/app.js"></script> -->
 </body>
 </html>

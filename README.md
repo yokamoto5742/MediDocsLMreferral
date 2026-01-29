@@ -469,14 +469,14 @@ tests/
 
 ## ライセンス
 
-このプロジェクトは[Apache License 2.0](LICENSE)のもとで公開されています。
+このプロジェクトは[Apache License 2.0](docs/LICENSE)のもとで公開されています。
 
 ## サポート
 
 問題、質問、コントリビューションについては、プロジェクトリポジトリを参照してください。
 
 ## 変更履歴
-バージョン履歴と更新については、[CHANGELOG.md](CHANGELOG.md)を参照してください。
+バージョン履歴と更新については、[CHANGELOG.md](docs/CHANGELOG.md)を参照してください。
 
 ## セキュリティに関する注意事項
 
