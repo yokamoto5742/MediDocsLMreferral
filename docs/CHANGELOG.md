@@ -5,6 +5,28 @@
 このフォーマットは [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) に基づいており、
 このプロジェクトは [Semantic Versioning](https://semver.org/spec/v2.0.0.html) に準拠しています。
 
+## [1.5.1] - 2026-01-29
+
+### 追加
+- `package.json`: Alpine.jsをdependenciesに追加
+- `package.json`: heroku-postbuildスクリプトに `--include=dev` オプションを追加
+- `frontend/DEVELOPMENT.md`: フロントエンド開発ガイド（README.mdからリネーム）
+
+### 変更
+- `README.md`: プロジェクトルートに移動（docs/README.mdから）
+- `app/templates/base.html`: Vite版を有効化、CDN版をコメントアウト
+- `.claude/agents/readme-generator.md`: パス指定を修正（docs/README.md → README.md）
+- `scripts/project_structure.txt`: プロジェクト構造と生成日時を更新
+
+### 削除
+- `docs/FRONTEND_MIGRATION.md`: フロントエンド移行ガイドを削除（情報統合済み）
+- `app/static/js/app.js`: 未使用のJavaScriptファイルを削除（Vite版に統合済み）
+- `app/static/css/style.css`: 未使用のCSSファイルを削除（Vite版に統合済み）
+
+### リファクタリング
+- フロントエンド関連ファイルをVite版に完全移行
+- 開発関連ドキュメントを整理統合
+
 ## [1.5.0] - 2026-01-28
 
 ### 追加
@@ -105,6 +127,8 @@
 
 ## バージョン履歴
 
+- **1.5.1** (2026-01-29): Vite版への完全移行、未使用ファイル削除、ドキュメント整理
+- **1.5.0** (2026-01-28): Vite + TypeScript + Tailwind CSS導入、フロントエンド環境構築
 - **1.4.0** (2026-01-27): 型ヒント追加、スキーマ最適化、ドキュメント更新
 - **1.1.0** (2026-01-23): テスト修正とテキスト処理強化
 - **1.0.0** (2026-01-21): 包括的な機能と完全なテストカバレッジを備えた安定版リリース

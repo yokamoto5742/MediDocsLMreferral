@@ -1,178 +1,77 @@
 # 診療情報提供書作成アプリ
 
-このアプリケーションは、生成AIを活用して診療情報提供書を効率的に作成するためのWebアプリケーションです。
+このアプリケーションは、生成AIを活用して診療情報提供書を効率的に作成するためのFastAPIベースのWebアプリケーションです。Claude（Anthropic）とGemini（Google Vertex AI）の両方のAIプロバイダーに対応し、自動モデル切り替え機能で最適なパフォーマンスを実現します。
 
 ## 機能
 
 ### コア機能
-- **複数のAIプロバイダーサポート**: Claude（Anthropic）とGemini（Google Vertex AI）の両方に統合
-- **自動モデル切り替え**: 入力が指定文字数を超えると、自動的にClaudeからGeminiに切り替え
+- **複数のAIプロバイダーサポート**: Claude（AWS Bedrock/直接API）とGemini（Vertex AI）に統合
+- **自動モデル切り替え**: 入力文字数が指定の閾値を超えた場合、Claudeから自動的にGeminiに切り替え
 - **構造化文書生成**: 標準化されたセクションで医療文書を生成
 
 ### 文書管理
-- **複数の文書タイプ**:
-  - 他院への紹介
-  - 紹介元への逆紹介
-  - 返書
-  - 最終返書
+- **複数の文書タイプ**: 他院への紹介、逆紹介、返書、最終返書
 - **診療科別カスタマイズ**: 診療科ベースの設定に対応
 - **医師別プロンプト**: 階層的プロンプトシステム（診療科 → 医師 → 文書タイプ）
 
 ### プロンプト管理
-- **カスタムプロンプトテンプレート**: さまざまなシナリオ用のカスタムプロンプトを作成・管理
+- **カスタムプロンプトテンプレート**: さまざまなシナリオ用のカスタムプロンプト作成・管理
 - **階層的継承**: 診療科と医師ごとのプロンプトカスタマイズ
 - **Webベース UI**: プロンプトの作成と編集のための使いやすいインターフェース
 
 ### 分析とモニタリング
 - **使用統計**: API使用状況、トークン数、作成時間を追跡
-- **パフォーマンスメトリクス**: レスポンス時間とモデルパフォーマンスを監視
+- **パフォーマンスメトリクス**: レスポンス時間とモデル別パフォーマンス監視
 
-## アーキテクチャ概要
+## 前提条件
 
-### デザインパターン
-
-**Factory Pattern**: `app/external/api_factory.py` がAIプロバイダーのインスタンス化を管理
-```python
-# APIプロバイダーに基づいて適切なクライアントを動的に作成
-client = APIFactory.create_client(APIProvider.CLAUDE)
-result = client.generate_summary(medical_text, additional_info, ...)
-```
-
-**Service Layer**: `app/services/` にはAPIルートから分離されたビジネスロジックが含まれる
-- `summary_service.py`: 文書生成ロジック
-- `prompt_service.py`: プロンプト管理
-- `evaluation_service.py`: 出力評価ロジック
-- `statistics_service.py`: 使用状況分析
-
-**Repository Pattern**: `app/models/` にはデータベースモデルとデータアクセスが含まれる
-- `prompt.py`: プロンプトテンプレート
-- `evaluation_prompt.py`: 評価プロンプトテンプレート
-- `usage.py`: API使用統計
-- `setting.py`: アプリケーション設定
-
-**MVC アーキテクチャ**:
-- **Models**: `app/models/` 内のSQLAlchemy ORMモデル
-- **Views**: `app/templates/` 内のJinja2テンプレート
-- **Controllers**: `app/api/` 内のFastAPIルーター
-
-### データフロー
-
-1. **ユーザー入力**: ユーザーがWebインターフェースからカルテデータを入力し、文書タイプを選択
-2. **リクエスト処理**: FastAPIエンドポイントが入力を受信・検証
-3. **サービスレイヤー**: `SummaryService` が文書生成を調整
-4. **AI統合**: Factoryパターンが適切なAPIクライアントをインスタンス化
-5. **モデル選択**: 入力が指定文字数を超えた場合、自動的にClaudeからGeminiに切り替え
-6. **文書生成**: AIが構造化された医療文書を生成
-7. **後処理**: テキストプロセッサーが出力をセクションに解析
-8. **データベースログ**: 使用統計とメタデータをPostgreSQLに保存
-9. **レスポンス**: 構造化された文書をユーザーインターフェースに返却
-
-### APIクライアントアーキテクチャ
-
-**ベースAPI パターン** (`app/external/base_api.py`):
-- すべてのAIプロバイダーに共通のインターフェースを定義
-- tenacityを使用した指数バックオフ付き再試行ロジック
-- プロバイダー間で統一されたエラーハンドリング
-
-**Claude 統合** (`app/external/claude_api.py`):
--  AWS Bedrockに対応
-- `anthropic` SDK または `boto3` を自動選択
-- 環境変数に基づいて接続方式を判定
-
-**Gemini 統合** (`app/external/gemini_api.py`):
-- Google Cloud Vertex AIを使用
-- Gemini Pro/Flashモデル対応
-- 推論深度レベルの設定可能
-
-### 主要コンポーネント
-
-app/
-├── api/            # FastAPI ルートハンドラー
-│   ├── router.py   # メイン API ルーター
-│   ├── summary.py  # 文書生成エンドポイント
-│   ├── prompts.py  # プロンプト管理エンドポイント
-│   ├── evaluation.py  # 出力評価エンドポイント
-│   ├── statistics.py  # 出力統計エンドポイント
-│   └── settings.py    # 設定エンドポイント
-├── core/           # コア設定
-│   ├── config.py   # 環境設定
-│   ├── constants.py  # アプリケーション定数
-│   └── database.py   # データベース接続
-├── external/       # 外部 API 連携
-│   ├── api_factory.py  # API クライアントファクトリ
-│   ├── base_api.py     # ベース API クライアント
-│   ├── claude_api.py   # Claude/Amazon Bedrock 連携
-│   └── gemini_api.py   # Gemini/Vertex AI 連携
-├── models/         # データベースモデル
-│   ├── prompt.py   # プロンプトテンプレート
-│   ├── evaluation_prompt.py  # 評価プロンプトテンプレート
-│   ├── usage.py    # 利用統計
-│   └── setting.py  # アプリケーション設定
-├── schemas/        # Pydantic スキーマ
-│   ├── summary.py  # リクエスト/レスポンススキーマ
-│   ├── prompt.py   # プロンプトスキーマ
-│   ├── evaluation.py  # 評価スキーマ
-│   └── statistics.py  # 統計スキーマ
-├── services/       # ビジネスロジック
-│   ├── summary_service.py  # 文書生成ロジック
-│   ├── prompt_service.py   # プロンプト管理ロジック
-│   ├── evaluation_service.py  # 出力評価ロジック
-│   └── statistics_service.py  # 出力統計ロジック
-├── utils/          # ユーティリティ関数
-│   ├── text_processor.py  # テキスト解析
-│   ├── exceptions.py      # カスタム例外
-│   └── error_handlers.py  # エラーハンドリング
-└── main.py         # FastAPI アプリケーション本体
-
-## セットアップとインストール
-
-### 前提条件
-
-- Python 3.13以上
-- PostgreSQL 16以上
-- 少なくとも1つのAI APIアカウント:
-  - AWS BedrockアクセスのClaude API 
+- **Python** 3.13以上
+- **PostgreSQL** 16以上
+- **Node.js** 18以上（フロントエンド開発用）
+- **AI APIアカウント**（下記いずれかまたは複数）:
+  - AWS BedrockアクセスのClaude API
   - Vertex AIが有効化されたGoogle Cloud Platformアカウント
 
-### インストール手順
+## インストール
 
-1. **リポジトリのクローン**
+### 1. リポジトリのクローン
 ```bash
 git clone <repository-url>
 cd MediDocsLMreferral
 ```
 
-1. **仮想環境の作成**
+### 2. 仮想環境の作成と有効化
 ```bash
 python -m venv .venv
-source .venv\Scripts\activate
+# Windows
+.venv\Scripts\activate
+# macOS/Linux
+source .venv/bin/activate
 ```
 
-1. **依存関係のインストール**
+### 3. Pythonの依存関係をインストール
 ```bash
 pip install -r requirements.txt
 ```
 
-1. **PostgreSQLデータベースのセットアップ**
+### 4. PostgreSQLデータベースのセットアップ
 ```bash
 # データベースの作成
 createdb medidocs
 
-# データベーステーブルは初回実行時に自動作成されます
+# テーブルは初回実行時にSQLAlchemyを介して自動作成されます
 ```
 
-1. **データベースマイグレーションの実行**
-```bash
-# テーブルは起動時にSQLAlchemyを介して自動作成されます
-```
+### 5. 環境変数の設定
+プロジェクトルートに`.env`ファイルを作成します。詳細は「環境変数の設定」セクションを参照。
 
 ## 環境変数の設定
 
-プロジェクトルートに以下の変数を含む `.env` ファイルを作成してください:
+`.env`ファイルにおける主要な設定項目です。
 
 ### データベース設定
 ```env
-# PostgreSQL データベース
+# PostgreSQL接続情報
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_USER=postgres
@@ -186,27 +85,31 @@ DB_MAX_OVERFLOW=10
 DB_POOL_TIMEOUT=30
 DB_POOL_RECYCLE=1800
 
-# Heroku データベース URL（オプション、個別設定を上書き）
+# または、DATABASE_URL（オプション、個別設定を上書き）
 DATABASE_URL=postgresql://user:password@host:port/database
 ```
 
-### Claude API 設定
+### Claude API設定
 
-**AWS Bedrock**
+**AWS Bedrock（推奨）:**
 ```env
 AWS_ACCESS_KEY_ID=your_aws_access_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret_key
 AWS_REGION=ap-northeast-1
 ANTHROPIC_MODEL=anthropic.claude-3-5-sonnet-20241022-v2:0
-CLAUDE_API_KEY=your_anthropic_api_key  # (オプション：直接API使用時)
 ```
 
-### Google Vertex AI 設定
+**直接API:**
 ```env
-# Google Cloud 認証情報（JSON形式）
+CLAUDE_API_KEY=your_anthropic_api_key
+```
+
+### Google Vertex AI設定
+```env
+# Google Cloud認証情報（JSON形式）
 GOOGLE_CREDENTIALS_JSON={"type":"service_account","project_id":"your-project",...}
 
-# Vertex AI 設定
+# Vertex AI設定
 GOOGLE_PROJECT_ID=your-gcp-project-id
 GOOGLE_LOCATION=asia-northeast1
 GEMINI_MODEL=gemini-2.0-flash
@@ -220,7 +123,7 @@ MAX_INPUT_TOKENS=200000
 MIN_INPUT_TOKENS=100
 MAX_TOKEN_THRESHOLD=100000
 
-# 機能
+# 機能設定
 PROMPT_MANAGEMENT=true
 APP_TYPE=default
 SELECTED_AI_MODEL=Claude
@@ -228,7 +131,7 @@ SELECTED_AI_MODEL=Claude
 
 ## 使用方法
 
-### アプリケーションの起動
+### バックエンドの起動
 
 **開発モード:**
 ```bash
@@ -240,12 +143,9 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-### 型チェック
+### フロントエンドの開発準備
 
-Pyrightを使用した静的型チェック：
-```bash
-pyright
-```
+フロントエンド開発の詳細については、[frontend/DEVELOPMENT.md](frontend/DEVELOPMENT.md)を参照してください。
 
 ### Webインターフェースの使用
 
@@ -257,8 +157,7 @@ pyright
    - 追加情報を入力
 3. **AIモデルの選択**: ClaudeまたはGeminiを選択（または自動切り替え）
 4. **文書の生成**: 生成ボタンをクリック
-5. **出力結果の確認**: 生成された文書が構造化されたセクションで表示される
-6. **出力結果のコピー**: コピーボタンで出力結果のテキストをコピー
+5. **出力結果の確認**: 生成された文書が構造化されたセクションで表示
 
 ### プロンプトの管理
 
@@ -267,38 +166,130 @@ pyright
    - 診療科、医師、文書タイプを選択
    - カスタムプロンプトテンプレートを入力
    - プロンプトを保存
-3. **既存プロンプトの編集**: プロンプトの横にある編集アイコンをクリック
-4. **プロンプトの削除**: 削除アイコンをクリック
+3. **既存プロンプトの編集・削除**: 各プロンプトの横のアイコンをクリック
 
 ### 統計の表示
 
 1. **Statistics** ページにアクセス
 2. 統計用の日付範囲を選択
-3. メトリクスの表示:
+3. メトリクスを表示:
    - 合計API呼び出し数
    - モデル別トークン使用量
    - 平均作成時間
 
-### APIの使用
+## プロジェクト構造
 
-**API経由での文書生成:**
-```bash
-curl -X POST "http://localhost:8000/api/summary/generate" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "chart_data": "患者情報とカルテデータ",
-    "additional_info": "追加情報",
-    "department": "眼科",
-    "doctor": "橋本義弘",
-    "document_type": "他院への紹介",
-    "model_name": "Claude"
-  }'
+```
+app/
+├── api/                 # FastAPI ルートハンドラー
+│   ├── router.py       # メイン API ルーター
+│   ├── summary.py      # 文書生成エンドポイント
+│   ├── prompts.py      # プロンプト管理エンドポイント
+│   ├── evaluation.py   # 出力評価エンドポイント
+│   ├── statistics.py   # 統計エンドポイント
+│   └── settings.py     # 設定エンドポイント
+├── core/               # コア設定
+│   ├── config.py       # 環境設定
+│   ├── constants.py    # アプリケーション定数
+│   └── database.py     # データベース接続
+├── external/           # 外部 API 連携
+│   ├── api_factory.py  # APIクライアントファクトリ
+│   ├── base_api.py     # ベースAPIクライアント
+│   ├── claude_api.py   # Claude/Bedrock連携
+│   └── gemini_api.py   # Gemini/Vertex AI連携
+├── models/             # SQLAlchemy ORM モデル
+│   ├── prompt.py       # プロンプトテンプレート
+│   ├── evaluation_prompt.py  # 評価プロンプト
+│   ├── usage.py        # 利用統計
+│   └── setting.py      # アプリケーション設定
+├── schemas/            # Pydantic スキーマ
+│   ├── summary.py      # リクエスト/レスポンス
+│   ├── prompt.py       # プロンプトスキーマ
+│   ├── evaluation.py   # 評価スキーマ
+│   └── statistics.py   # 統計スキーマ
+├── services/           # ビジネスロジック
+│   ├── summary_service.py      # 文書生成ロジック
+│   ├── prompt_service.py       # プロンプト管理
+│   ├── evaluation_service.py   # 出力評価
+│   └── statistics_service.py   # 統計処理
+├── utils/              # ユーティリティ関数
+│   ├── text_processor.py   # テキスト解析
+│   ├── exceptions.py       # カスタム例外
+│   └── error_handlers.py   # エラーハンドリング
+├── templates/          # Jinja2 テンプレート
+└── main.py             # FastAPI アプリケーション本体
+
+frontend/              # フロントエンド（Vite + TypeScript + Tailwind CSS）
+├── src/
+│   ├── main.ts         # エントリーポイント
+│   ├── app.ts          # Alpine.js アプリケーションロジック
+│   ├── types.ts        # 型定義
+│   └── styles/
+│       └── main.css    # Tailwind CSS + カスタムスタイル
+└── DEVELOPMENT.md      # フロントエンド開発ガイド
+
+tests/                 # テストスイート
+├── conftest.py        # 共有フィクスチャ
+├── api/               # APIエンドポイントテスト
+├── core/              # コア機能テスト
+├── external/          # 外部APIテスト
+├── services/          # ビジネスロジックテスト
+└── test_utils/        # ユーティリティテスト
 ```
 
-**使用統計の取得:**
-```bash
-curl -X GET "http://localhost:8000/api/statistics?start_date=2026-01-01&end_date=2026-01-21"
+## アーキテクチャと設計パターン
+
+### Factory Pattern
+APIプロバイダー（Claude/Gemini）の動的インスタンス化を管理します：
+```python
+client = APIFactory.create_client(APIProvider.CLAUDE)
+result = client.generate_summary(medical_text, additional_info, ...)
 ```
+
+### Service Layer Pattern
+ビジネスロジックはAPIルートから分離されています：
+- `summary_service.py`: 文書生成
+- `prompt_service.py`: プロンプト管理
+- `evaluation_service.py`: 出力評価
+- `statistics_service.py`: 統計処理
+
+### Repository Pattern
+SQLAlchemy ORMによるデータベース操作：
+- `prompt.py`: プロンプトテンプレート（階層的継承対応）
+- `evaluation_prompt.py`: 評価プロンプト
+- `usage.py`: API使用統計
+- `setting.py`: アプリケーション設定
+
+### MVC アーキテクチャ
+- **Models**: `app/models/` の SQLAlchemy ORM モデル
+- **Views**: `app/templates/` の Jinja2 テンプレート
+- **Controllers**: `app/api/` の FastAPI ルーター
+
+## 主要なビジネスロジック
+
+### 自動モデル切り替え
+`summary_service.py`の`determine_model()`メソッドで実装：
+- 入力が`MAX_TOKEN_THRESHOLD`（デフォルト100,000文字）を超え、Claudeが選択されている場合、自動的にGeminiに切り替え
+- Geminiが設定されていない場合はエラーを返す
+- 閾値は環境変数`MAX_TOKEN_THRESHOLD`で調整可能
+
+### 階層的プロンプトシステム
+プロンプトは特異性の順序で解決されます：
+1. 医師 + 文書タイプ固有のプロンプト
+2. 診療科 + 文書タイプ固有のプロンプト
+3. 文書タイプのデフォルトプロンプト
+4. `config.ini`のシステムデフォルト
+
+### データフロー
+1. ユーザーがWebインターフェースからカルテデータを入力
+2. FastAPIエンドポイントが入力を受信・検証
+3. `SummaryService`が文書生成を調整
+4. Factoryパターンが適切なAPIクライアントをインスタンス化
+5. 入力文字数に基づいてモデルを自動選択
+6. AIが構造化された医療文書を生成
+7. テキストプロセッサーが出力をセクションに解析
+8. 使用統計（トークン数、作成時間、コスト）をPostgreSQLに保存
+9. 構造化された文書をユーザーインターフェースに返却
 
 ## テスト
 
@@ -324,13 +315,27 @@ python -m pytest tests/services/test_summary_service.py -v
 python -m pytest tests/services/test_summary_service.py::test_generate_summary -v
 ```
 
-### データベースマイグレーション
+### テスト構造
+
+本プロジェクトは120以上のテストで包括的なテストカバレッジを維持：
+- **API統合テスト**: エンドポイントとリクエスト/レスポンス
+- **ビジネスロジック**: サービスレイヤーのユニットテスト
+- **外部API**: モック使用によるプロバイダー統合テスト
+- **データベース**: 操作とORM機能
+- **ユーティリティ**: テキスト処理とエラーハンドリング
+
+新機能追加時は以下の順序でテストを追加してください：
+1. サービスレイヤーテスト（TDD推奨）
+2. API統合テスト
+3. 必要に応じて外部APIテスト（pytest-mockでモック）
+
+## データベースマイグレーション
 
 Alembicを使用してデータベーススキーマを管理します：
 
 **新しいマイグレーション作成:**
 ```bash
-alembic revision --autogenerate -m "description"
+alembic revision --autogenerate -m "説明"
 ```
 
 **マイグレーション実行:**
@@ -343,149 +348,93 @@ alembic upgrade head
 alembic downgrade -1
 ```
 
-### テスト構造
-
-```
-tests/
-├── conftest.py              # 共有フィクスチャ
-├── api/                     # APIエンドポイントテスト
-│   ├── test_prompts.py
-│   ├── test_summary.py
-│   ├── test_evaluation.py
-│   ├── test_statistics.py
-│   └── test_settings.py
-├── core/                    # コア機能テスト
-│   └── test_config.py
-├── external/                # 外部APIテスト
-│   ├── test_api_factory.py
-│   ├── test_base_api.py
-│   ├── test_claude_api.py
-│   ├── test_gemini_api.py
-│   └── test_gemini_evaluation.py
-├── services/                # ビジネスロジックテスト
-│   ├── test_prompt_service.py
-│   ├── test_summary_service.py
-│   ├── test_evaluation_service.py
-│   └── test_statistics_service.py
-└── test_utils/              # ユーティリティテスト
-    └── test_text_processor.py
-```
-
-### テストカバレッジ
-
-本プロジェクトは120以上のテストで包括的なテストカバレッジを維持:
-- APIエンドポイント統合テスト
-- サービスレイヤーロジック（ユニットテスト）
-- 外部API統合テスト（モック使用）
-- データベース操作テスト
-- テキスト処理ユーティリティ
-- エラーハンドリング
-- エッジケースと例外処理
-
-新機能追加時は、以下の順序でテストを追加してください：
-1. サービスレイヤーテスト（TDD推奨）
-2. API統合テスト
-3. 必要に応じて外部APIテスト（pytest-mockでモック）
+テーブルは初回実行時にSQLAlchemyを介して自動作成されます。
 
 ## 使用技術
 
-### バックエンドフレームワーク
-- **FastAPI**: API構築のためのモダンで高速なWebフレームワーク
-- **Uvicorn**: FastAPI用ASGIサーバー
-- **Pydantic**: Pythonの型アノテーションを使用したデータ検証
-- **SQLAlchemy**: SQLツールキットとORM
-
-### データベース
-- **PostgreSQL**: プロンプト、設定、使用データを保存する主要データベース
-- **psycopg2-binary**: Python用PostgreSQLアダプター
+### バックエンド
+- **FastAPI**: 高速で最新的なPython Webフレームワーク
+- **Uvicorn**: ASGI Webサーバー
+- **Pydantic**: データ検証
+- **SQLAlchemy**: ORM
+- **PostgreSQL**: リレーショナルデータベース
 
 ### AI/ML統合
-- **Google Generative AI**: Gemini API統合
-- **Google Cloud AI Platform**: Vertex AI統合
-- **boto3**: Amazon Bedrock統合用AWS SDK
+- **AWS Bedrock**: Claude API へのアクセス
+- **Anthropic API**: 直接 Claude API 利用
+- **Google Vertex AI**: Gemini API への統合
 
 ### フロントエンド
-- **Jinja2**: HTMLレンダリング用テンプレートエンジン
-- **HTML/CSS/JavaScript**: フロントエンド技術
-
-### テスト
-- **pytest**: テストフレームワーク
-- **pytest-cov**: カバレッジレポート
-- **pytest-mock**: テスト用モックライブラリ
+- **Vite**: 高速フロントエンドビルドツール
+- **TypeScript**: 型安全なJavaScript
+- **Tailwind CSS**: ユーティリティファーストCSSフレームワーク
+- **Alpine.js**: 軽量なJavaScript フレームワーク
+- **Jinja2**: サーバーサイドテンプレートエンジン
 
 ### 開発ツール
+- **pytest**: テストフレームワーク
+- **pytest-cov**: カバレッジレポート
+- **pytest-mock**: モックライブラリ
+- **pyright**: Python静的型チェッカー
 - **python-dotenv**: 環境変数管理
-- **pyright**: Python用静的型チェッカー
-- **uv**: 高速Pythonパッケージインストーラー
 
-### 追加ライブラリ
-- **httpx**: API呼び出し用HTTPクライアント
-- **tenacity**: APIレジリエンス用リトライライブラリ
-- **pydantic-settings**: 設定管理
-- **python-multipart**: マルチパートフォームデータ解析
+## トラブルシューティング
 
-## 主要なビジネスロジック
+### データベース接続エラー
+- PostgreSQLが起動しているか確認
+- `DATABASE_URL`または個別の`POSTGRES_*`変数が正しいか確認
+- ユーザー名とパスワードを確認
 
-### 自動モデル切り替え
+### AI APIエラー
+- 環境変数`CLAUDE_API_KEY`または AWS 認証情報を確認
+- API キーの有効期限とアカウント余額を確認
+- Google Cloud プロジェクト ID と認証情報が正しいか確認
 
-`summary_service.py` の `determine_model()` で自動実装:
-- 入力が `MAX_TOKEN_THRESHOLD`（デフォルト 100,000文字）を超え、Claudeが選択されている場合、自動的にGeminiに切り替え
-- Geminiが設定されていない場合はエラーを返す
-- 閾値は環境変数 `MAX_TOKEN_THRESHOLD` で調整可能
-
-### 階層的プロンプトシステム
-
-プロンプトは特異性の順序で解決されます:
-1. 医師 + 文書タイプ固有のプロンプト
-2. 診療科 + 文書タイプ固有のプロンプト
-3. 文書タイプのデフォルトプロンプト
-4. `config.ini` のシステムデフォルト
-
-柔軟なカスタマイズとデフォルトフォールバックの両立を実現。
-
-### 使用状況の追跡
-
-すべてのAPI呼び出しは以下の情報とともに PostgreSQL に記録:
-- 使用されたモデル
-- トークン数（入力/出力）
-- 作成時間
-- タイムスタンプ
-- 診療科/医師/文書タイプのコンテキスト
+### テスト失敗
+- `.env.test`ファイルが正しく設定されているか確認
+- データベースマイグレーションが完了しているか確認
+- 外部API呼び出しがモックされているか確認
 
 ## コントリビューション
 
 ### コードスタイル
-- PEP 8ガイドラインに従う
-- すべての関数に型ヒント（パラメータと戻り値）を使用
+- **PEP 8** ガイドラインに従う
+- すべての関数に**型ヒント**（パラメータと戻り値）を使用
 - インポート順序: 標準ライブラリ → サードパーティ → ローカルモジュール
-- 各グループ内でアルファベット順にソート（importが先、fromは後）
-- 関数サイズは50行以下を目標
+- 各グループ内でアルファベット順にソート（`import`が先、`from`は後）
+- 関数サイズは**50行以下**を目標
 - コメントは複雑なロジックのみ日本語で記述（文末に句点不要）
 
 ### コミットメッセージ
-- 従来のコミット形式を使用（✨ feat, 🐛 fix, 📝 docs, ♻️ refactor, ✅ test）
+- 従来のコミット形式を使用：`✨ feat`, `🐛 fix`, `📝 docs`, `♻️ refactor`, `✅ test`
 - 変更内容と理由を日本語で記述
 - 変更範囲は最小限に
+
+### 開発コマンド
+
+**型チェック:**
+```bash
+pyright
+```
+
+詳細は [CLAUDE.md](CLAUDE.md) を参照してください。
 
 ## ライセンス
 
 このプロジェクトは[Apache License 2.0](docs/LICENSE)のもとで公開されています。
 
-## サポート
-
-問題、質問、コントリビューションについては、プロジェクトリポジトリを参照してください。
-
 ## 変更履歴
+
 バージョン履歴と更新については、[CHANGELOG.md](docs/CHANGELOG.md)を参照してください。
 
 ## セキュリティに関する注意事項
 
-- 認証情報を含む `.env` ファイルをコミットしない
+- 認証情報を含む`.env`ファイルをコミットしない
 - APIキーを定期的にローテーション
 - すべての機密設定に環境変数を使用
 - セキュリティパッチのために依存関係を最新に保つ
-- 本番医療現場で使用する前にAI生成コンテンツをレビュー
+- 本番医療現場で使用する前にAI生成コンテンツを専門家がレビュー
 
 ## 免責事項
 
-このアプリケーションは医療文書作成を支援するツールであり、専門的な医学的判断に代わるものではありません。
+このアプリケーションは医療文書作成を支援するツールであり、専門的な医学的判断に代わるものではありません。生成されたすべてのコンテンツは、医療専門家による確認が必須です。
