@@ -23,6 +23,11 @@
 - **使用統計**: API使用状況、トークン数、作成時間を追跡
 - **パフォーマンスメトリクス**: レスポンス時間とモデル別パフォーマンス監視
 
+### フロントエンド
+- **Vite + TypeScript**: モダンなビルド環境と型安全性
+- **Tailwind CSS**: ユーティリティファーストなスタイリング
+- **Alpine.js**: 軽量なJavaScript フレームワーク
+
 ## 前提条件
 
 - **Python** 3.13以上
@@ -248,8 +253,8 @@ result = client.generate_summary(medical_text, additional_info, ...)
 
 ### Service Layer Pattern
 ビジネスロジックはAPIルートから分離されています：
-- `summary_service.py`: 文書生成
-- `prompt_service.py`: プロンプト管理
+- `summary_service.py`: 文書生成とモデル選択ロジック
+- `prompt_service.py`: プロンプト管理と階層的解決
 - `evaluation_service.py`: 出力評価
 - `statistics_service.py`: 統計処理
 
@@ -272,6 +277,7 @@ SQLAlchemy ORMによるデータベース操作：
 - 入力が`MAX_TOKEN_THRESHOLD`（デフォルト100,000文字）を超え、Claudeが選択されている場合、自動的にGeminiに切り替え
 - Geminiが設定されていない場合はエラーを返す
 - 閾値は環境変数`MAX_TOKEN_THRESHOLD`で調整可能
+- `prompt_service.py`の`get_selected_model()`にモデル名取得ロジックを集約
 
 ### 階層的プロンプトシステム
 プロンプトは特異性の順序で解決されます：
@@ -279,6 +285,12 @@ SQLAlchemy ORMによるデータベース操作：
 2. 診療科 + 文書タイプ固有のプロンプト
 3. 文書タイプのデフォルトプロンプト
 4. `config.ini`のシステムデフォルト
+
+### マジックストリング削除と定数管理
+バージョン1.5.2から、`ModelType` Enumを`app/core/constants.py`に導入し、文字列リテラルを統一管理：
+- "Claude"、"Gemini_Pro"などのモデル名定数化
+- 複数の場所での重複コードを削減（DRY原則）
+- `APIProvider` Enumとともに使用してタイプセーフティを向上
 
 ### データフロー
 1. ユーザーがWebインターフェースからカルテデータを入力
@@ -365,7 +377,7 @@ alembic downgrade -1
 - **Google Vertex AI**: Gemini API への統合
 
 ### フロントエンド
-- **Vite**: 高速フロントエンドビルドツール
+- **Vite**: 高速フロントエンドビルドツール（バージョン1.5.0から導入）
 - **TypeScript**: 型安全なJavaScript
 - **Tailwind CSS**: ユーティリティファーストCSSフレームワーク
 - **Alpine.js**: 軽量なJavaScript フレームワーク
@@ -416,6 +428,9 @@ alembic downgrade -1
 ```bash
 pyright
 ```
+
+**フロントエンド開発:**
+フロントエンド開発の詳細については、[frontend/DEVELOPMENT.md](frontend/DEVELOPMENT.md)を参照してください。
 
 詳細は [CLAUDE.md](CLAUDE.md) を参照してください。
 
