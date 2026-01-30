@@ -5,6 +5,19 @@
 このフォーマットは [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) に基づいており、
 このプロジェクトは [Semantic Versioning](https://semver.org/spec/v2.0.0.html) に準拠しています。
 
+## [Unreleased]
+
+### 追加
+- **APIキー認証機能**: `/api/*`配下のエンドポイントに`X-API-Key`ヘッダーによる認証を実装
+  - `app/core/config.py`: `api_key`フィールドを追加
+  - `app/core/security.py`: `verify_api_key`依存関数を実装
+  - `app/api/router.py`: ルーターレベルで認証を適用
+  - 環境変数`API_KEY`でキーを設定
+  - `API_KEY`未設定時は認証をスキップ（開発モード）
+  - `.env.example`: APIキー設定例を追加
+  - `tests/core/test_security.py`: 認証関数のユニットテスト
+  - `tests/api/test_api_authentication.py`: 統合テスト
+
 ## [1.5.2] - 2026-01-29
 
 ### リファクタリング

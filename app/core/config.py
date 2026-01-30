@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     prompt_management: bool = True
     app_type: str = "default"
     selected_ai_model: str = ModelType.CLAUDE.value
+    api_key: str | None = None  # APIキー認証用
 
     def get_database_url(self) -> str:
         """データベース接続URLを構築"""
