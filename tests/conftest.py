@@ -13,11 +13,26 @@ from sqlalchemy.pool import StaticPool
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+from app.core.config import Settings, get_settings
 from app.core.database import get_db
 from app.main import app
 from app.models.base import Base
 from app.models.prompt import Prompt
 from app.models.usage import SummaryUsage
+
+
+@pytest.fixture(scope="function", autouse=True)
+def override_settings():
+    """テスト環境用の設定をオーバーライド（API_KEYを無効化）"""
+    def get_test_settings():
+        settings = Settings()
+        # テスト環境では認証を無効化
+        settings.api_key = None
+        return settings
+
+    app.dependency_overrides[get_settings] = get_test_settings
+    yield
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture(scope="function")
@@ -44,7 +59,8 @@ def test_db():
     yield TestingSessionLocal()
 
     Base.metadata.drop_all(bind=engine)
-    app.dependency_overrides.clear()
+    # get_settingsのオーバーライドは維持（autouse fixtureで管理）
+    db_override = app.dependency_overrides.pop(get_db, None)
 
 
 @pytest.fixture
