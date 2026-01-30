@@ -58,8 +58,9 @@ def get_common_context(active_page: str = "index") -> dict:
 async def index(request: Request):
     """メインページ"""
     return templates.TemplateResponse(
+        request,
         "index.html",
-        {"request": request, **get_common_context()},
+        get_common_context(),
     )
 
 
@@ -67,8 +68,9 @@ async def index(request: Request):
 async def prompts_new_page(request: Request):
     """プロンプト新規作成ページ"""
     return templates.TemplateResponse(
+        request,
         "prompts_new.html",
-        {"request": request, **get_common_context("prompts")},
+        get_common_context("prompts"),
     )
 
 
@@ -76,8 +78,9 @@ async def prompts_new_page(request: Request):
 async def prompts_edit_page(request: Request, prompt_id: int):
     """プロンプト編集ページ"""
     return templates.TemplateResponse(
+        request,
         "prompts_edit.html",
-        {"request": request, "prompt_id": prompt_id, **get_common_context("prompts")},
+        {"prompt_id": prompt_id, **get_common_context("prompts")},
     )
 
 
@@ -85,8 +88,9 @@ async def prompts_edit_page(request: Request, prompt_id: int):
 async def prompts_page(request: Request):
     """プロンプト管理ページ"""
     return templates.TemplateResponse(
+        request,
         "prompts.html",
-        {"request": request, **get_common_context("prompts")},
+        get_common_context("prompts"),
     )
 
 
@@ -95,8 +99,9 @@ async def statistics_page(request: Request):
     """統計ページ"""
     gemini_model_name = settings.gemini_model
     return templates.TemplateResponse(
+        request,
         "statistics.html",
-        {"request": request, "gemini_model_name": gemini_model_name, **get_common_context("statistics")},
+        {"gemini_model_name": gemini_model_name, **get_common_context("statistics")},
     )
 
 
@@ -104,8 +109,9 @@ async def statistics_page(request: Request):
 async def evaluation_prompts_page(request: Request):
     """評価プロンプト管理ページ"""
     return templates.TemplateResponse(
+        request,
         "evaluation_prompts.html",
-        {"request": request, **get_common_context("prompts")},
+        get_common_context("prompts"),
     )
 
 
@@ -113,8 +119,9 @@ async def evaluation_prompts_page(request: Request):
 async def evaluation_prompts_edit_page(request: Request, document_type: str):
     """評価プロンプト編集ページ"""
     return templates.TemplateResponse(
+        request,
         "evaluation_prompts_edit.html",
-        {"request": request, "document_type": document_type, **get_common_context("prompts")},
+        {"document_type": document_type, **get_common_context("prompts")},
     )
 
 
