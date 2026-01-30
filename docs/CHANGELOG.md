@@ -18,6 +18,9 @@
   - `tests/core/test_security.py`: 認証関数のユニットテスト
   - `tests/api/test_api_authentication.py`: 統合テスト
 
+### 修正
+- `app/templates/base.html`: Alpine.jsの`init()`メソッドが実行されるように`x-init="init()"`を追加し、医師名リストが正しく表示されるよう修正
+
 ## [1.5.2] - 2026-01-29
 
 ### リファクタリング

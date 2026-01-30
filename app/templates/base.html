@@ -26,7 +26,7 @@
         })();
     </script>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900" x-data="appState()">
+<body class="bg-gray-50 dark:bg-gray-900" x-data="appState()" x-init="init()">
     <div x-show="showCopySuccess"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 transform translate-y-2"
