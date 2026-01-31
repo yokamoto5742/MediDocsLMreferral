@@ -23,11 +23,11 @@ from app.models.usage import SummaryUsage
 
 @pytest.fixture(scope="function", autouse=True)
 def override_settings():
-    """テスト環境用の設定をオーバーライド（API_KEYを無効化）"""
+    """テスト環境用の設定をオーバーライド（MEDIDOCS_API_KEYを無効化）"""
     def get_test_settings():
         settings = Settings()
         # テスト環境では認証を無効化
-        settings.api_key = None
+        settings.medidocs_api_key = None
         return settings
 
     app.dependency_overrides[get_settings] = get_test_settings

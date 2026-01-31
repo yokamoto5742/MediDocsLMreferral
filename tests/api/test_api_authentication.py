@@ -13,7 +13,7 @@ class TestApiAuthentication:
     def test_api_endpoint_requires_authentication_when_key_configured(
         self, client: TestClient
     ):
-        """API_KEY設定時、ヘッダーなしで401エラー"""
+        """MEDIDOCS_API_KEY設定時、ヘッダーなしで401エラー"""
         # settingsのapi_keyをオーバーライド
         mock_settings = MagicMock()
         mock_settings.api_key = "test-secret-key"
@@ -99,7 +99,7 @@ class TestApiAuthentication:
     def test_development_mode_allows_access_without_key(
         self, client: TestClient
     ):
-        """開発モード（API_KEY未設定）は認証なしでアクセス可能"""
+        """開発モード（MEDIDOCS_API_KEY未設定）は認証なしでアクセス可能"""
         mock_settings = MagicMock()
         mock_settings.api_key = None
         mock_settings.prompt_management = True

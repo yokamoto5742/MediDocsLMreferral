@@ -15,10 +15,10 @@ async def verify_api_key(
     """
     APIキーを検証する依存関数
 
-    - API_KEY環境変数が未設定の場合: 認証をスキップ（開発モード）
-    - API_KEY環境変数が設定済みの場合: ヘッダーのキーと照合
+    - MEDIDOCS_API_KEY環境変数が未設定の場合: 認証をスキップ（開発モード）
+    - MEDIDOCS_API_KEY環境変数が設定済みの場合: ヘッダーのキーと照合
     """
-    # 開発モード: API_KEY未設定時は認証スキップ
+    # 開発モード: MEDIDOCS_API_KEY未設定時は認証スキップ
     if settings.api_key is None:
         return None
 

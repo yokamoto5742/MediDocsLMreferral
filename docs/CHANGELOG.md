@@ -7,13 +7,22 @@
 
 ## [Unreleased]
 
+### 変更
+- **環境変数名の変更**: APIキー認証用の環境変数を`API_KEY`から`MEDIDOCS_API_KEY`に変更
+  - `app/core/config.py`: フィールド名を`medidocs_api_key`に変更し、後方互換性のため`api_key`プロパティを追加
+  - `app/core/security.py`: コメント内の環境変数名を更新
+  - `tests/conftest.py`: テスト設定のコメントを更新
+  - `tests/core/test_security.py`: テストのコメントを更新
+  - `tests/api/test_api_authentication.py`: テストのコメントを更新
+  - HTTPヘッダー名（`X-API-Key`）は変更なし
+
 ### 追加
 - **APIキー認証機能**: `/api/*`配下のエンドポイントに`X-API-Key`ヘッダーによる認証を実装
   - `app/core/config.py`: `api_key`フィールドを追加
   - `app/core/security.py`: `verify_api_key`依存関数を実装
   - `app/api/router.py`: ルーターレベルで認証を適用
-  - 環境変数`API_KEY`でキーを設定
-  - `API_KEY`未設定時は認証をスキップ（開発モード）
+  - 環境変数`MEDIDOCS_API_KEY`でキーを設定
+  - `MEDIDOCS_API_KEY`未設定時は認証をスキップ（開発モード）
   - `.env.example`: APIキー設定例を追加
   - `tests/core/test_security.py`: 認証関数のユニットテスト
   - `tests/api/test_api_authentication.py`: 統合テスト

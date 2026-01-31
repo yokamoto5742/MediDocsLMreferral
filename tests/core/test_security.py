@@ -10,7 +10,7 @@ class TestVerifyApiKey:
     """verify_api_key関数のテスト"""
 
     def test_development_mode_no_api_key_configured(self):
-        """API_KEY未設定時は認証スキップ"""
+        """MEDIDOCS_API_KEY未設定時は認証スキップ"""
         mock_settings = MagicMock()
         mock_settings.api_key = None
 
@@ -22,7 +22,7 @@ class TestVerifyApiKey:
         assert result is None
 
     def test_development_mode_with_header_still_allows(self):
-        """API_KEY未設定時はヘッダーがあっても認証スキップ"""
+        """MEDIDOCS_API_KEY未設定時はヘッダーがあっても認証スキップ"""
         mock_settings = MagicMock()
         mock_settings.api_key = None
 
