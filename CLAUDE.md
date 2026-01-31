@@ -34,54 +34,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a FastAPI-based medical document generation system that uses AI (Claude/Gemini) to create standardized medical referral letters. The application supports multiple AI providers and automatically switches between them based on input length.
+**MediDocsLMreferral** is a FastAPI-based medical document generation application that uses Claude (AWS Bedrock/API) and Gemini (Vertex AI) to create structured referral letters (診療情報提供書). The app features automatic model switching, hierarchical prompt management, and usage statistics tracking.
 
-## Development Commands
+## Essential Commands
 
-### Running the Application
+### Backend Development
 
-**Development mode with auto-reload:**
 ```bash
+# Start development server with auto-reload
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
 
-**Production mode:**
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+# Production server
+uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
 ### Testing
 
-**Run all tests:**
 ```bash
+# Run all tests
 python -m pytest tests/ -v --tb=short
-```
 
-**Run with coverage:**
-```bash
+# Run with coverage
 python -m pytest tests/ -v --tb=short --cov=app --cov-report=html
-```
 
-**Run specific test file:**
-```bash
+# Run specific test file
 python -m pytest tests/services/test_summary_service.py -v
-```
 
-**Run specific test:**
-```bash
+# Run specific test
 python -m pytest tests/services/test_summary_service.py::test_generate_summary -v
-```
 
-### Type Checking
-
-The project uses pyright for static type checking:
-```bash
+# Type checking
 pyright
 ```
 
 ### Database Migrations
-
-Alembic is configured for database migrations. Database tables are created automatically on startup, but you can also manage migrations:
 
 ```bash
 # Create new migration
@@ -90,194 +76,249 @@ alembic revision --autogenerate -m "description"
 # Apply migrations
 alembic upgrade head
 
-# Rollback migration
+# Rollback one migration
 alembic downgrade -1
 ```
 
-## Architecture Overview
+### Frontend Development
 
-### Design Patterns
+```bash
+cd frontend
 
-**Factory Pattern** (`app/external/api_factory.py`):
-- `APIFactory.create_client()` dynamically instantiates the appropriate AI provider (Claude or Gemini)
-- `generate_summary()` function uses the factory to select and invoke the correct API client
+# Install dependencies
+npm install
 
-**Service Layer Pattern** (`app/services/`):
-- Business logic is separated from API routes
-- `summary_service.py`: Core document generation logic
-- `prompt_service.py`: Hierarchical prompt template management
-- `statistics_service.py`: Usage tracking and analytics
-- `evaluation_service.py`: Document quality evaluation
+# Development server (port 5173, proxies to :8000)
+npm run dev
 
-**Repository Pattern** (`app/models/`):
-- Database models using SQLAlchemy ORM
-- `prompt.py`: Stores prompt templates with hierarchical inheritance
-- `usage.py`: Tracks API usage, tokens, and costs
-- `setting.py`: Application configuration
-- `evaluation_prompt.py`: Evaluation criteria and templates
+# Type check
+npm run typecheck
 
-### Critical Business Logic
+# Production build (outputs to ../app/static/dist/)
+npm run build
+```
 
-**Automatic Model Switching** (`app/services/summary_service.py:determine_model`):
-- When input exceeds 40,000 characters and Claude is selected, automatically switches to Gemini
-- Threshold is configurable via `MAX_TOKEN_THRESHOLD` environment variable
-- If Gemini is not configured, raises an error instead of processing with Claude
+## Architecture and Key Patterns
 
-**Hierarchical Prompt System** (`app/services/prompt_service.py`):
-Prompts are resolved in order of specificity:
-1. Doctor + Document Type specific prompt
-2. Department + Document Type specific prompt
-3. Document Type default prompt
-4. Fallback to system default from `config.ini`
+### Factory Pattern for AI Provider Management
 
-This allows flexible customization while maintaining defaults.
+The `APIFactory` in `app/external/api_factory.py` dynamically instantiates Claude or Gemini clients:
 
-**Model Selection Priority**:
-1. Explicit user selection in UI (highest priority)
-2. Prompt-level model configuration (per department/doctor/document type)
-3. Application default from environment variables
+```python
+from app.external.api_factory import APIFactory, APIProvider
 
-### Data Flow
+client = APIFactory.create_client(APIProvider.CLAUDE)
+result = client.generate_summary(medical_text, additional_info, ...)
+```
 
-1. User submits medical chart data via web interface
-2. FastAPI endpoint receives and validates input
-3. `SummaryService` orchestrates document generation:
-   - Retrieves appropriate prompt template from database
-   - Determines which AI model to use (with automatic switching)
-   - Calls `APIFactory.generate_summary()` with provider-specific logic
-4. AI generates structured medical document
-5. `TextProcessor` parses output into sections
-6. Usage statistics (tokens, time, cost) saved to PostgreSQL
-7. Structured document returned to user interface
+### Service Layer Pattern
 
-### API Integration Architecture
+Business logic is separated from API routes in `app/services/`:
 
-**Base API Pattern** (`app/external/base_api.py`):
-- Abstract base class defining common interface for all AI providers
-- Implements retry logic with exponential backoff using `tenacity`
-- Standardized error handling across providers
+- **`summary_service.py`**: Document generation orchestration, automatic model switching logic
+- **`prompt_service.py`**: Hierarchical prompt resolution (doctor → department → document type → default)
+- **`evaluation_service.py`**: AI-based output evaluation
+- **`statistics_service.py`**: Usage metrics and statistics
 
-**Claude Integration** (`app/external/claude_api.py`):
-- Supports both direct Anthropic API and AWS Bedrock
-- Uses `anthropic` SDK for direct API or `boto3` for Bedrock
-- Automatically selects based on environment variables
+### Automatic Model Switching
 
-**Gemini Integration** (`app/external/gemini_api.py`):
-- Uses Google Cloud Vertex AI
-- Supports Gemini Pro and Gemini Flash models
-- Configurable thinking level for deeper reasoning
+Implemented in `summary_service.py::determine_model()`:
+- Monitors input character count against `MAX_TOKEN_THRESHOLD` (default 100,000)
+- Automatically switches from Claude to Gemini when threshold is exceeded
+- Raises error if Gemini credentials are not configured
+- Model name retrieval is centralized in `prompt_service.py::get_selected_model()`
 
-## Environment Configuration
+### Hierarchical Prompt System
 
-Key environment variables you'll work with:
+Prompts are resolved in specificity order (`prompt_service.py`):
+1. Doctor + document type specific prompt
+2. Department + document type specific prompt
+3. Document type default prompt
+4. System default from `config.ini`
 
-**Database:**
-- `DATABASE_URL` or individual `POSTGRES_*` variables for connection
-- Connection pooling configured via `DB_POOL_SIZE`, `DB_MAX_OVERFLOW`
+This allows department-specific and doctor-specific customizations to override defaults.
 
-**AI Models:**
-- `CLAUDE_API_KEY` + `CLAUDE_MODEL` for direct Anthropic API
-- `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` + `ANTHROPIC_MODEL` for Bedrock
-- `GOOGLE_CREDENTIALS_JSON` + `GOOGLE_PROJECT_ID` + `GEMINI_MODEL` for Vertex AI
+### Constants Management
 
-**Thresholds:**
-- `MAX_TOKEN_THRESHOLD=100000` (default) - triggers switch from Claude to Gemini
-- `MAX_INPUT_TOKENS=200000` - absolute maximum input length
+`app/core/constants.py` centralizes all magic strings:
+- `ModelType` Enum: "Claude", "Gemini_Pro"
+- `APIProvider` Enum: CLAUDE, GEMINI
+- Department/doctor mappings
+- Document types and section names
+- User-facing messages
 
-## Code Organization
+Always use these constants instead of string literals.
+
+### API Authentication
+
+API key authentication (`app/core/security.py::verify_api_key`):
+- Configured via `MEDIDOCS_API_KEY` environment variable
+- If unset: authentication is skipped (development mode)
+- If set: requires `X-API-Key` header for `/api/*` public endpoints
+- Admin routes (prompts, statistics, settings) accessible via Web UI without auth
+- Public API routes (summary generation, evaluation) require authentication
+
+## Project Structure
 
 ```
 app/
-├── api/            # FastAPI route handlers (controllers in MVC)
-├── core/           # Configuration, constants, database setup
-├── external/       # AI provider integrations with factory pattern
-├── models/         # SQLAlchemy ORM models (repository pattern)
-├── schemas/        # Pydantic schemas for request/response validation
-├── services/       # Business logic layer
-├── utils/          # Utilities (text processing, error handling)
-├── templates/      # Jinja2 HTML templates
-└── main.py         # FastAPI application entry point
+├── api/                    # FastAPI route handlers
+│   ├── router.py           # Main router (admin + public API separation)
+│   ├── summary.py          # Document generation endpoints
+│   ├── prompts.py          # Prompt management endpoints
+│   ├── evaluation.py       # Output evaluation endpoints
+│   ├── statistics.py       # Statistics endpoints
+│   └── settings.py         # Settings endpoints
+├── core/                   # Core configuration
+│   ├── config.py           # Environment settings (Settings class)
+│   ├── constants.py        # Application constants and Enums
+│   ├── database.py         # Database connection
+│   └── security.py         # API key authentication
+├── external/               # External API integrations
+│   ├── api_factory.py      # API client factory (Factory pattern)
+│   ├── base_api.py         # Base API client
+│   ├── claude_api.py       # Claude/Bedrock integration
+│   └── gemini_api.py       # Gemini/Vertex AI integration
+├── models/                 # SQLAlchemy ORM models
+│   ├── prompt.py           # Prompt templates
+│   ├── evaluation_prompt.py # Evaluation prompts
+│   ├── usage.py            # Usage statistics
+│   └── setting.py          # Application settings
+├── schemas/                # Pydantic schemas (request/response)
+├── services/               # Business logic layer
+├── utils/                  # Utility functions
+│   ├── text_processor.py   # Text parsing and formatting
+│   ├── exceptions.py       # Custom exceptions
+│   └── error_handlers.py   # Error handling
+├── templates/              # Jinja2 templates
+└── main.py                 # FastAPI application entry point
 
-tests/              # Mirror structure of app/ with comprehensive coverage
-├── api/            # Integration tests for endpoints
-├── core/           # Configuration tests
-├── external/       # AI provider mocking and integration tests
-├── services/       # Business logic unit tests
-└── test_utils/     # Utility function tests
+frontend/                   # Vite + TypeScript + Tailwind CSS
+├── src/
+│   ├── main.ts             # Entry point
+│   ├── app.ts              # Alpine.js application logic
+│   ├── types.ts            # TypeScript type definitions
+│   └── styles/main.css     # Tailwind CSS + custom styles
+
+tests/                      # Test suite (120+ tests)
+├── conftest.py             # Shared fixtures
+├── api/                    # API endpoint tests
+├── core/                   # Core functionality tests
+├── external/               # External API tests (mocked)
+├── services/               # Business logic tests
+└── test_utils/             # Utility tests
 ```
 
-## Testing Philosophy
+## Data Flow
 
-The project maintains 120+ tests covering:
-- **API endpoints**: Integration tests using FastAPI TestClient
-- **Service layer**: Unit tests with mocked dependencies
-- **External APIs**: Tests use mocking to avoid real API calls
-- **Database operations**: Tests use session fixtures from `conftest.py`
-- **Error handling**: Comprehensive exception and edge case coverage
+1. User submits medical record data via Web UI
+2. FastAPI endpoint receives and validates input
+3. `SummaryService` orchestrates document generation
+4. Factory pattern instantiates appropriate API client
+5. Auto model selection based on input length
+6. AI generates structured medical document
+7. Text processor parses output into sections
+8. Usage statistics (tokens, time, cost) saved to PostgreSQL
+9. Structured document returned to UI
 
-When adding new features, maintain test coverage by:
-1. Adding service layer tests first (TDD approach encouraged)
-2. Adding API integration tests
-3. Mocking external API calls using `pytest-mock`
+## Code Style Guidelines
 
-## Common Development Patterns
+- **Python**: PEP 8 compliant
+- **Type hints**: All functions must have parameter and return type hints
+- **Imports**: stdlib → third-party → local, alphabetically sorted (imports first, then from imports)
+- **Function size**: Target ≤50 lines
+- **Comments**: Japanese only for complex logic, no trailing period
+- **Constants**: Use `constants.py` Enums instead of magic strings
+- **Commit format**: Conventional commits with emoji prefixes (`✨ feat`, `🐛 fix`, `📝 docs`, `♻️ refactor`, `✅ test`)
 
-**Adding a New AI Provider:**
-1. Create new class in `app/external/` inheriting from `BaseAPI`
-2. Implement `generate_summary()` method
-3. Register in `APIProvider` enum in `api_factory.py`
-4. Add factory logic in `APIFactory.create_client()`
-5. Add configuration in `app/core/config.py`
-6. Add tests in `tests/external/`
+## Testing Strategy
 
-**Adding a New Document Type:**
-1. Update `DOCUMENT_TYPES` constant in `app/core/constants.py`
-2. Add default prompt in `config.ini` under `[PROMPTS]`
-3. Update UI template dropdowns in `app/templates/`
-4. Add any type-specific logic in `app/services/summary_service.py`
+Test order when adding new features:
+1. Write service layer tests first (TDD recommended)
+2. Add API integration tests
+3. Add external API tests with mocks if needed (use `pytest-mock`)
 
-**Database Schema Changes:**
-1. Modify model in `app/models/`
-2. Generate migration: `alembic revision --autogenerate -m "description"`
-3. Review generated migration in `alembic/versions/`
-4. Apply migration: `alembic upgrade head`
+Tests are organized by layer:
+- **API tests**: Endpoint and request/response validation
+- **Service tests**: Business logic unit tests
+- **External tests**: Provider integration with mocks
+- **DB tests**: ORM and database operations
+- **Utils tests**: Text processing and error handling
 
-## Important Constraints
+## Environment Configuration
 
-**Token Limits:**
-- Claude optimized for inputs under 40,000 characters (configurable)
-- Gemini handles longer inputs but may be more expensive
-- System enforces MAX_INPUT_TOKENS (200,000) absolute limit
+Key environment variables (`.env`):
 
-**Database:**
-- PostgreSQL required (not compatible with SQLite)
-- Connection pooling configured for production workloads
-- All database access goes through `get_db_session()` context manager
+```env
+# Database
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_password
+POSTGRES_DB=medidocs
 
-**Medical Context:**
-- All AI-generated content requires review by qualified medical professionals
-- This is an assistive tool, not a replacement for medical judgment
-- Code should never bypass safety checks or validation
+# Claude API (AWS Bedrock recommended)
+AWS_ACCESS_KEY_ID=your_aws_access_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+AWS_REGION=ap-northeast-1
+ANTHROPIC_MODEL=anthropic.claude-3-5-sonnet-20241022-v2:0
 
-## Coding Standards
+# Gemini (Vertex AI)
+GOOGLE_CREDENTIALS_JSON={"type":"service_account",...}
+GOOGLE_PROJECT_ID=your-gcp-project-id
+GOOGLE_LOCATION=asia-northeast1
+GEMINI_MODEL=gemini-2.0-flash
 
-**Type Hints:**
-- All functions must have type hints for parameters and return values
-- Use `from typing import` imports for complex types
-- Use `cast()` from typing when narrowing types
+# Authentication
+MEDIDOCS_API_KEY=your_api_key_here  # Optional, skips auth if unset
 
-**Import Order:**
-1. Standard library
-2. Third-party packages (fastapi, sqlalchemy, etc.)
-3. Local modules (app.*)
-Each group alphabetically sorted.
+# Application
+MAX_TOKEN_THRESHOLD=100000
+SELECTED_AI_MODEL=Claude
+```
 
-**Commit Messages:**
-- Follow conventional commit format when possible
-- Include both Japanese and English descriptions where applicable
-- Use emoji prefixes: ✨ feat, 🐛 fix, 📝 docs, ♻️ refactor, ✅ test
+## Frontend Development
 
-**Comments:**
-- Minimal Japanese comments for unclear logic only
-- No comments for self-explanatory code
-- No periods at end of comments or docstrings
+Frontend uses **Vite + TypeScript + Tailwind CSS + Alpine.js**:
+
+- **Entry point**: `frontend/src/main.ts`
+- **Alpine.js logic**: `frontend/src/app.ts` (typed)
+- **Type definitions**: `frontend/src/types.ts` (sync with Pydantic schemas)
+- **Styles**: `frontend/src/styles/main.css` (use `@apply` for custom classes)
+- **Build output**: `app/static/dist/`
+- **Dev server**: Port 5173 with proxy to backend `:8000`
+
+Workflow:
+1. Add typed methods to `app.ts`
+2. Add type definitions to `types.ts`
+3. Reference in Jinja2 templates (`app/templates/`)
+4. Run `npm run typecheck` regularly
+
+## Common Tasks
+
+### Adding a New AI Provider
+
+1. Create client in `app/external/` extending `BaseAPI`
+2. Add provider to `APIProvider` enum in `api_factory.py`
+3. Update factory's `create_client()` method
+4. Add configuration to `app/core/config.py`
+5. Add tests in `tests/external/`
+
+### Adding a New Document Type
+
+1. Add to `DOCUMENT_TYPES` in `app/core/constants.py`
+2. Add purpose mapping in `DOCUMENT_TYPE_TO_PURPOSE_MAPPING`
+3. Create default prompt in database or `config.ini`
+4. Update frontend type definitions in `frontend/src/types.ts`
+
+### Modifying Prompt Resolution
+
+Edit `app/services/prompt_service.py` - the hierarchical resolution logic is centralized in `get_prompt()`.
+
+## Important Notes
+
+- Tables are auto-created on first run via SQLAlchemy
+- Use Alembic for schema changes in production
+- Always mock external API calls in tests
+- Frontend and backend type definitions should be kept in sync
+- Review all AI-generated medical content before clinical use (disclaimer applies)
