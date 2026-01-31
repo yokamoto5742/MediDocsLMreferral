@@ -15,10 +15,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 カスタムモジュール 
 それぞれアルファベット順に並べます。importが先でfromは後です。
 
-## CHANGELOG
-このプロジェクトにおけるすべての重要な変更は日本語でdcos/CHANGELOG.mdに記録します。
-フォーマットは[Keep a Changelog](https://keepachangelog.com/ja/1.1.0/)に基づきます。
-
 ## Automatic Notifications (Hooks)
 自動通知は`.claude/settings.local.json` で設定済：
 - **Stop Hook**: ユーザーがClaude Codeを停止した時に「作業が完了しました」と通知

@@ -2,7 +2,6 @@ from enum import Enum
 
 
 class ModelType(str, Enum):
-    """AIモデルタイプ"""
     CLAUDE = "Claude"
     GEMINI_PRO = "Gemini_Pro"
 
@@ -19,13 +18,6 @@ DEFAULT_DOCUMENT_TYPE = "診療情報提供書"
 DOCUMENT_TYPES = ["他院への紹介", "紹介元への逆紹介", "返書", "最終返書"]
 DOCUMENT_TYPE_OPTIONS = ["すべて", "他院への紹介", "紹介元への逆紹介", "返書", "最終返書"]
 
-DOCUMENT_TYPE_TO_PURPOSE_MAPPING = {
-    "他院への紹介": "精査加療依頼",
-    "紹介元への逆紹介": "継続治療依頼",
-    "返書": "受診報告",
-    "最終返書": "治療経過報告",
-}
-
 DEFAULT_SECTION_NAMES = [
     "主病名",
     "紹介目的",
@@ -39,9 +31,7 @@ DEFAULT_SECTION_NAMES = [
 DEFAULT_STATISTICS_PERIOD_DAYS = 7
 
 DEFAULT_SUMMARY_PROMPT = """
-以下のカルテ情報を基に、診療情報提供書の内容を生成してください。
-患者の主な診断名と症状を簡潔に記載してください。
-これまでに行った検査や治療の内容を記載してください。
+以下のカルテ情報を要約してください。これまでの治療内容を記載してください。
 """
 
 # 【治療経過】: 内容 など(改行含む)
@@ -63,6 +53,13 @@ TAB_NAMES = [
     "現在の処方",
     "備考",
 ]
+
+DOCUMENT_TYPE_TO_PURPOSE_MAPPING = {
+    "他院への紹介": "精査加療依頼",
+    "紹介元への逆紹介": "継続治療依頼",
+    "返書": "受診報告",
+    "最終返書": "治療経過報告",
+}
 
 MESSAGES = {
     "PROMPT_UPDATED": "プロンプトを更新しました",
@@ -102,6 +99,6 @@ MESSAGES = {
     "PROCESSING_TIME": "作成時間",
     "MODEL_SWITCHED": "入力が長いため、モデルを {} に自動切替しました",
     "API_ERROR": "API エラーが発生しました",
-    "GENERATING": "生成中...",
+    "GENERATING": "作成中...",
     "AI_DISCLAIMER": "生成AIは不正確な場合があります。回答をカルテでご確認ください。",
 }
