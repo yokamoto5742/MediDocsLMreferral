@@ -14,9 +14,25 @@ protected_router = APIRouter(prefix="/summary", tags=["summary"])
 settings = get_settings()
 
 
+@router.post("/generate", response_model=SummaryResponse)
+def generate_summary_internal(request: SummaryRequest):
+    """文書生成API（Web UI用、認証不要）"""
+    return execute_summary_generation(
+        medical_text=request.medical_text,
+        additional_info=request.additional_info,
+        referral_purpose=request.referral_purpose,
+        current_prescription=request.current_prescription,
+        department=request.department,
+        doctor=request.doctor,
+        document_type=request.document_type,
+        model=request.model,
+        model_explicitly_selected=request.model_explicitly_selected,
+    )
+
+
 @protected_router.post("/generate", response_model=SummaryResponse)
 def generate_summary(request: SummaryRequest):
-    """文書生成API（認証必須）"""
+    """文書生成API（外部API用、認証必須）"""
     return execute_summary_generation(
         medical_text=request.medical_text,
         additional_info=request.additional_info,
