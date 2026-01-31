@@ -50,8 +50,8 @@ interface AppState {
 // APIリクエスト用のヘッダーを取得
 function getHeaders(additionalHeaders: Record<string, string> = {}): Record<string, string> {
     const headers: Record<string, string> = { ...additionalHeaders };
-    if (window.API_KEY) {
-        headers['X-API-Key'] = window.API_KEY;
+    if (window.CSRF_TOKEN) {
+        headers['X-CSRF-Token'] = window.CSRF_TOKEN;
     }
     return headers;
 }

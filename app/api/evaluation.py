@@ -19,21 +19,9 @@ router = APIRouter(prefix="/evaluation", tags=["evaluation"])
 protected_router = APIRouter(prefix="/evaluation", tags=["evaluation"])
 
 
-@router.post("/evaluate", response_model=EvaluationResponse)
-def evaluate_output_internal(request: EvaluationRequest):
-    """出力評価API（Web UI用、認証不要）"""
-    return evaluation_service.execute_evaluation(
-        document_type=request.document_type,
-        input_text=request.input_text,
-        current_prescription=request.current_prescription,
-        additional_info=request.additional_info,
-        output_summary=request.output_summary,
-    )
-
-
 @protected_router.post("/evaluate", response_model=EvaluationResponse)
 def evaluate_output(request: EvaluationRequest):
-    """出力評価API（外部API用、認証必須）"""
+    """出力評価API（CSRF認証必須）"""
     return evaluation_service.execute_evaluation(
         document_type=request.document_type,
         input_text=request.input_text,

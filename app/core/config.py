@@ -48,12 +48,10 @@ class Settings(BaseSettings):
     prompt_management: bool = True
     app_type: str = "default"
     selected_ai_model: str = ModelType.CLAUDE.value
-    medidocs_api_key: str | None = None  # APIキー認証用
 
-    @property
-    def api_key(self) -> str | None:
-        """後方互換性のためのプロパティ"""
-        return self.medidocs_api_key
+    # CSRF Protection
+    csrf_secret_key: str | None = None  # CSRFトークン署名用秘密鍵
+    csrf_token_expire_minutes: int = 60  # トークン有効期限（分）
 
     def get_database_url(self) -> str:
         """データベース接続URLを構築"""

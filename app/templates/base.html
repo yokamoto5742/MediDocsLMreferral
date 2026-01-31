@@ -50,8 +50,8 @@
         {% if document_purpose_mapping %}
         window.DOCUMENT_PURPOSE_MAPPING = {{ document_purpose_mapping | tojson }};
         {% endif %}
-        {% if api_key %}
-        window.API_KEY = {{ api_key | tojson }};
+        {% if csrf_token %}
+        window.CSRF_TOKEN = {{ csrf_token | tojson }};
         {% endif %}
     </script>
 

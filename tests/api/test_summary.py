@@ -55,7 +55,7 @@ def mock_summary_result_model_switched():
     )
 
 
-def test_generate_summary_success(client, test_db, mock_summary_result_success):
+def test_generate_summary_success(client, test_db, csrf_headers, mock_summary_result_success):
     """文書生成API - 正常系"""
     with patch("app.api.summary.execute_summary_generation") as mock_execute:
         mock_execute.return_value = mock_summary_result_success
@@ -72,7 +72,7 @@ def test_generate_summary_success(client, test_db, mock_summary_result_success):
             "model_explicitly_selected": False,
         }
 
-        response = client.post("/api/summary/generate", json=payload)
+        response = client.post("/api/summary/generate", json=payload, headers=csrf_headers)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -89,7 +89,7 @@ def test_generate_summary_success(client, test_db, mock_summary_result_success):
         mock_execute.assert_called_once()
 
 
-def test_generate_summary_validation_error(client, test_db, mock_summary_result_failure):
+def test_generate_summary_validation_error(client, test_db, csrf_headers, mock_summary_result_failure):
     """文書生成API - 検証エラー"""
     with patch("app.api.summary.execute_summary_generation") as mock_execute:
         mock_execute.return_value = mock_summary_result_failure
@@ -108,7 +108,7 @@ def test_generate_summary_validation_error(client, test_db, mock_summary_result_
             "model_explicitly_selected": False,
         }
 
-        response = client.post("/api/summary/generate", json=payload)
+        response = client.post("/api/summary/generate", json=payload, headers=csrf_headers)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -118,7 +118,7 @@ def test_generate_summary_validation_error(client, test_db, mock_summary_result_
         assert data["output_tokens"] == 0
 
 
-def test_generate_summary_model_switched(client, test_db, mock_summary_result_model_switched):
+def test_generate_summary_model_switched(client, test_db, csrf_headers, mock_summary_result_model_switched):
     """文書生成API - モデル自動切り替え"""
     with patch("app.api.summary.execute_summary_generation") as mock_execute:
         mock_execute.return_value = mock_summary_result_model_switched
@@ -138,7 +138,7 @@ def test_generate_summary_model_switched(client, test_db, mock_summary_result_mo
             "model_explicitly_selected": False,
         }
 
-        response = client.post("/api/summary/generate", json=payload)
+        response = client.post("/api/summary/generate", json=payload, headers=csrf_headers)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -147,20 +147,20 @@ def test_generate_summary_model_switched(client, test_db, mock_summary_result_mo
         assert data["model_switched"] is True
 
 
-def test_generate_summary_missing_required_field(client, test_db):
+def test_generate_summary_missing_required_field(client, test_db, csrf_headers):
     """文書生成API - 必須フィールド不足"""
     payload = {
         "additional_info": "追加情報",
         # medical_text が欠落
     }
 
-    response = client.post("/api/summary/generate", json=payload)
+    response = client.post("/api/summary/generate", json=payload, headers=csrf_headers)
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     assert "medical_text" in response.text.lower()
 
 
-def test_generate_summary_all_optional_fields(client, test_db, mock_summary_result_success):
+def test_generate_summary_all_optional_fields(client, test_db, csrf_headers, mock_summary_result_success):
     """文書生成API - オプションフィールドすべて省略"""
     with patch("app.api.summary.execute_summary_generation") as mock_execute:
         mock_execute.return_value = mock_summary_result_success
@@ -169,7 +169,7 @@ def test_generate_summary_all_optional_fields(client, test_db, mock_summary_resu
             "medical_text": "患者は40歳女性。",
         }
 
-        response = client.post("/api/summary/generate", json=payload)
+        response = client.post("/api/summary/generate", json=payload, headers=csrf_headers)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -245,7 +245,7 @@ def test_get_available_models_none(client, test_db):
         assert data["default_model"] is None
 
 
-def test_generate_summary_with_exception(client, test_db):
+def test_generate_summary_with_exception(client, test_db, csrf_headers):
     """文書生成API - 例外処理"""
     with patch("app.api.summary.execute_summary_generation") as mock_execute:
         mock_execute.side_effect = Exception("予期しないエラー")
@@ -256,10 +256,10 @@ def test_generate_summary_with_exception(client, test_db):
 
         # execute_summary_generation が例外を投げた場合、FastAPIが500エラーを返す
         with pytest.raises(Exception):
-            client.post("/api/summary/generate", json=payload)
+            client.post("/api/summary/generate", json=payload, headers=csrf_headers)
 
 
-def test_generate_summary_model_explicitly_selected(client, test_db, mock_summary_result_success):
+def test_generate_summary_model_explicitly_selected(client, test_db, csrf_headers, mock_summary_result_success):
     """文書生成API - モデルが明示的に選択された場合"""
     with patch("app.api.summary.execute_summary_generation") as mock_execute:
         mock_execute.return_value = mock_summary_result_success
@@ -270,7 +270,7 @@ def test_generate_summary_model_explicitly_selected(client, test_db, mock_summar
             "model_explicitly_selected": True,
         }
 
-        response = client.post("/api/summary/generate", json=payload)
+        response = client.post("/api/summary/generate", json=payload, headers=csrf_headers)
 
         assert response.status_code == status.HTTP_200_OK
 

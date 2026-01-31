@@ -1,138 +1,89 @@
-"""API認証の統合テスト"""
-import pytest
-from fastapi.testclient import TestClient
+"""CSRF認証の統合テスト"""
 from unittest.mock import MagicMock
 
+import pytest
+from fastapi.testclient import TestClient
+
 from app.core.config import get_settings
+from app.core.security import generate_csrf_token
 from app.main import app
 
 
-class TestApiAuthentication:
-    """APIエンドポイントの認証テスト"""
+class TestCsrfAuthentication:
+    """APIエンドポイントのCSRF認証テスト"""
 
-    def test_api_endpoint_requires_authentication_when_key_configured(
-        self, client: TestClient
-    ):
-        """MEDIDOCS_API_KEY設定時、ヘッダーなしで401エラー"""
-        # settingsのapi_keyをオーバーライド
+    def test_protected_endpoint_requires_csrf_token(self, client: TestClient):
+        """保護されたエンドポイントはCSRFトークンなしで401エラー"""
+        response = client.post(
+            "/api/summary/generate",
+            json={
+                "medical_text": "test",
+                "department": "内科",
+                "document_type": "診療情報提供書",
+            },
+        )
+        assert response.status_code == 401
+        assert "CSRFトークンが必要です" in response.json()["detail"]
+
+    def test_protected_endpoint_with_invalid_token(self, client: TestClient):
+        """無効なCSRFトークンで403エラー"""
+        response = client.post(
+            "/api/summary/generate",
+            json={
+                "medical_text": "test",
+                "department": "内科",
+                "document_type": "診療情報提供書",
+            },
+            headers={"X-CSRF-Token": "invalid.token"},
+        )
+        assert response.status_code == 403
+        assert "無効または期限切れのCSRFトークンです" in response.json()["detail"]
+
+    def test_protected_endpoint_with_valid_token(self, client: TestClient):
+        """有効なCSRFトークンで認証成功"""
         mock_settings = MagicMock()
-        mock_settings.api_key = "test-secret-key"
-        mock_settings.prompt_management = True
-        app.dependency_overrides[get_settings] = lambda: mock_settings
+        mock_settings.csrf_secret_key = "test-csrf-secret-key"
+        mock_settings.csrf_token_expire_minutes = 60
 
-        try:
-            # 認証が必要なエンドポイント (/api/summary/generate) を使用
-            response = client.post(
-                "/api/summary/generate",
-                json={
-                    "medical_text": "test",
-                    "department": "内科",
-                    "document_type": "診療情報提供書",
-                },
-            )
-            assert response.status_code == 401
-            assert "APIキーが必要です" in response.json()["detail"]
-        finally:
-            app.dependency_overrides.clear()
+        token = generate_csrf_token(mock_settings)
 
-    def test_api_endpoint_with_invalid_key(self, client: TestClient):
-        """無効なAPIキーで403エラー"""
-        mock_settings = MagicMock()
-        mock_settings.api_key = "test-secret-key"
-        mock_settings.prompt_management = True
-        app.dependency_overrides[get_settings] = lambda: mock_settings
+        response = client.post(
+            "/api/summary/generate",
+            json={
+                "medical_text": "test",
+                "department": "内科",
+                "document_type": "診療情報提供書",
+            },
+            headers={"X-CSRF-Token": token},
+        )
+        # CSRF認証は成功（他のエラーがあれば別の理由）
+        assert response.status_code not in [401, 403]
 
-        try:
-            # 認証が必要なエンドポイント (/api/summary/generate) を使用
-            response = client.post(
-                "/api/summary/generate",
-                json={
-                    "medical_text": "test",
-                    "department": "内科",
-                    "document_type": "診療情報提供書",
-                },
-                headers={"X-API-Key": "wrong-key"},
-            )
-            assert response.status_code == 403
-            assert "無効なAPIキーです" in response.json()["detail"]
-        finally:
-            app.dependency_overrides.clear()
+    def test_evaluation_endpoint_requires_csrf_token(self, client: TestClient):
+        """評価エンドポイントもCSRFトークン必須"""
+        response = client.post(
+            "/api/evaluation/evaluate",
+            json={
+                "document_type": "診療情報提供書",
+                "input_text": "test",
+                "output_summary": "test",
+            },
+        )
+        assert response.status_code == 401
+        assert "CSRFトークンが必要です" in response.json()["detail"]
 
-    def test_api_endpoint_with_valid_key(self, client: TestClient):
-        """有効なAPIキーで認証成功"""
-        mock_settings = MagicMock()
-        mock_settings.api_key = "test-secret-key"
-        mock_settings.prompt_management = True
-        app.dependency_overrides[get_settings] = lambda: mock_settings
+    def test_web_pages_do_not_require_csrf(self, client: TestClient):
+        """WebページUIはCSRF認証不要"""
+        response = client.get("/")
+        assert response.status_code == 200
 
-        try:
-            # 認証が必要なエンドポイント (/api/summary/generate) を使用
-            response = client.post(
-                "/api/summary/generate",
-                json={
-                    "medical_text": "test",
-                    "department": "内科",
-                    "document_type": "診療情報提供書",
-                },
-                headers={"X-API-Key": "test-secret-key"},
-            )
-            # 認証は成功（他のエラーがあれば別の理由）
-            assert response.status_code not in [401, 403]
-        finally:
-            app.dependency_overrides.clear()
+    def test_admin_endpoints_do_not_require_csrf(self, client: TestClient):
+        """管理用エンドポイント（/api/settings等）はCSRF認証不要"""
+        response = client.get("/api/settings/departments")
+        assert response.status_code == 200
+        assert "departments" in response.json()
 
-    def test_web_pages_do_not_require_authentication(
-        self, client: TestClient
-    ):
-        """WebページUIは認証不要"""
-        mock_settings = MagicMock()
-        mock_settings.api_key = "test-secret-key"
-        app.dependency_overrides[get_settings] = lambda: mock_settings
-
-        try:
-            response = client.get("/")
-            # トップページは認証なしでアクセス可能
-            assert response.status_code == 200
-        finally:
-            app.dependency_overrides.clear()
-
-    def test_development_mode_allows_access_without_key(
-        self, client: TestClient
-    ):
-        """開発モード（MEDIDOCS_API_KEY未設定）は認証なしでアクセス可能"""
-        mock_settings = MagicMock()
-        mock_settings.api_key = None
-        mock_settings.prompt_management = True
-        app.dependency_overrides[get_settings] = lambda: mock_settings
-
-        try:
-            # 認証が必要なエンドポイント (/api/summary/generate) を使用
-            response = client.post(
-                "/api/summary/generate",
-                json={
-                    "medical_text": "test",
-                    "department": "内科",
-                    "document_type": "診療情報提供書",
-                },
-            )
-            # 認証スキップされるため200または別のステータス
-            assert response.status_code not in [401, 403]
-        finally:
-            app.dependency_overrides.clear()
-
-    def test_admin_endpoints_do_not_require_authentication(
-        self, client: TestClient
-    ):
-        """管理用エンドポイント（/api/settings等）はAPIキー設定時も認証不要"""
-        mock_settings = MagicMock()
-        mock_settings.api_key = "test-secret-key"
-        mock_settings.prompt_management = True
-        app.dependency_overrides[get_settings] = lambda: mock_settings
-
-        try:
-            # 管理用エンドポイントは認証なしでアクセス可能
-            response = client.get("/api/settings/departments")
-            assert response.status_code == 200
-            assert "departments" in response.json()
-        finally:
-            app.dependency_overrides.clear()
+    def test_models_endpoint_does_not_require_csrf(self, client: TestClient):
+        """モデル一覧エンドポイントはCSRF認証不要"""
+        response = client.get("/api/summary/models")
+        assert response.status_code == 200

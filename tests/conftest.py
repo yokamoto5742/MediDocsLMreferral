@@ -15,6 +15,7 @@ sys.path.insert(0, str(project_root))
 
 from app.core.config import Settings, get_settings
 from app.core.database import get_db
+from app.core.security import generate_csrf_token
 from app.main import app
 from app.models.base import Base
 from app.models.prompt import Prompt
@@ -23,11 +24,11 @@ from app.models.usage import SummaryUsage
 
 @pytest.fixture(scope="function", autouse=True)
 def override_settings():
-    """テスト環境用の設定をオーバーライド（MEDIDOCS_API_KEYを無効化）"""
+    """テスト環境用の設定をオーバーライド"""
     def get_test_settings():
         settings = Settings()
-        # テスト環境では認証を無効化
-        settings.medidocs_api_key = None
+        # テスト環境ではCSRF秘密鍵を固定値に設定
+        settings.csrf_secret_key = "test-csrf-secret-key"
         return settings
 
     app.dependency_overrides[get_settings] = get_test_settings
@@ -124,3 +125,13 @@ def sample_usage_records(test_db):
     for record in records:
         test_db.refresh(record)
     return records
+
+
+@pytest.fixture
+def csrf_headers():
+    """CSRFトークン付きヘッダーを生成"""
+    settings = Settings()
+    settings.csrf_secret_key = "test-csrf-secret-key"
+    settings.csrf_token_expire_minutes = 60
+    token = generate_csrf_token(settings)
+    return {"X-CSRF-Token": token}

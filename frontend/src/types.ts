@@ -55,6 +55,6 @@ export interface DoctorsResponse {
 declare global {
     interface Window {
         DOCUMENT_PURPOSE_MAPPING?: Record<string, string>;
-        API_KEY?: string;
+        CSRF_TOKEN?: string;
     }
 }
