@@ -21,7 +21,15 @@ class TestApiAuthentication:
         app.dependency_overrides[get_settings] = lambda: mock_settings
 
         try:
-            response = client.get("/api/settings/departments")
+            # 認証が必要なエンドポイント (/api/summary/generate) を使用
+            response = client.post(
+                "/api/summary/generate",
+                json={
+                    "medical_text": "test",
+                    "department": "内科",
+                    "document_type": "診療情報提供書",
+                },
+            )
             assert response.status_code == 401
             assert "APIキーが必要です" in response.json()["detail"]
         finally:
@@ -35,8 +43,14 @@ class TestApiAuthentication:
         app.dependency_overrides[get_settings] = lambda: mock_settings
 
         try:
-            response = client.get(
-                "/api/settings/departments",
+            # 認証が必要なエンドポイント (/api/summary/generate) を使用
+            response = client.post(
+                "/api/summary/generate",
+                json={
+                    "medical_text": "test",
+                    "department": "内科",
+                    "document_type": "診療情報提供書",
+                },
                 headers={"X-API-Key": "wrong-key"},
             )
             assert response.status_code == 403
@@ -52,8 +66,14 @@ class TestApiAuthentication:
         app.dependency_overrides[get_settings] = lambda: mock_settings
 
         try:
-            response = client.get(
-                "/api/settings/departments",
+            # 認証が必要なエンドポイント (/api/summary/generate) を使用
+            response = client.post(
+                "/api/summary/generate",
+                json={
+                    "medical_text": "test",
+                    "department": "内科",
+                    "document_type": "診療情報提供書",
+                },
                 headers={"X-API-Key": "test-secret-key"},
             )
             # 認証は成功（他のエラーがあれば別の理由）
@@ -86,8 +106,33 @@ class TestApiAuthentication:
         app.dependency_overrides[get_settings] = lambda: mock_settings
 
         try:
-            response = client.get("/api/settings/departments")
+            # 認証が必要なエンドポイント (/api/summary/generate) を使用
+            response = client.post(
+                "/api/summary/generate",
+                json={
+                    "medical_text": "test",
+                    "department": "内科",
+                    "document_type": "診療情報提供書",
+                },
+            )
             # 認証スキップされるため200または別のステータス
             assert response.status_code not in [401, 403]
+        finally:
+            app.dependency_overrides.clear()
+
+    def test_admin_endpoints_do_not_require_authentication(
+        self, client: TestClient
+    ):
+        """管理用エンドポイント（/api/settings等）はAPIキー設定時も認証不要"""
+        mock_settings = MagicMock()
+        mock_settings.api_key = "test-secret-key"
+        mock_settings.prompt_management = True
+        app.dependency_overrides[get_settings] = lambda: mock_settings
+
+        try:
+            # 管理用エンドポイントは認証なしでアクセス可能
+            response = client.get("/api/settings/departments")
+            assert response.status_code == 200
+            assert "departments" in response.json()
         finally:
             app.dependency_overrides.clear()
