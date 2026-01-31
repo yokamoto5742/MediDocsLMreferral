@@ -50,6 +50,9 @@
         {% if document_purpose_mapping %}
         window.DOCUMENT_PURPOSE_MAPPING = {{ document_purpose_mapping | tojson }};
         {% endif %}
+        {% if api_key %}
+        window.API_KEY = {{ api_key | tojson }};
+        {% endif %}
     </script>
 
     <script type="module" src="/static/dist/js/main.js"></script>

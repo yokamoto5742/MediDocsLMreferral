@@ -47,6 +47,15 @@ interface AppState {
     getTabClass(index: number): string;
 }
 
+// APIリクエスト用のヘッダーを取得
+function getHeaders(additionalHeaders: Record<string, string> = {}): Record<string, string> {
+    const headers: Record<string, string> = { ...additionalHeaders };
+    if (window.API_KEY) {
+        headers['X-API-Key'] = window.API_KEY;
+    }
+    return headers;
+}
+
 export function appState(): AppState {
     return {
         // Settings
@@ -106,11 +115,21 @@ export function appState(): AppState {
         },
 
         async updateDoctors() {
-            const response = await fetch(`/api/settings/doctors/${this.settings.department}`);
-            const data = await response.json() as DoctorsResponse;
-            this.doctors = data.doctors;
-            if (!this.doctors.includes(this.settings.doctor)) {
-                this.settings.doctor = this.doctors[0];
+            try {
+                const response = await fetch(`/api/settings/doctors/${this.settings.department}`, {
+                    headers: getHeaders()
+                });
+                if (!response.ok) {
+                    console.error('医師リストの取得に失敗しました:', response.status, response.statusText);
+                    return;
+                }
+                const data = await response.json() as DoctorsResponse;
+                this.doctors = data.doctors;
+                if (!this.doctors.includes(this.settings.doctor)) {
+                    this.settings.doctor = this.doctors[0];
+                }
+            } catch (error) {
+                console.error('医師リストの取得中にエラーが発生しました:', error);
             }
         },
 
@@ -141,7 +160,7 @@ export function appState(): AppState {
             try {
                 const response = await fetch('/api/summary/generate', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({
                         referral_purpose: this.form.referralPurpose,
                         current_prescription: this.form.currentPrescription,
@@ -251,7 +270,7 @@ export function appState(): AppState {
             try {
                 const response = await fetch('/api/evaluation/evaluate', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({
                         document_type: this.settings.documentType,
                         input_text: this.form.medicalText,
