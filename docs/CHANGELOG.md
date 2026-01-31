@@ -20,6 +20,10 @@
 
 ### 修正
 - `app/templates/base.html`: Alpine.jsの`init()`メソッドが実行されるように`x-init="init()"`を追加し、医師名リストが正しく表示されるよう修正
+- **APIキー設定時の医師名表示不具合を修正**: 設定エンドポイント（`/api/settings/*`）を認証対象外に変更
+  - `app/api/router.py`: 認証が必要なルーターと不要なルーターを分離し、`settings.router`のみ認証をスキップ
+  - `frontend/src/app.ts`: `updateDoctors()`にエラーハンドリングを追加し、APIエラー時の挙動を改善
+  - `tests/api/test_api_authentication.py`: 認証テストを更新し、設定エンドポイントが認証不要であることを確認するテストを追加
 
 ## [1.5.2] - 2026-01-29
 

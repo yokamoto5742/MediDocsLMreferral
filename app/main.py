@@ -51,6 +51,7 @@ def get_common_context(active_page: str = "index") -> dict:
         "available_models": get_available_models(),
         "tab_names": TAB_NAMES,
         "active_page": active_page,
+        "api_key": settings.api_key,
     }
 
 

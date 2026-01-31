@@ -21,7 +21,8 @@ class TestApiAuthentication:
         app.dependency_overrides[get_settings] = lambda: mock_settings
 
         try:
-            response = client.get("/api/settings/departments")
+            # 認証が必要なエンドポイント（prompts）を使用
+            response = client.get("/api/prompts")
             assert response.status_code == 401
             assert "APIキーが必要です" in response.json()["detail"]
         finally:
@@ -35,8 +36,9 @@ class TestApiAuthentication:
         app.dependency_overrides[get_settings] = lambda: mock_settings
 
         try:
+            # 認証が必要なエンドポイント（prompts）を使用
             response = client.get(
-                "/api/settings/departments",
+                "/api/prompts",
                 headers={"X-API-Key": "wrong-key"},
             )
             assert response.status_code == 403
@@ -52,8 +54,9 @@ class TestApiAuthentication:
         app.dependency_overrides[get_settings] = lambda: mock_settings
 
         try:
+            # 認証が必要なエンドポイント（prompts）を使用
             response = client.get(
-                "/api/settings/departments",
+                "/api/prompts",
                 headers={"X-API-Key": "test-secret-key"},
             )
             # 認証は成功（他のエラーがあれば別の理由）
@@ -86,8 +89,24 @@ class TestApiAuthentication:
         app.dependency_overrides[get_settings] = lambda: mock_settings
 
         try:
-            response = client.get("/api/settings/departments")
+            # 認証が必要なエンドポイント（prompts）を使用
+            response = client.get("/api/prompts")
             # 認証スキップされるため200または別のステータス
             assert response.status_code not in [401, 403]
+        finally:
+            app.dependency_overrides.clear()
+
+    def test_settings_endpoints_do_not_require_authentication(
+        self, client: TestClient
+    ):
+        """設定エンドポイントは認証不要"""
+        mock_settings = MagicMock()
+        mock_settings.api_key = "test-secret-key"
+        app.dependency_overrides[get_settings] = lambda: mock_settings
+
+        try:
+            # APIキーが設定されていても、設定エンドポイントは認証不要
+            response = client.get("/api/settings/departments")
+            assert response.status_code == 200
         finally:
             app.dependency_overrides.clear()
