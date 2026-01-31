@@ -28,6 +28,17 @@ DEFAULT_SECTION_NAMES = [
     "備考"
 ]
 
+TAB_NAMES = [
+    "全文",
+    "主病名",
+    "紹介目的",
+    "既往歴",
+    "症状経過",
+    "治療経過",
+    "現在の処方",
+    "備考",
+]
+
 DEFAULT_STATISTICS_PERIOD_DAYS = 7
 
 DEFAULT_SUMMARY_PROMPT = """
@@ -43,17 +54,7 @@ SECTION_DETECTION_PATTERNS = [
     r'^{section}\s*$',
 ]
 
-TAB_NAMES = [
-    "全文",
-    "主病名",
-    "紹介目的",
-    "既往歴",
-    "症状経過",
-    "治療経過",
-    "現在の処方",
-    "備考",
-]
-
+# 診療情報提供者アプリ固有の設定
 DOCUMENT_TYPE_TO_PURPOSE_MAPPING = {
     "他院への紹介": "精査加療依頼",
     "紹介元への逆紹介": "継続治療依頼",
