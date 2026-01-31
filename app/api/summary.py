@@ -5,13 +5,18 @@ from app.core.constants import ModelType
 from app.schemas.summary import SummaryRequest, SummaryResponse
 from app.services.summary_service import execute_summary_generation
 
+# 管理用ルーター（認証不要）
 router = APIRouter(prefix="/summary", tags=["summary"])
+
+# 公開APIルーター（認証必須）
+protected_router = APIRouter(prefix="/summary", tags=["summary"])
+
 settings = get_settings()
 
 
-@router.post("/generate", response_model=SummaryResponse)
+@protected_router.post("/generate", response_model=SummaryResponse)
 def generate_summary(request: SummaryRequest):
-    """文書生成API"""
+    """文書生成API（認証必須）"""
     return execute_summary_generation(
         medical_text=request.medical_text,
         additional_info=request.additional_info,
@@ -27,7 +32,7 @@ def generate_summary(request: SummaryRequest):
 
 @router.get("/models")
 def get_available_models():
-    """利用可能なモデル一覧を取得"""
+    """利用可能なモデル一覧を取得（認証不要）"""
     models = []
     if settings.anthropic_model or settings.claude_api_key:
         models.append(ModelType.CLAUDE.value)

@@ -19,6 +19,13 @@
   - `tests/api/test_api_authentication.py`: 統合テスト
 
 ### 修正
+- **APIキー認証の適用範囲を最適化**: Web UI（ブラウザアクセス）と外部API呼び出しを区別
+  - `app/api/router.py`: 管理用ルーター（認証不要）と公開APIルーター（認証必須）に分離
+  - `app/api/summary.py`: `/models`エンドポイントを認証不要、`/generate`エンドポイントを認証必須に変更
+  - `app/api/evaluation.py`: `/prompts/*`エンドポイントを認証不要、`/evaluate`エンドポイントを認証必須に変更
+  - 管理機能（プロンプト管理、統計、設定）はWeb UIから認証なしでアクセス可能
+  - 文書生成・評価APIは外部アクセス時にAPIキー認証が必要
+  - `tests/api/test_api_authentication.py`: テストを更新し、管理APIと公開APIの認証動作を検証
 - `app/templates/base.html`: Alpine.jsの`init()`メソッドが実行されるように`x-init="init()"`を追加し、医師名リストが正しく表示されるよう修正
 
 ## [1.5.2] - 2026-01-29
