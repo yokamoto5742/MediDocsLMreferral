@@ -33,7 +33,7 @@ def get_secret_key(settings: Settings) -> bytes:
     return _SECRET_KEY_CACHE[cache_key]
 
 
-def generate_csrf_token(settings: Settings = Depends(get_settings)) -> str:
+def generate_csrf_token(settings: Settings) -> str:
     """CSRFトークンを生成（タイムスタンプ + HMAC署名）"""
     timestamp = int(time.time())
     secret_key = get_secret_key(settings)
