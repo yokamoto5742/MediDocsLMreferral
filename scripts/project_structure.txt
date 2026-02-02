@@ -1,7 +1,7 @@
 ============================================================
 プロジェクト構造: MediDocsLMreferral
 パス: C:\Users\yokam\PycharmProjects\MediDocsLMreferral
-生成日時: 2026-01-29 18:35:23
+生成日時: 2026-02-02 19:28:38
 ============================================================
 
 └── MediDocsLMreferral
@@ -18,7 +18,8 @@
     │   │   ├── __init__.py
     │   │   ├── config.py
     │   │   ├── constants.py
-    │   │   └── database.py
+    │   │   ├── database.py
+    │   │   └── security.py
     │   ├── external
     │   │   ├── __init__.py
     │   │   ├── api_factory.py
@@ -88,6 +89,7 @@
     │   ├── tsconfig.json
     │   └── vite.config.ts
     ├── scripts
+    │   ├── generate_token.py
     │   ├── project_structure.py
     │   └── project_structure.txt
     ├── config.ini
