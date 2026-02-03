@@ -23,8 +23,8 @@ DEFAULT_SECTION_NAMES = [
     "備考",
 ]
 
-# app/external/api_factory.py
-DEFAULT_DOCUMENT_TYPE = "診療情報提供書"
+# app/external/api_factory.py 他
+DEFAULT_DOCUMENT_TYPE = "他院への紹介"
 # app/external/base_api.py
 DEFAULT_SUMMARY_PROMPT = """
 以下のカルテ情報を要約してください。これまでの治療内容を記載してください。
