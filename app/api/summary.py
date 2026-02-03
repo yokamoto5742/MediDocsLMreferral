@@ -5,7 +5,7 @@ from app.core.constants import ModelType
 from app.schemas.summary import SummaryRequest, SummaryResponse
 from app.services.summary_service import execute_summary_generation
 
-# 管理用ルーター（認証不要）
+# 管理用ルーター（認証不要）（Web UIから使用）
 router = APIRouter(prefix="/summary", tags=["summary"])
 
 # 公開APIルーター（認証必須）
@@ -32,7 +32,7 @@ def generate_summary(request: SummaryRequest):
 
 @router.get("/models")
 def get_available_models():
-    """利用可能なモデル一覧を取得（認証不要）"""
+    """利用可能なモデル一覧を取得"""
     models = []
     if settings.anthropic_model or settings.claude_api_key:
         models.append(ModelType.CLAUDE.value)
