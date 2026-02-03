@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from app.core.constants import ModelType
+from app.core.constants import DEFAULT_DOCUMENT_TYPE,ModelType
 
 
 class SummaryRequest(BaseModel):
@@ -10,7 +10,7 @@ class SummaryRequest(BaseModel):
     additional_info: str = ""
     department: str = "default"
     doctor: str = "default"
-    document_type: str = "他院への紹介"
+    document_type: str = DEFAULT_DOCUMENT_TYPE
     model: str = ModelType.CLAUDE.value
     model_explicitly_selected: bool = False
 
