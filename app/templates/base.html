@@ -54,6 +54,9 @@
         {% if csrf_token %}
         window.CSRF_TOKEN = {{ csrf_token | tojson }};
         {% endif %}
+        {% if tab_names %}
+        window.TAB_NAMES = {{ tab_names | tojson }};
+        {% endif %}
     </script>
 
     <script type="module" src="/static/dist/js/main.js"></script>

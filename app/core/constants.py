@@ -23,24 +23,8 @@ DEFAULT_STATISTICS_PERIOD_DAYS = 7
 
 # 出力結果
 DEFAULT_SECTION_NAMES = [
-    "主病名",
-    "紹介目的",
-    "既往歴",
-    "症状経過",
-    "治療経過",
     "現在の処方",
     "備考"
-]
-
-TAB_NAMES = [
-    "全文",
-    "主病名",
-    "紹介目的",
-    "既往歴",
-    "症状経過",
-    "治療経過",
-    "現在の処方",
-    "備考",
 ]
 
 DEFAULT_SUMMARY_PROMPT = """

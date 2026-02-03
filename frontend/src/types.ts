@@ -56,5 +56,6 @@ declare global {
     interface Window {
         DOCUMENT_PURPOSE_MAPPING?: Record<string, string>;
         CSRF_TOKEN?: string;
+        TAB_NAMES?: readonly string[];
     }
 }

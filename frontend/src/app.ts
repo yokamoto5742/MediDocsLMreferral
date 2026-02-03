@@ -91,7 +91,7 @@ export function appState(): AppState {
         showCopySuccess: false,
         error: null,
         activeTab: 0,
-        tabs: ['全文', '主病名', '紹介目的', '既往歴', '症状経過', '治療経過', '現在の処方', '備考'] as const,
+        tabs: window.TAB_NAMES ?? ['全文'],
         currentScreen: 'input',
 
         // Evaluation state
