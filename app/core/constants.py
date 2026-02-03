@@ -5,9 +5,6 @@ class ModelType(str, Enum):
     CLAUDE = "Claude"
     GEMINI_PRO = "Gemini_Pro"
 
-# api_factory.pyのデフォルト値
-DEFAULT_DOCUMENT_TYPE = "診療情報提供書"
-
 # プロンプト管理
 DEFAULT_DEPARTMENT = ["default", "眼科"]
 DEFAULT_DOCTOR = ["default"]
@@ -27,10 +24,13 @@ DEFAULT_SECTION_NAMES = [
     "備考",
 ]
 
+# app/external/api_factory.py
+DEFAULT_DOCUMENT_TYPE = "診療情報提供書"
+# app/external/base_api.py
 DEFAULT_SUMMARY_PROMPT = """
 以下のカルテ情報を要約してください。これまでの治療内容を記載してください。
 """
-
+# app/utils/text_processor.py
 # 【治療経過】: 内容 など(改行含む)
 # 治療経過: 内容 など(改行含む)
 # 治療経過（行全体がセクション名のみ）
