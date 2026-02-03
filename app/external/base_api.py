@@ -14,7 +14,7 @@ class BaseAPIClient(ABC):
 
     @abstractmethod
     def initialize(self) -> bool:
-        """APIクライアントを初期化。"""
+        """APIクライアントを初期化"""
         pass
 
     @abstractmethod
