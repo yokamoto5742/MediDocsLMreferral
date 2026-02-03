@@ -1,4 +1,3 @@
-"""CSRF認証モジュール"""
 import hashlib
 import hmac
 import secrets
@@ -9,14 +8,14 @@ from fastapi.security import APIKeyHeader
 
 from app.core.config import Settings, get_settings
 
-# ヘッダー名の定義
+
 CSRF_TOKEN_HEADER = APIKeyHeader(name="X-CSRF-Token", auto_error=False)
 
 
 def _get_secret_key(settings: Settings) -> bytes:
     """CSRF署名用の秘密鍵を取得"""
     if settings.csrf_secret_key:
-        return settings.csrf_secret_key.encode("utf-8")
+        return settings.csrf_secret_key.encode()
     # 未設定時はランダム生成（サーバー再起動で無効化）
     return secrets.token_bytes(32)
 
@@ -34,17 +33,17 @@ def get_secret_key(settings: Settings) -> bytes:
 
 
 def generate_csrf_token(settings: Settings) -> str:
-    """CSRFトークンを生成（タイムスタンプ + HMAC署名）"""
+    """CSRFトークンを生成"""
     timestamp = int(time.time())
     secret_key = get_secret_key(settings)
     signature = hmac.new(
-        secret_key, str(timestamp).encode("utf-8"), hashlib.sha256
+        secret_key, str(timestamp).encode(), hashlib.sha256
     ).hexdigest()
     return f"{timestamp}.{signature}"
 
 
 def verify_csrf_token(token: str, settings: Settings) -> bool:
-    """CSRFトークンを検証（署名 + 有効期限チェック）"""
+    """CSRFトークンを検証）"""
     try:
         timestamp_str, signature = token.split(".", 1)
         timestamp = int(timestamp_str)
@@ -60,7 +59,7 @@ def verify_csrf_token(token: str, settings: Settings) -> bool:
     # 署名検証
     secret_key = get_secret_key(settings)
     expected_signature = hmac.new(
-        secret_key, str(timestamp).encode("utf-8"), hashlib.sha256
+        secret_key, str(timestamp).encode(), hashlib.sha256
     ).hexdigest()
 
     return hmac.compare_digest(signature, expected_signature)

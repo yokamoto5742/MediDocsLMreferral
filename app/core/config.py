@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     app_type: str = "default"
     selected_ai_model: str = ModelType.CLAUDE.value
 
-    # CSRF Protection
+    # CSRF認証
     csrf_secret_key: str | None = None  # CSRFトークン署名用秘密鍵
     csrf_token_expire_minutes: int = 60  # トークン有効期限（分）
 
