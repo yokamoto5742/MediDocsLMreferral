@@ -5,19 +5,23 @@ class ModelType(str, Enum):
     CLAUDE = "Claude"
     GEMINI_PRO = "Gemini_Pro"
 
+# api_factory.pyのデフォルト値
+DEFAULT_DOCUMENT_TYPE = "診療情報提供書"
 
+# プロンプト管理
 DEFAULT_DEPARTMENT = ["default", "眼科"]
 DEFAULT_DOCTOR = ["default"]
-
 DEPARTMENT_DOCTORS_MAPPING = {
     "default": ["default"],
     "眼科": ["default", "橋本義弘"],
 }
-
-DEFAULT_DOCUMENT_TYPE = "診療情報提供書"
 DOCUMENT_TYPES = ["他院への紹介", "紹介元への逆紹介", "返書", "最終返書"]
-DOCUMENT_TYPE_OPTIONS = ["すべて", "他院への紹介", "紹介元への逆紹介", "返書", "最終返書"]
 
+# 統計情報
+DOCUMENT_TYPE_OPTIONS = ["すべて", "他院への紹介", "紹介元への逆紹介", "返書", "最終返書"]
+DEFAULT_STATISTICS_PERIOD_DAYS = 7
+
+# 出力結果
 DEFAULT_SECTION_NAMES = [
     "主病名",
     "紹介目的",
@@ -38,8 +42,6 @@ TAB_NAMES = [
     "現在の処方",
     "備考",
 ]
-
-DEFAULT_STATISTICS_PERIOD_DAYS = 7
 
 DEFAULT_SUMMARY_PROMPT = """
 以下のカルテ情報を要約してください。これまでの治療内容を記載してください。
