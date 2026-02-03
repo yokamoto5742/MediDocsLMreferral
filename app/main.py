@@ -131,8 +131,3 @@ async def evaluation_prompts_edit_page(request: Request, document_type: str):
 async def health_check():
     """ヘルスチェックエンドポイント"""
     return {"status": "healthy"}
-
-
-@app.get("/favicon.ico", include_in_schema=False)
-async def favicon():
-    return Response(status_code=204)
