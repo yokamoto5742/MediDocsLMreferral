@@ -15,7 +15,6 @@ DEPARTMENT_DOCTORS_MAPPING = {
 DOCUMENT_TYPES = ["他院への紹介", "紹介元への逆紹介", "返書", "最終返書"]
 
 # 統計情報
-DOCUMENT_TYPE_OPTIONS = ["すべて", "他院への紹介", "紹介元への逆紹介", "返書", "最終返書"]
 DEFAULT_STATISTICS_PERIOD_DAYS = 7
 
 # 出力結果
