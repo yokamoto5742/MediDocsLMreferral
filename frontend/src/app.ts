@@ -169,7 +169,8 @@ export function appState(): AppState {
                         department: this.settings.department,
                         doctor: this.settings.doctor,
                         document_type: this.settings.documentType,
-                        model: this.settings.model
+                        model: this.settings.model,
+                        model_explicitly_selected: true
                     })
                 });
 
