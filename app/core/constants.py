@@ -80,6 +80,8 @@ MESSAGES = {
     "VERTEX_AI_CREDENTIALS_JSON_PARSE_ERROR": "認証情報JSONのパースに失敗しました: {error}",
     "VERTEX_AI_CREDENTIALS_FIELD_MISSING": "認証情報に必要なフィールドがありません: {error}",
     "VERTEX_AI_CREDENTIALS_ERROR": "認証情報の処理中にエラーが発生しました: {error}",
+    "CLOUDFLARE_GATEWAY_SETTINGS_MISSING": "Cloudflare AI Gatewayの設定が不完全です。環境変数を確認してください",
+    "CLOUDFLARE_GATEWAY_API_ERROR": "Cloudflare AI Gateway経由のAPI呼び出しエラー: {error}",
     "EMPTY_RESPONSE": "レスポンスが空です",
     "PROCESSING_TIME": "作成時間",
     "MODEL_SWITCHED": "入力が長いため、モデルを {} に自動切替しました",

@@ -1,9 +1,10 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from app.external.api_factory import APIFactory, APIProvider, generate_summary
 from app.external.claude_api import ClaudeAPIClient
+from app.external.cloudflare_gemini_api import CloudflareGeminiAPIClient
 from app.external.gemini_api import GeminiAPIClient
 from app.utils.exceptions import APIError
 
@@ -35,20 +36,58 @@ class TestAPIFactoryCreateClient:
         client = APIFactory.create_client(APIProvider.CLAUDE)
         assert isinstance(client, ClaudeAPIClient)
 
-    def test_create_client_gemini_enum(self):
-        """クライアント作成 - Gemini（Enum）"""
+    @patch("app.external.api_factory.get_settings")
+    def test_create_client_gemini_enum_without_cloudflare(self, mock_get_settings):
+        """クライアント作成 - Gemini（Enum）Cloudflare設定なし"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         client = APIFactory.create_client(APIProvider.GEMINI)
         assert isinstance(client, GeminiAPIClient)
+
+    @patch("app.external.api_factory.get_settings")
+    def test_create_client_gemini_enum_with_cloudflare(self, mock_get_settings):
+        """クライアント作成 - Gemini（Enum）Cloudflare設定あり"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = "test-account"
+        mock_settings.cloudflare_gateway_id = "test-gateway"
+        mock_settings.cloudflare_aig_token = "test-token"
+        mock_get_settings.return_value = mock_settings
+
+        client = APIFactory.create_client(APIProvider.GEMINI)
+        assert isinstance(client, CloudflareGeminiAPIClient)
 
     def test_create_client_claude_string(self):
         """クライアント作成 - Claude（文字列）"""
         client = APIFactory.create_client("claude")
         assert isinstance(client, ClaudeAPIClient)
 
-    def test_create_client_gemini_string(self):
-        """クライアント作成 - Gemini（文字列）"""
+    @patch("app.external.api_factory.get_settings")
+    def test_create_client_gemini_string_without_cloudflare(self, mock_get_settings):
+        """クライアント作成 - Gemini（文字列）Cloudflare設定なし"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         client = APIFactory.create_client("gemini")
         assert isinstance(client, GeminiAPIClient)
+
+    @patch("app.external.api_factory.get_settings")
+    def test_create_client_gemini_string_with_cloudflare(self, mock_get_settings):
+        """クライアント作成 - Gemini（文字列）Cloudflare設定あり"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = "test-account"
+        mock_settings.cloudflare_gateway_id = "test-gateway"
+        mock_settings.cloudflare_aig_token = "test-token"
+        mock_get_settings.return_value = mock_settings
+
+        client = APIFactory.create_client("gemini")
+        assert isinstance(client, CloudflareGeminiAPIClient)
 
     def test_create_client_case_insensitive(self):
         """クライアント作成 - 大文字小文字を無視"""
@@ -95,9 +134,16 @@ class TestAPIFactoryGenerateSummary:
         assert call_args[2] == ""  # referral_purpose
         assert call_args[3] == ""  # current_prescription
 
+    @patch("app.external.api_factory.get_settings")
     @patch.object(GeminiAPIClient, "generate_summary")
-    def test_generate_summary_gemini_all_params(self, mock_generate):
+    def test_generate_summary_gemini_all_params(self, mock_generate, mock_get_settings):
         """文書生成 - Gemini 全パラメータ"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         mock_generate.return_value = ("生成された文書", 2000, 800)
 
         result = APIFactory.generate_summary_with_provider(
@@ -172,7 +218,7 @@ class TestAPIFactoryGenerateSummary:
 
         call_args = mock_generate.call_args[0]
         # DEFAULT_DOCUMENT_TYPE が使用される
-        assert call_args[5] == "診療情報提供書"
+        assert call_args[5] == "他院への紹介"
 
 
 class TestGenerateSummaryFunction:
@@ -191,9 +237,16 @@ class TestGenerateSummaryFunction:
         assert result == ("生成結果", 1000, 500)
         mock_generate.assert_called_once()
 
+    @patch("app.external.api_factory.get_settings")
     @patch.object(GeminiAPIClient, "generate_summary")
-    def test_generate_summary_function_with_kwargs(self, mock_generate):
+    def test_generate_summary_function_with_kwargs(self, mock_generate, mock_get_settings):
         """generate_summary関数 - kwargsあり"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         mock_generate.return_value = ("結果", 2000, 800)
 
         result = generate_summary(
@@ -234,14 +287,33 @@ class TestAPIFactoryEdgeCases:
         assert isinstance(client1, ClaudeAPIClient)
         assert isinstance(client2, ClaudeAPIClient)
 
-    def test_create_different_clients(self):
+    @patch("app.external.api_factory.get_settings")
+    def test_create_different_clients(self, mock_get_settings):
         """異なるクライアントの作成"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         claude_client = APIFactory.create_client("claude")
         gemini_client = APIFactory.create_client("gemini")
 
         assert type(claude_client) != type(gemini_client)
         assert isinstance(claude_client, ClaudeAPIClient)
         assert isinstance(gemini_client, GeminiAPIClient)
+
+    @patch("app.external.api_factory.get_settings")
+    def test_create_client_gemini_partial_cloudflare_settings(self, mock_get_settings):
+        """クライアント作成 - Gemini Cloudflare設定が不完全"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = "test-account"
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = "test-token"
+        mock_get_settings.return_value = mock_settings
+
+        client = APIFactory.create_client(APIProvider.GEMINI)
+        assert isinstance(client, GeminiAPIClient)
 
     @patch.object(ClaudeAPIClient, "generate_summary")
     def test_generate_summary_empty_optional_fields(self, mock_generate):

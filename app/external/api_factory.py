@@ -1,9 +1,11 @@
 from enum import Enum
 from typing import Union
 
+from app.core.config import get_settings
 from app.core.constants import DEFAULT_DOCUMENT_TYPE
 from app.external.base_api import BaseAPIClient
 from app.external.claude_api import ClaudeAPIClient
+from app.external.cloudflare_gemini_api import CloudflareGeminiAPIClient
 from app.external.gemini_api import GeminiAPIClient
 from app.utils.exceptions import APIError
 
@@ -22,9 +24,18 @@ class APIFactory:
             except ValueError:
                 raise APIError(f"未対応のAPIプロバイダー: {provider}")
 
+        if provider == APIProvider.GEMINI:
+            settings = get_settings()
+            if all([
+                settings.cloudflare_account_id,
+                settings.cloudflare_gateway_id,
+                settings.cloudflare_aig_token,
+            ]):
+                return CloudflareGeminiAPIClient()
+            return GeminiAPIClient()
+
         client_mapping = {
             APIProvider.CLAUDE: ClaudeAPIClient,
-            APIProvider.GEMINI: GeminiAPIClient,
         }
 
         if provider in client_mapping:
