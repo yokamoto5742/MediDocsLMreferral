@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 from typing import Union
 
@@ -8,6 +9,8 @@ from app.external.claude_api import ClaudeAPIClient
 from app.external.cloudflare_gemini_api import CloudflareGeminiAPIClient
 from app.external.gemini_api import GeminiAPIClient
 from app.utils.exceptions import APIError
+
+logger = logging.getLogger(__name__)
 
 
 class APIProvider(Enum):
@@ -31,7 +34,9 @@ class APIFactory:
                 settings.cloudflare_gateway_id,
                 settings.cloudflare_aig_token,
             ]):
+                logger.info("APIクライアント選択: CloudflareGeminiAPIClient (Cloudflare AI Gateway経由)")
                 return CloudflareGeminiAPIClient()
+            logger.info("APIクライアント選択: GeminiAPIClient (Direct Vertex AI)")
             return GeminiAPIClient()
 
         client_mapping = {
@@ -39,8 +44,10 @@ class APIFactory:
         }
 
         if provider in client_mapping:
+            logger.info("APIクライアント選択: ClaudeAPIClient")
             return client_mapping[provider]()
         else:
+            logger.error(f"未対応のAPIプロバイダー: {provider}")
             raise APIError(f"未対応のAPIプロバイダー: {provider}")
 
     @staticmethod
