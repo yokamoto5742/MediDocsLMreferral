@@ -248,10 +248,10 @@ async def execute_summary_generation_stream(
         yield _sse_event("error", {"success": False, "error_message": str(e)})
         return
 
-    # 生成開始を通知
+    # 生成開始を通知（即座に送信してHerokuタイムアウトを回避）
     yield _sse_event("progress", {
-        "status": "generating",
-        "message": "文書を生成中..."
+        "status": "starting",
+        "message": "文書生成を開始します..."
     })
 
     start_time = time.time()
@@ -267,13 +267,20 @@ async def execute_summary_generation_stream(
             )
             await queue.put(("result", result))
         except Exception as e:
+            logging.error(f"Generation task error: {e}", exc_info=True)
             await queue.put(("error", str(e)))
 
     # 生成タスクを開始
     task = asyncio.create_task(_generation_task())
 
-    # ハートビートを送信しながら結果を待つ
-    HEARTBEAT_INTERVAL = 10
+    # 生成開始を再度通知
+    yield _sse_event("progress", {
+        "status": "generating",
+        "message": "文書を生成中..."
+    })
+
+    # ハートビートを送信しながら結果を待つ（Herokuタイムアウト回避のため5秒に短縮）
+    HEARTBEAT_INTERVAL = 5
     full_text = ""
     input_tokens = 0
     output_tokens = 0

@@ -18,6 +18,10 @@ settings = get_settings()
 @protected_router.post("/generate", response_model=SummaryResponse)
 def generate_summary(request: SummaryRequest):
     """文書生成API（CSRF認証必須）"""
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"通常文書生成開始: model={request.model}, dept={request.department}")
+
     return execute_summary_generation(
         medical_text=request.medical_text,
         additional_info=request.additional_info,
@@ -34,6 +38,10 @@ def generate_summary(request: SummaryRequest):
 @protected_router.post("/generate-stream")
 async def generate_summary_stream(request: SummaryRequest):
     """SSEストリーミング文書生成API（CSRF認証必須）"""
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"SSEストリーミング文書生成開始: model={request.model}, dept={request.department}")
+
     event_generator = execute_summary_generation_stream(
         medical_text=request.medical_text,
         additional_info=request.additional_info,

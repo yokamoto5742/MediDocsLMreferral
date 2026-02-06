@@ -180,7 +180,7 @@ export function appState(): AppState {
                 });
 
                 if (!response.ok) {
-                    // SSEエンドポイントが利用不可の場合、非ストリーミングにフォールバック
+                    console.warn(`SSEストリーミングエンドポイントが利用不可 (status: ${response.status})、非ストリーミングにフォールバック`);
                     await this.generateSummaryFallback();
                     return;
                 }
@@ -188,10 +188,12 @@ export function appState(): AppState {
                 await this.processSSEStream(response);
 
             } catch (e) {
+                console.error('SSEストリーミング中にエラーが発生:', e);
                 // ネットワークエラー時は非ストリーミングにフォールバック
                 try {
                     await this.generateSummaryFallback();
-                } catch {
+                } catch (fallbackError) {
+                    console.error('フォールバックも失敗:', fallbackError);
                     this.error = 'API エラーが発生しました';
                 }
             } finally {
@@ -201,27 +203,38 @@ export function appState(): AppState {
         },
 
         async processSSEStream(response: Response) {
-            const reader = response.body!.getReader();
+            if (!response.body) {
+                throw new Error('レスポンスボディが空です');
+            }
+
+            const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let buffer = '';
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
 
-                buffer += decoder.decode(value, { stream: true });
-                const events = buffer.split('\n\n');
-                buffer = events.pop() || '';
+                    buffer += decoder.decode(value, { stream: true });
+                    const events = buffer.split('\n\n');
+                    buffer = events.pop() || '';
 
-                for (const eventText of events) {
-                    if (!eventText.trim()) continue;
-                    this.handleSSEEvent(eventText);
+                    for (const eventText of events) {
+                        if (!eventText.trim()) continue;
+                        this.handleSSEEvent(eventText);
+                    }
                 }
-            }
 
-            // 残りのバッファを処理
-            if (buffer.trim()) {
-                this.handleSSEEvent(buffer);
+                // 残りのバッファを処理
+                if (buffer.trim()) {
+                    this.handleSSEEvent(buffer);
+                }
+            } catch (e) {
+                console.error('SSEストリーム読み取り中にエラーが発生:', e);
+                throw e;
+            } finally {
+                reader.releaseLock();
             }
         },
 
