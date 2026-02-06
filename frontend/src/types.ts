@@ -51,6 +51,28 @@ export interface DoctorsResponse {
     doctors: string[];
 }
 
+// SSEイベント型
+export interface SSEProgressEvent {
+    status: string;
+    message: string;
+}
+
+export interface SSECompleteEvent {
+    success: boolean;
+    output_summary: string;
+    parsed_summary: Record<string, string>;
+    input_tokens: number;
+    output_tokens: number;
+    processing_time: number;
+    model_used: string;
+    model_switched: boolean;
+}
+
+export interface SSEErrorEvent {
+    success: boolean;
+    error_message: string;
+}
+
 // グローバル変数の型宣言
 declare global {
     interface Window {

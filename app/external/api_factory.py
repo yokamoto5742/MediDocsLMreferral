@@ -75,5 +75,34 @@ class APIFactory:
         )
 
 
+    @staticmethod
+    def generate_summary_stream_with_provider(
+        provider: Union[APIProvider, str],
+        medical_text: str,
+        additional_info: str = "",
+        referral_purpose: str = "",
+        current_prescription: str = "",
+        department: str = "default",
+        document_type: str = DEFAULT_DOCUMENT_TYPE,
+        doctor: str = "default",
+        model_name: str | None = None,
+    ):
+        client = APIFactory.create_client(provider)
+        return client.generate_summary_stream(
+            medical_text,
+            additional_info,
+            referral_purpose,
+            current_prescription,
+            department,
+            document_type,
+            doctor,
+            model_name,
+        )
+
+
 def generate_summary(provider: str, medical_text: str, **kwargs):
     return APIFactory.generate_summary_with_provider(provider, medical_text, **kwargs)
+
+
+def generate_summary_stream(provider: str, medical_text: str, **kwargs):
+    return APIFactory.generate_summary_stream_with_provider(provider, medical_text, **kwargs)

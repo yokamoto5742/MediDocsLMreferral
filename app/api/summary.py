@@ -1,9 +1,10 @@
 from fastapi import APIRouter
+from fastapi.responses import StreamingResponse
 
 from app.core.config import get_settings
 from app.core.constants import ModelType
 from app.schemas.summary import SummaryRequest, SummaryResponse
-from app.services.summary_service import execute_summary_generation
+from app.services.summary_service import execute_summary_generation, execute_summary_generation_stream
 
 # 管理用ルーター（認証不要）（Web UIから使用）
 router = APIRouter(prefix="/summary", tags=["summary"])
@@ -27,6 +28,31 @@ def generate_summary(request: SummaryRequest):
         document_type=request.document_type,
         model=request.model,
         model_explicitly_selected=request.model_explicitly_selected,
+    )
+
+
+@protected_router.post("/generate-stream")
+async def generate_summary_stream(request: SummaryRequest):
+    """SSEストリーミング文書生成API（CSRF認証必須）"""
+    event_generator = execute_summary_generation_stream(
+        medical_text=request.medical_text,
+        additional_info=request.additional_info,
+        referral_purpose=request.referral_purpose,
+        current_prescription=request.current_prescription,
+        department=request.department,
+        doctor=request.doctor,
+        document_type=request.document_type,
+        model=request.model,
+        model_explicitly_selected=request.model_explicitly_selected,
+    )
+    return StreamingResponse(
+        event_generator,
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 

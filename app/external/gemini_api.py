@@ -1,5 +1,5 @@
 import json
-from typing import Tuple
+from typing import Generator, Tuple, Union
 
 from google import genai
 from google.genai import types
@@ -100,5 +100,51 @@ class GeminiAPIClient(BaseAPIClient):
                     output_tokens = int(metadata.candidates_token_count)
 
             return result_text, input_tokens, output_tokens
+        except Exception as e:
+            raise APIError(MESSAGES["VERTEX_AI_API_ERROR"].format(error=str(e)))
+
+    def _generate_content_stream(
+        self, prompt: str, model_name: str
+    ) -> Generator[Union[str, dict], None, None]:
+        """ストリーミングでコンテンツを生成"""
+        try:
+            if self.client is None:
+                raise APIError("Client not initialized")
+
+            thinking_level = (
+                types.ThinkingLevel.LOW
+                if self.settings.gemini_thinking_level == "LOW"
+                else types.ThinkingLevel.HIGH
+            )
+
+            response_stream = self.client.models.generate_content_stream(
+                model=model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    thinking_config=types.ThinkingConfig(
+                        thinking_level=thinking_level
+                    )
+                )
+            )
+
+            input_tokens = 0
+            output_tokens = 0
+
+            for chunk in response_stream:
+                # テキストチャンクを返す
+                if hasattr(chunk, 'text') and chunk.text:
+                    yield chunk.text
+
+                # トークン数を更新（最後のチャンクに含まれる）
+                if hasattr(chunk, 'usage_metadata') and chunk.usage_metadata:
+                    metadata = chunk.usage_metadata
+                    if hasattr(metadata, 'prompt_token_count') and metadata.prompt_token_count:
+                        input_tokens = int(metadata.prompt_token_count)
+                    if hasattr(metadata, 'candidates_token_count') and metadata.candidates_token_count:
+                        output_tokens = int(metadata.candidates_token_count)
+
+            # 最後にメタデータを返す
+            yield {"input_tokens": input_tokens, "output_tokens": output_tokens}
+
         except Exception as e:
             raise APIError(MESSAGES["VERTEX_AI_API_ERROR"].format(error=str(e)))

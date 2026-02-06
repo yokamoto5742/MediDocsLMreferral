@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple
+from typing import Generator, Optional, Tuple, Union
 
 from app.core.constants import DEFAULT_DOCUMENT_TYPE, DEFAULT_SUMMARY_PROMPT
 from app.core.database import get_db_session
@@ -113,6 +113,54 @@ class BaseAPIClient(ABC):
 
         except APIError as e:
             raise e
+        except Exception as e:
+            raise APIError(
+                f"{self.__class__.__name__}でエラーが発生しました: {str(e)}"
+            )
+
+    def _generate_content_stream(
+        self, prompt: str, model_name: str
+    ) -> Generator[Union[str, dict], None, None]:
+        """ストリーミングのデフォルト実装（非ストリーミングにフォールバック）"""
+        text, input_tokens, output_tokens = self._generate_content(prompt, model_name)
+        yield text
+        yield {"input_tokens": input_tokens, "output_tokens": output_tokens}
+
+    def generate_summary_stream(
+        self,
+        medical_text: str,
+        additional_info: str = "",
+        referral_purpose: str = "",
+        current_prescription: str = "",
+        department: str = "default",
+        document_type: str = DEFAULT_DOCUMENT_TYPE,
+        doctor: str = "default",
+        model_name: Optional[str] = None,
+    ) -> Generator[Union[str, dict], None, None]:
+        """ストリーミングで要約を生成"""
+        try:
+            self.initialize()
+
+            if not model_name:
+                model_name = self.get_model_name(department, document_type, doctor)
+
+            if not model_name:
+                raise APIError("モデル名が指定されていません")
+
+            prompt = self.create_summary_prompt(
+                medical_text,
+                additional_info,
+                referral_purpose,
+                current_prescription,
+                department,
+                document_type,
+                doctor,
+            )
+
+            yield from self._generate_content_stream(prompt, model_name)
+
+        except APIError:
+            raise
         except Exception as e:
             raise APIError(
                 f"{self.__class__.__name__}でエラーが発生しました: {str(e)}"

@@ -5,7 +5,9 @@ import type {
     EvaluationResult,
     SummaryResponse,
     EvaluationResponse,
-    DoctorsResponse
+    DoctorsResponse,
+    SSECompleteEvent,
+    SSEErrorEvent
 } from './types';
 
 type ScreenType = 'input' | 'output' | 'evaluation';
@@ -33,6 +35,9 @@ interface AppState {
     startTimer(): void;
     stopTimer(): void;
     generateSummary(): Promise<void>;
+    processSSEStream(response: Response): Promise<void>;
+    handleSSEEvent(eventText: string): void;
+    generateSummaryFallback(): Promise<void>;
     clearForm(): void;
     backToInput(): void;
     backToOutput(): void;
@@ -158,7 +163,7 @@ export function appState(): AppState {
             this.startTimer();
 
             try {
-                const response = await fetch('/api/summary/generate', {
+                const response = await fetch('/api/summary/generate-stream', {
                     method: 'POST',
                     headers: getHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({
@@ -174,31 +179,128 @@ export function appState(): AppState {
                     })
                 });
 
-                const data = await response.json() as SummaryResponse;
-
-                if (data.success) {
-                    this.result = {
-                        outputSummary: data.output_summary || '',
-                        parsedSummary: data.parsed_summary || {},
-                        processingTime: data.processing_time || null,
-                        modelUsed: data.model_used || '',
-                        modelSwitched: data.model_switched || false
-                    };
-                    // 新規生成時は評価結果をクリア
-                    this.evaluationResult = {
-                        result: '',
-                        processingTime: null
-                    };
-                    this.activeTab = 0;
-                    this.currentScreen = 'output';
-                } else {
-                    this.error = data.error_message || 'エラーが発生しました';
+                if (!response.ok) {
+                    // SSEエンドポイントが利用不可の場合、非ストリーミングにフォールバック
+                    await this.generateSummaryFallback();
+                    return;
                 }
+
+                await this.processSSEStream(response);
+
             } catch (e) {
-                this.error = 'API エラーが発生しました';
+                // ネットワークエラー時は非ストリーミングにフォールバック
+                try {
+                    await this.generateSummaryFallback();
+                } catch {
+                    this.error = 'API エラーが発生しました';
+                }
             } finally {
                 this.stopTimer();
                 this.isGenerating = false;
+            }
+        },
+
+        async processSSEStream(response: Response) {
+            const reader = response.body!.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const events = buffer.split('\n\n');
+                buffer = events.pop() || '';
+
+                for (const eventText of events) {
+                    if (!eventText.trim()) continue;
+                    this.handleSSEEvent(eventText);
+                }
+            }
+
+            // 残りのバッファを処理
+            if (buffer.trim()) {
+                this.handleSSEEvent(buffer);
+            }
+        },
+
+        handleSSEEvent(eventText: string) {
+            const lines = eventText.split('\n');
+            let eventType = '';
+            let data = '';
+
+            for (const line of lines) {
+                if (line.startsWith('event: ')) {
+                    eventType = line.slice(7).trim();
+                } else if (line.startsWith('data: ')) {
+                    data = line.slice(6);
+                }
+            }
+
+            if (!eventType || !data) return;
+
+            const parsed = JSON.parse(data);
+
+            switch (eventType) {
+                case 'progress':
+                    // ハートビート - UIのステータス表示を更新可能
+                    break;
+                case 'complete':
+                    if ((parsed as SSECompleteEvent).success) {
+                        const completeData = parsed as SSECompleteEvent;
+                        this.result = {
+                            outputSummary: completeData.output_summary || '',
+                            parsedSummary: completeData.parsed_summary || {},
+                            processingTime: completeData.processing_time || null,
+                            modelUsed: completeData.model_used || '',
+                            modelSwitched: completeData.model_switched || false
+                        };
+                        this.evaluationResult = { result: '', processingTime: null };
+                        this.activeTab = 0;
+                        this.currentScreen = 'output';
+                    } else {
+                        this.error = (parsed as SSEErrorEvent).error_message || 'エラーが発生しました';
+                    }
+                    break;
+                case 'error':
+                    this.error = (parsed as SSEErrorEvent).error_message || 'エラーが発生しました';
+                    break;
+            }
+        },
+
+        async generateSummaryFallback() {
+            const response = await fetch('/api/summary/generate', {
+                method: 'POST',
+                headers: getHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({
+                    referral_purpose: this.form.referralPurpose,
+                    current_prescription: this.form.currentPrescription,
+                    medical_text: this.form.medicalText,
+                    additional_info: this.form.additionalInfo,
+                    department: this.settings.department,
+                    doctor: this.settings.doctor,
+                    document_type: this.settings.documentType,
+                    model: this.settings.model,
+                    model_explicitly_selected: true
+                })
+            });
+
+            const data = await response.json() as SummaryResponse;
+
+            if (data.success) {
+                this.result = {
+                    outputSummary: data.output_summary || '',
+                    parsedSummary: data.parsed_summary || {},
+                    processingTime: data.processing_time || null,
+                    modelUsed: data.model_used || '',
+                    modelSwitched: data.model_switched || false
+                };
+                this.evaluationResult = { result: '', processingTime: null };
+                this.activeTab = 0;
+                this.currentScreen = 'output';
+            } else {
+                this.error = data.error_message || 'エラーが発生しました';
             }
         },
 
