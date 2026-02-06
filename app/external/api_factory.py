@@ -6,6 +6,7 @@ from app.core.config import get_settings
 from app.core.constants import DEFAULT_DOCUMENT_TYPE
 from app.external.base_api import BaseAPIClient
 from app.external.claude_api import ClaudeAPIClient
+from app.external.cloudflare_claude_api import CloudflareClaudeAPIClient
 from app.external.cloudflare_gemini_api import CloudflareGeminiAPIClient
 from app.external.gemini_api import GeminiAPIClient
 from app.utils.exceptions import APIError
@@ -27,8 +28,9 @@ class APIFactory:
             except ValueError:
                 raise APIError(f"未対応のAPIプロバイダー: {provider}")
 
+        settings = get_settings()
+
         if provider == APIProvider.GEMINI:
-            settings = get_settings()
             if all([
                 settings.cloudflare_account_id,
                 settings.cloudflare_gateway_id,
@@ -39,16 +41,19 @@ class APIFactory:
             logger.info("APIクライアント選択: GeminiAPIClient (Direct Vertex AI)")
             return GeminiAPIClient()
 
-        client_mapping = {
-            APIProvider.CLAUDE: ClaudeAPIClient,
-        }
+        if provider == APIProvider.CLAUDE:
+            if all([
+                settings.cloudflare_account_id,
+                settings.cloudflare_gateway_id,
+                settings.cloudflare_aig_token,
+            ]):
+                logger.info("APIクライアント選択: CloudflareClaudeAPIClient (Cloudflare AI Gateway経由)")
+                return CloudflareClaudeAPIClient()
+            logger.info("APIクライアント選択: ClaudeAPIClient (Direct Bedrock)")
+            return ClaudeAPIClient()
 
-        if provider in client_mapping:
-            logger.info("APIクライアント選択: ClaudeAPIClient")
-            return client_mapping[provider]()
-        else:
-            logger.error(f"未対応のAPIプロバイダー: {provider}")
-            raise APIError(f"未対応のAPIプロバイダー: {provider}")
+        logger.error(f"未対応のAPIプロバイダー: {provider}")
+        raise APIError(f"未対応のAPIプロバイダー: {provider}")
 
     @staticmethod
     def generate_summary_with_provider(

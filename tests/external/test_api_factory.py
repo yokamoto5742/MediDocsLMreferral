@@ -4,6 +4,7 @@ import pytest
 
 from app.external.api_factory import APIFactory, APIProvider, generate_summary
 from app.external.claude_api import ClaudeAPIClient
+from app.external.cloudflare_claude_api import CloudflareClaudeAPIClient
 from app.external.cloudflare_gemini_api import CloudflareGeminiAPIClient
 from app.external.gemini_api import GeminiAPIClient
 from app.utils.exceptions import APIError
@@ -31,10 +32,29 @@ class TestAPIProvider:
 class TestAPIFactoryCreateClient:
     """APIFactory.create_client のテスト"""
 
-    def test_create_client_claude_enum(self):
-        """クライアント作成 - Claude（Enum）"""
+    @patch("app.external.api_factory.get_settings")
+    def test_create_client_claude_enum_without_cloudflare(self, mock_get_settings):
+        """クライアント作成 - Claude（Enum）Cloudflare設定なし"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         client = APIFactory.create_client(APIProvider.CLAUDE)
         assert isinstance(client, ClaudeAPIClient)
+
+    @patch("app.external.api_factory.get_settings")
+    def test_create_client_claude_enum_with_cloudflare(self, mock_get_settings):
+        """クライアント作成 - Claude（Enum）Cloudflare設定あり"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = "test-account"
+        mock_settings.cloudflare_gateway_id = "test-gateway"
+        mock_settings.cloudflare_aig_token = "test-token"
+        mock_get_settings.return_value = mock_settings
+
+        client = APIFactory.create_client(APIProvider.CLAUDE)
+        assert isinstance(client, CloudflareClaudeAPIClient)
 
     @patch("app.external.api_factory.get_settings")
     def test_create_client_gemini_enum_without_cloudflare(self, mock_get_settings):
@@ -60,10 +80,29 @@ class TestAPIFactoryCreateClient:
         client = APIFactory.create_client(APIProvider.GEMINI)
         assert isinstance(client, CloudflareGeminiAPIClient)
 
-    def test_create_client_claude_string(self):
-        """クライアント作成 - Claude（文字列）"""
+    @patch("app.external.api_factory.get_settings")
+    def test_create_client_claude_string_without_cloudflare(self, mock_get_settings):
+        """クライアント作成 - Claude（文字列）Cloudflare設定なし"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         client = APIFactory.create_client("claude")
         assert isinstance(client, ClaudeAPIClient)
+
+    @patch("app.external.api_factory.get_settings")
+    def test_create_client_claude_string_with_cloudflare(self, mock_get_settings):
+        """クライアント作成 - Claude（文字列）Cloudflare設定あり"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = "test-account"
+        mock_settings.cloudflare_gateway_id = "test-gateway"
+        mock_settings.cloudflare_aig_token = "test-token"
+        mock_get_settings.return_value = mock_settings
+
+        client = APIFactory.create_client("claude")
+        assert isinstance(client, CloudflareClaudeAPIClient)
 
     @patch("app.external.api_factory.get_settings")
     def test_create_client_gemini_string_without_cloudflare(self, mock_get_settings):
@@ -89,8 +128,15 @@ class TestAPIFactoryCreateClient:
         client = APIFactory.create_client("gemini")
         assert isinstance(client, CloudflareGeminiAPIClient)
 
-    def test_create_client_case_insensitive(self):
+    @patch("app.external.api_factory.get_settings")
+    def test_create_client_case_insensitive(self, mock_get_settings):
         """クライアント作成 - 大文字小文字を無視"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         client1 = APIFactory.create_client("CLAUDE")
         client2 = APIFactory.create_client("Claude")
         client3 = APIFactory.create_client("claude")
@@ -115,9 +161,16 @@ class TestAPIFactoryCreateClient:
 class TestAPIFactoryGenerateSummary:
     """APIFactory.generate_summary_with_provider のテスト"""
 
+    @patch("app.external.api_factory.get_settings")
     @patch.object(ClaudeAPIClient, "generate_summary")
-    def test_generate_summary_claude_minimal(self, mock_generate):
+    def test_generate_summary_claude_minimal(self, mock_generate, mock_get_settings):
         """文書生成 - Claude 最小パラメータ"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         mock_generate.return_value = ("生成された文書", 1000, 500)
 
         result = APIFactory.generate_summary_with_provider(
@@ -171,9 +224,16 @@ class TestAPIFactoryGenerateSummary:
         assert call_args[6] == "橋本義弘"
         assert call_args[7] == "gemini-1.5-pro-002"
 
+    @patch("app.external.api_factory.get_settings")
     @patch.object(ClaudeAPIClient, "generate_summary")
-    def test_generate_summary_with_enum(self, mock_generate):
+    def test_generate_summary_with_enum(self, mock_generate, mock_get_settings):
         """文書生成 - Enum を使用"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         mock_generate.return_value = ("文書", 1500, 600)
 
         result = APIFactory.generate_summary_with_provider(
@@ -193,9 +253,16 @@ class TestAPIFactoryGenerateSummary:
 
         assert "未対応のAPIプロバイダー" in str(exc_info.value)
 
+    @patch("app.external.api_factory.get_settings")
     @patch.object(ClaudeAPIClient, "generate_summary")
-    def test_generate_summary_client_exception(self, mock_generate):
+    def test_generate_summary_client_exception(self, mock_generate, mock_get_settings):
         """文書生成 - クライアント例外"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         mock_generate.side_effect = Exception("API エラー")
 
         with pytest.raises(Exception) as exc_info:
@@ -206,9 +273,16 @@ class TestAPIFactoryGenerateSummary:
 
         assert "API エラー" in str(exc_info.value)
 
+    @patch("app.external.api_factory.get_settings")
     @patch.object(ClaudeAPIClient, "generate_summary")
-    def test_generate_summary_default_document_type(self, mock_generate):
+    def test_generate_summary_default_document_type(self, mock_generate, mock_get_settings):
         """文書生成 - デフォルト文書タイプ"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         mock_generate.return_value = ("文書", 1000, 500)
 
         APIFactory.generate_summary_with_provider(
@@ -224,9 +298,16 @@ class TestAPIFactoryGenerateSummary:
 class TestGenerateSummaryFunction:
     """generate_summary 関数のテスト"""
 
+    @patch("app.external.api_factory.get_settings")
     @patch.object(ClaudeAPIClient, "generate_summary")
-    def test_generate_summary_function(self, mock_generate):
+    def test_generate_summary_function(self, mock_generate, mock_get_settings):
         """generate_summary関数 - 正常系"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         mock_generate.return_value = ("生成結果", 1000, 500)
 
         result = generate_summary(
@@ -278,8 +359,15 @@ class TestGenerateSummaryFunction:
 class TestAPIFactoryEdgeCases:
     """API Factory のエッジケース"""
 
-    def test_create_multiple_clients_independence(self):
+    @patch("app.external.api_factory.get_settings")
+    def test_create_multiple_clients_independence(self, mock_get_settings):
         """複数クライアント作成 - 独立性確認"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         client1 = APIFactory.create_client("claude")
         client2 = APIFactory.create_client("claude")
 
@@ -315,9 +403,16 @@ class TestAPIFactoryEdgeCases:
         client = APIFactory.create_client(APIProvider.GEMINI)
         assert isinstance(client, GeminiAPIClient)
 
+    @patch("app.external.api_factory.get_settings")
     @patch.object(ClaudeAPIClient, "generate_summary")
-    def test_generate_summary_empty_optional_fields(self, mock_generate):
+    def test_generate_summary_empty_optional_fields(self, mock_generate, mock_get_settings):
         """文書生成 - 空のオプションフィールド"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         mock_generate.return_value = ("文書", 1000, 500)
 
         result = APIFactory.generate_summary_with_provider(provider="claude", medical_text="患者データ")
@@ -329,9 +424,16 @@ class TestAPIFactoryEdgeCases:
         assert call_args[2] == ""
         assert call_args[3] == ""
 
+    @patch("app.external.api_factory.get_settings")
     @patch.object(ClaudeAPIClient, "generate_summary")
-    def test_generate_summary_none_model_name(self, mock_generate):
+    def test_generate_summary_none_model_name(self, mock_generate, mock_get_settings):
         """文書生成 - model_name が None"""
+        mock_settings = MagicMock()
+        mock_settings.cloudflare_account_id = None
+        mock_settings.cloudflare_gateway_id = None
+        mock_settings.cloudflare_aig_token = None
+        mock_get_settings.return_value = mock_settings
+
         mock_generate.return_value = ("文書", 1000, 500)
 
         result = APIFactory.generate_summary_with_provider(provider="claude", medical_text="データ")
