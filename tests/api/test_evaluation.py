@@ -45,7 +45,7 @@ def mock_evaluation_prompt():
     return prompt
 
 
-def test_evaluate_output_success(client, test_db, mock_evaluation_result_success):
+def test_evaluate_output_success(client, test_db, csrf_headers, mock_evaluation_result_success):
     """評価実行API - 正常系"""
     with patch("app.api.evaluation.evaluation_service.execute_evaluation") as mock_execute:
         mock_execute.return_value = mock_evaluation_result_success
@@ -58,7 +58,7 @@ def test_evaluate_output_success(client, test_db, mock_evaluation_result_success
             "output_summary": "主病名: 糖尿病\n治療経過: インスリン治療中",
         }
 
-        response = client.post("/api/evaluation/evaluate", json=payload)
+        response = client.post("/api/evaluation/evaluate", json=payload, headers=csrf_headers)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -72,7 +72,7 @@ def test_evaluate_output_success(client, test_db, mock_evaluation_result_success
         mock_execute.assert_called_once()
 
 
-def test_evaluate_output_no_output_error(client, test_db, mock_evaluation_result_failure):
+def test_evaluate_output_no_output_error(client, test_db, csrf_headers, mock_evaluation_result_failure):
     """評価実行API - 出力なしエラー"""
     with patch("app.api.evaluation.evaluation_service.execute_evaluation") as mock_execute:
         mock_execute.return_value = mock_evaluation_result_failure
@@ -85,7 +85,7 @@ def test_evaluate_output_no_output_error(client, test_db, mock_evaluation_result
             "output_summary": "",
         }
 
-        response = client.post("/api/evaluation/evaluate", json=payload)
+        response = client.post("/api/evaluation/evaluate", json=payload, headers=csrf_headers)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -95,7 +95,7 @@ def test_evaluate_output_no_output_error(client, test_db, mock_evaluation_result
         assert data["output_tokens"] == 0
 
 
-def test_evaluate_output_model_missing_error(client, test_db):
+def test_evaluate_output_model_missing_error(client, test_db, csrf_headers):
     """評価実行API - モデル未設定エラー"""
     error_result = EvaluationResponse(
         success=False,
@@ -117,7 +117,7 @@ def test_evaluate_output_model_missing_error(client, test_db):
             "output_summary": "出力内容",
         }
 
-        response = client.post("/api/evaluation/evaluate", json=payload)
+        response = client.post("/api/evaluation/evaluate", json=payload, headers=csrf_headers)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -266,7 +266,7 @@ def test_delete_evaluation_prompt_not_found(client, test_db):
         assert "見つかりません" in data["message"]
 
 
-def test_evaluate_output_missing_required_field(client, test_db):
+def test_evaluate_output_missing_required_field(client, test_db, csrf_headers):
     """評価実行API - 必須フィールド不足"""
     payload = {
         "document_type": "他院への紹介",
@@ -274,7 +274,7 @@ def test_evaluate_output_missing_required_field(client, test_db):
         "output_summary": "出力内容",
     }
 
-    response = client.post("/api/evaluation/evaluate", json=payload)
+    response = client.post("/api/evaluation/evaluate", json=payload, headers=csrf_headers)
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     assert "input_text" in response.text.lower()

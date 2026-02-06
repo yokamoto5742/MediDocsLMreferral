@@ -56,7 +56,7 @@ class TestCreateSummaryPrompt:
         client = MockAPIClient()
         prompt = client.create_summary_prompt(medical_text="患者情報")
 
-        assert "以下のカルテ情報を基に" in prompt
+        assert "以下のカルテ情報を要約してください" in prompt
         assert "【カルテ情報】" in prompt
         assert "患者情報" in prompt
         assert "【追加情報】" in prompt
@@ -179,7 +179,7 @@ class TestCreateSummaryPrompt:
         prompt = client.create_summary_prompt(medical_text="テスト", department="眼科", document_type="他院への紹介")
 
         # カスタムプロンプトがない場合はDEFAULT_SUMMARY_PROMPTを使用
-        assert "以下のカルテ情報を基に" in prompt
+        assert "以下のカルテ情報を要約してください" in prompt
         assert "【カルテ情報】" in prompt
         assert "テスト" in prompt
 
@@ -466,7 +466,7 @@ class TestBaseAPIClientEdgeCases:
         client = MockAPIClient()
         prompt = client.create_summary_prompt(medical_text=long_text)
 
-        assert "以下のカルテ情報を基に" in prompt
+        assert "以下のカルテ情報を要約してください" in prompt
         assert long_text in prompt
 
     @patch("app.external.base_api.get_prompt")

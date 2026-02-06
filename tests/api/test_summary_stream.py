@@ -16,11 +16,10 @@ def mock_csrf_token():
     return "test-csrf-token"
 
 
-@pytest.mark.asyncio
-async def test_generate_summary_stream_success(client, mock_csrf_token):
+def test_generate_summary_stream_success(client, mock_csrf_token):
     """SSEストリーミング文書生成API - 正常系"""
 
-    async def mock_stream():
+    def mock_stream():
         yield 'event: progress\ndata: {"status": "generating", "message": "文書を生成中..."}\n\n'
         yield 'event: complete\ndata: {"success": true, "output_summary": "生成された文書", "parsed_summary": {}, "input_tokens": 100, "output_tokens": 200, "processing_time": 1.5, "model_used": "Claude", "model_switched": false}\n\n'
 
