@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     db_max_overflow: int = 10
     db_pool_timeout: int = 30
     db_pool_recycle: int = 1800
-    database_url: str | None = None  # Heroku DATABASE_URL
+    database_url: str | None = None
 
     # AWS Bedrock (Claude)
     aws_access_key_id: str | None = None
@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     selected_ai_model: str = ModelType.CLAUDE.value
 
     # CSRF認証
-    csrf_secret_key: str | None = None  # CSRFトークン署名用秘密鍵
+    csrf_secret_key: str | None = None
     csrf_token_expire_minutes: int = 60  # トークン有効期限（分）
 
     def get_database_url(self) -> str:

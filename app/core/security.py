@@ -25,7 +25,7 @@ _SECRET_KEY_CACHE: dict[str, bytes] = {}
 
 
 def get_secret_key(settings: Settings) -> bytes:
-    """秘密鍵をキャッシュして返す（設定値ごとにキャッシュ）"""
+    """秘密鍵をキャッシュして返す"""
     cache_key = settings.csrf_secret_key or "_random_"
     if cache_key not in _SECRET_KEY_CACHE:
         _SECRET_KEY_CACHE[cache_key] = _get_secret_key(settings)
@@ -43,7 +43,7 @@ def generate_csrf_token(settings: Settings) -> str:
 
 
 def verify_csrf_token(token: str, settings: Settings) -> bool:
-    """CSRFトークンを検証）"""
+    """CSRFトークンを検証"""
     try:
         timestamp_str, signature = token.split(".", 1)
         timestamp = int(timestamp_str)
@@ -72,7 +72,7 @@ async def require_csrf_token(
     """
     CSRFトークンを検証する依存関数
 
-    UI経由のリクエストのみ許可し、外部APIクライアントを遮断
+    UI経由のリクエストのみ許可して外部APIクライアントを遮断
     """
     if csrf_token is None:
         raise HTTPException(
