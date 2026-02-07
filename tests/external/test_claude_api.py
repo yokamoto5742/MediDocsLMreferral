@@ -255,7 +255,7 @@ class TestClaudeAPIClientGenerateContent:
             prompt="テストプロンプト", model_name="claude-3-5-sonnet-20241022"
         )
 
-        assert result == (MESSAGES["EMPTY_RESPONSE"], 100, 0)
+        assert result == (MESSAGES["ERROR"]["EMPTY_RESPONSE"], 100, 0)
 
     @patch.dict(
         os.environ,

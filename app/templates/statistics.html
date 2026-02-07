@@ -258,7 +258,7 @@ function statisticsPage() {
                 const response = await fetch(`/api/statistics/aggregated?${params}`);
                 this.aggregatedRecords = await response.json();
             } catch (e) {
-                this.error = '集計データの読み込みに失敗しました';
+                this.error = window.MESSAGES.ERROR.STATISTICS_AGGREGATED_LOAD_FAILED;
             } finally {
                 this.isLoadingAggregated = false;
             }
@@ -290,7 +290,7 @@ function statisticsPage() {
                 this.records = await response.json();
                 this.totalRecords = this.records.length > 0 ? this.pagination.offset + this.records.length + (this.records.length === parseInt(this.pagination.limit) ? 1 : 0) : 0;
             } catch (e) {
-                this.error = '使用履歴の読み込みに失敗しました';
+                this.error = window.MESSAGES.ERROR.STATISTICS_RECORDS_LOAD_FAILED;
             } finally {
                 this.isLoadingRecords = false;
             }

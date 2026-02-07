@@ -24,16 +24,16 @@ class CloudflareGeminiAPIClient(BaseAPIClient):
                 self.settings.cloudflare_gateway_id,
                 self.settings.cloudflare_aig_token,
             ]):
-                raise APIError(MESSAGES["CLOUDFLARE_GATEWAY_SETTINGS_MISSING"])
+                raise APIError(MESSAGES["CONFIG"]["CLOUDFLARE_GATEWAY_SETTINGS_MISSING"])
 
             if not self.settings.google_project_id:
-                raise APIError(MESSAGES["VERTEX_AI_PROJECT_MISSING"])
+                raise APIError(MESSAGES["CONFIG"]["VERTEX_AI_PROJECT_MISSING"])
 
             return True
         except APIError:
             raise
         except Exception as e:
-            raise APIError(MESSAGES["VERTEX_AI_INIT_ERROR"].format(error=str(e)))
+            raise APIError(MESSAGES["ERROR"]["VERTEX_AI_INIT_ERROR"].format(error=str(e)))
 
     def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
         try:
@@ -42,7 +42,7 @@ class CloudflareGeminiAPIClient(BaseAPIClient):
                 self.settings.cloudflare_gateway_id,
                 self.settings.cloudflare_aig_token,
             ]):
-                raise APIError("Cloudflare Gateway not initialized")
+                raise APIError(MESSAGES["ERROR"]["CLOUDFLARE_GATEWAY_NOT_INITIALIZED"])
 
             base_url = (
                 f"https://gateway.ai.cloudflare.com/v1/"
@@ -97,7 +97,7 @@ class CloudflareGeminiAPIClient(BaseAPIClient):
                         result_text = parts[0]["text"]
 
             if not result_text:
-                result_text = MESSAGES["EMPTY_RESPONSE"]
+                result_text = MESSAGES["ERROR"]["EMPTY_RESPONSE"]
 
             input_tokens = 0
             output_tokens = 0
@@ -111,9 +111,9 @@ class CloudflareGeminiAPIClient(BaseAPIClient):
 
         except httpx.HTTPStatusError as e:
             raise APIError(
-                MESSAGES["CLOUDFLARE_GATEWAY_API_ERROR"].format(
+                MESSAGES["ERROR"]["CLOUDFLARE_GATEWAY_API_ERROR"].format(
                     error=f"HTTP {e.response.status_code}: {e.response.text}"
                 )
             )
         except Exception as e:
-            raise APIError(MESSAGES["CLOUDFLARE_GATEWAY_API_ERROR"].format(error=str(e)))
+            raise APIError(MESSAGES["ERROR"]["CLOUDFLARE_GATEWAY_API_ERROR"].format(error=str(e)))

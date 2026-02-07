@@ -158,7 +158,7 @@ export function appState(): AppState {
 
         async generateSummary() {
             if (!this.form.medicalText.trim()) {
-                this.error = 'カルテ情報を入力してください';
+                this.error = window.MESSAGES?.VALIDATION?.NO_INPUT ?? 'カルテ情報を入力してください';
                 return;
             }
 
@@ -198,7 +198,7 @@ export function appState(): AppState {
                     await this.generateSummaryFallback();
                 } catch (fallbackError) {
                     console.error('フォールバックも失敗:', fallbackError);
-                    this.error = 'API エラーが発生しました';
+                    this.error = window.MESSAGES?.ERROR?.API_ERROR ?? 'API エラーが発生しました';
                 }
             } finally {
                 this.stopTimer();
@@ -208,7 +208,7 @@ export function appState(): AppState {
 
         async processSSEStream(response: Response) {
             if (!response.body) {
-                throw new Error('レスポンスボディが空です');
+                throw new Error(window.MESSAGES?.ERROR?.RESPONSE_BODY_EMPTY ?? 'レスポンスボディが空です');
             }
 
             const reader = response.body.getReader();
@@ -277,11 +277,11 @@ export function appState(): AppState {
                         this.activeTab = 0;
                         this.currentScreen = 'output';
                     } else {
-                        this.error = (parsed as SSEErrorEvent).error_message || 'エラーが発生しました';
+                        this.error = (parsed as SSEErrorEvent).error_message || window.MESSAGES?.ERROR?.GENERIC_ERROR ?? 'エラーが発生しました';
                     }
                     break;
                 case 'error':
-                    this.error = (parsed as SSEErrorEvent).error_message || 'エラーが発生しました';
+                    this.error = (parsed as SSEErrorEvent).error_message || window.MESSAGES?.ERROR?.GENERIC_ERROR ?? 'エラーが発生しました';
                     break;
             }
         },
@@ -317,7 +317,7 @@ export function appState(): AppState {
                 this.activeTab = 0;
                 this.currentScreen = 'output';
             } else {
-                this.error = data.error_message || 'エラーが発生しました';
+                this.error = data.error_message || window.MESSAGES?.ERROR?.GENERIC_ERROR ?? 'エラーが発生しました';
             }
         },
 
@@ -372,13 +372,13 @@ export function appState(): AppState {
 
         async evaluateOutput() {
             if (!this.result.outputSummary) {
-                this.error = '評価対象の出力がありません';
+                this.error = window.MESSAGES?.VALIDATION?.EVALUATION_NO_OUTPUT ?? '評価対象の出力がありません';
                 return;
             }
 
             // 既に評価結果がある場合は確認ダイアログを表示
             if (this.evaluationResult.result) {
-                if (!confirm('前回の評価をクリアして再評価しますか？')) {
+                if (!confirm(window.MESSAGES?.CONFIRM?.RE_EVALUATE ?? '前回の評価をクリアして再評価しますか？')) {
                     return;
                 }
             }
@@ -414,7 +414,7 @@ export function appState(): AppState {
                     await this.evaluateOutputFallback();
                 } catch (fallbackError) {
                     console.error('フォールバックも失敗:', fallbackError);
-                    this.error = 'API エラーが発生しました';
+                    this.error = window.MESSAGES?.ERROR?.API_ERROR ?? 'API エラーが発生しました';
                 }
             } finally {
                 this.stopEvaluationTimer();
@@ -424,7 +424,7 @@ export function appState(): AppState {
 
         async processEvaluationSSEStream(response: Response) {
             if (!response.body) {
-                throw new Error('レスポンスボディが空です');
+                throw new Error(window.MESSAGES?.ERROR?.RESPONSE_BODY_EMPTY ?? 'レスポンスボディが空です');
             }
 
             const reader = response.body.getReader();
@@ -488,11 +488,11 @@ export function appState(): AppState {
                         };
                         this.currentScreen = 'evaluation';
                     } else {
-                        this.error = (parsed as SSEErrorEvent).error_message || 'エラーが発生しました';
+                        this.error = (parsed as SSEErrorEvent).error_message || window.MESSAGES?.ERROR?.GENERIC_ERROR ?? 'エラーが発生しました';
                     }
                     break;
                 case 'error':
-                    this.error = (parsed as SSEErrorEvent).error_message || 'エラーが発生しました';
+                    this.error = (parsed as SSEErrorEvent).error_message || window.MESSAGES?.ERROR?.GENERIC_ERROR ?? 'エラーが発生しました';
                     break;
             }
         },
@@ -519,7 +519,7 @@ export function appState(): AppState {
                 };
                 this.currentScreen = 'evaluation';
             } else {
-                this.error = data.error_message || '評価中にエラーが発生しました';
+                this.error = data.error_message || window.MESSAGES?.ERROR?.EVALUATION_ERROR ?? '評価中にエラーが発生しました';
             }
         },
 
@@ -531,7 +531,7 @@ export function appState(): AppState {
                     this.showCopySuccess = false;
                 }, 2000);
             } catch (e) {
-                this.error = 'テキストのコピーに失敗しました';
+                this.error = window.MESSAGES?.ERROR?.COPY_FAILED ?? 'テキストのコピーに失敗しました';
             }
         },
 

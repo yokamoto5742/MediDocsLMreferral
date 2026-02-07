@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Generator, Optional, Tuple, Union
 
-from app.core.constants import DEFAULT_DOCUMENT_TYPE, DEFAULT_SUMMARY_PROMPT
+from app.core.constants import DEFAULT_DOCUMENT_TYPE, DEFAULT_SUMMARY_PROMPT, MESSAGES
 from app.core.database import get_db_session
 from app.services.prompt_service import get_prompt, get_selected_model
 from app.utils.exceptions import APIError
@@ -97,7 +97,7 @@ class BaseAPIClient(ABC):
                 model_name = self.get_model_name(department, document_type, doctor)
 
             if not model_name:
-                raise APIError("モデル名が指定されていません")
+                raise APIError(MESSAGES["ERROR"]["MODEL_NAME_NOT_SPECIFIED"])
 
             prompt = self.create_summary_prompt(
                 medical_text,
@@ -145,7 +145,7 @@ class BaseAPIClient(ABC):
                 model_name = self.get_model_name(department, document_type, doctor)
 
             if not model_name:
-                raise APIError("モデル名が指定されていません")
+                raise APIError(MESSAGES["ERROR"]["MODEL_NAME_NOT_SPECIFIED"])
 
             prompt = self.create_summary_prompt(
                 medical_text,

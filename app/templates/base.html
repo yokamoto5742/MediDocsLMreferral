@@ -37,7 +37,7 @@
          x-transition:leave-end="opacity-0 transform translate-y-2"
          class="fixed bottom-5 right-5 z-50 bg-green-600 text-white px-6 py-3 rounded-lg shadow-xl"
          x-cloak>
-        クリップボードにコピーしました
+        {{ messages.SUCCESS.COPIED_TO_CLIPBOARD }}
     </div>
 
     <div class="flex h-screen">
@@ -56,6 +56,9 @@
         {% endif %}
         {% if tab_names %}
         window.TAB_NAMES = {{ tab_names | tojson }};
+        {% endif %}
+        {% if messages %}
+        window.MESSAGES = {{ messages | tojson }};
         {% endif %}
     </script>
 

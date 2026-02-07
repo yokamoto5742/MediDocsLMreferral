@@ -83,7 +83,7 @@ class TestCreateOrUpdateEvaluationPrompt:
         )
 
         assert success is True
-        assert message == MESSAGES["EVALUATION_PROMPT_CREATED"]
+        assert message == MESSAGES["SUCCESS"]["EVALUATION_PROMPT_CREATED"]
         mock_db.add.assert_called_once()
 
         # 追加されたプロンプトを検証
@@ -106,7 +106,7 @@ class TestCreateOrUpdateEvaluationPrompt:
         )
 
         assert success is True
-        assert message == MESSAGES["EVALUATION_PROMPT_UPDATED"]
+        assert message == MESSAGES["SUCCESS"]["EVALUATION_PROMPT_UPDATED"]
         assert mock_existing.content == "更新されたプロンプト"
         assert mock_existing.is_active is True
         mock_db.add.assert_not_called()
@@ -138,7 +138,7 @@ class TestDeleteEvaluationPrompt:
         success, message = delete_evaluation_prompt(mock_db, "他院への紹介")
 
         assert success is True
-        assert message == MESSAGES["EVALUATION_PROMPT_DELETED"]
+        assert message == MESSAGES["SUCCESS"]["EVALUATION_PROMPT_DELETED"]
         mock_db.delete.assert_called_once_with(mock_prompt)
 
     def test_delete_evaluation_prompt_not_found(self):
@@ -255,7 +255,7 @@ class TestExecuteEvaluation:
         )
 
         assert result.success is False
-        assert result.error_message == MESSAGES["EVALUATION_NO_OUTPUT"]
+        assert result.error_message == MESSAGES["VALIDATION"]["EVALUATION_NO_OUTPUT"]
         assert result.input_tokens == 0
         assert result.output_tokens == 0
 
@@ -273,7 +273,7 @@ class TestExecuteEvaluation:
         )
 
         assert result.success is False
-        assert result.error_message == MESSAGES["EVALUATION_MODEL_MISSING"]
+        assert result.error_message == MESSAGES["CONFIG"]["EVALUATION_MODEL_MISSING"]
         assert result.input_tokens == 0
         assert result.output_tokens == 0
 
@@ -487,7 +487,7 @@ class TestExecuteEvaluationStream:
 
         assert len(events) == 1
         assert "event: error" in events[0]
-        assert MESSAGES["EVALUATION_NO_OUTPUT"] in events[0]
+        assert MESSAGES["VALIDATION"]["EVALUATION_NO_OUTPUT"] in events[0]
 
     @pytest.mark.asyncio
     @patch("app.services.evaluation_service.settings")
@@ -507,7 +507,7 @@ class TestExecuteEvaluationStream:
 
         assert len(events) == 1
         assert "event: error" in events[0]
-        assert MESSAGES["EVALUATION_MODEL_MISSING"] in events[0]
+        assert MESSAGES["CONFIG"]["EVALUATION_MODEL_MISSING"] in events[0]
 
     @pytest.mark.asyncio
     @patch("app.services.evaluation_service.get_db_session")

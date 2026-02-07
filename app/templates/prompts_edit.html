@@ -122,12 +122,12 @@ function promptEditPage(promptId) {
                         content: data.content
                     };
                 } else if (response.status === 404) {
-                    this.loadError = 'プロンプトが見つかりません';
+                    this.loadError = window.MESSAGES.ERROR.PROMPT_NOT_FOUND;
                 } else {
-                    this.loadError = 'プロンプトの読み込みに失敗しました';
+                    this.loadError = window.MESSAGES.ERROR.PROMPT_LOAD_FAILED;
                 }
             } catch (e) {
-                this.loadError = 'API エラーが発生しました';
+                this.loadError = window.MESSAGES.ERROR.API_ERROR;
             } finally {
                 this.isLoading = false;
             }
@@ -135,7 +135,7 @@ function promptEditPage(promptId) {
 
         async updatePrompt() {
             if (!this.form.content.trim()) {
-                this.error = 'プロンプト内容を入力してください';
+                this.error = window.MESSAGES.VALIDATION.PROMPT_CONTENT_REQUIRED;
                 return;
             }
 
@@ -159,17 +159,17 @@ function promptEditPage(promptId) {
                     window.location.href = '/prompts?updated=1';
                 } else {
                     const data = await response.json();
-                    this.error = data.detail || 'プロンプトの更新に失敗しました';
+                    this.error = data.detail || window.MESSAGES.ERROR.PROMPT_UPDATE_FAILED;
                 }
             } catch (e) {
-                this.error = 'API エラーが発生しました';
+                this.error = window.MESSAGES.ERROR.API_ERROR;
             } finally {
                 this.isSaving = false;
             }
         },
 
         async deletePrompt() {
-            if (!confirm('このプロンプトを削除してもよろしいですか？')) return;
+            if (!confirm(window.MESSAGES.CONFIRM.DELETE_PROMPT)) return;
 
             this.isSaving = true;
             this.error = null;
@@ -183,10 +183,10 @@ function promptEditPage(promptId) {
                     window.location.href = '/prompts?deleted=1';
                 } else {
                     const data = await response.json();
-                    this.error = data.detail || 'プロンプトの削除に失敗しました';
+                    this.error = data.detail || window.MESSAGES.ERROR.PROMPT_DELETE_FAILED;
                 }
             } catch (e) {
-                this.error = 'API エラーが発生しました';
+                this.error = window.MESSAGES.ERROR.API_ERROR;
             } finally {
                 this.isSaving = false;
             }

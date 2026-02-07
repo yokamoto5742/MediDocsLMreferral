@@ -106,7 +106,7 @@ function promptNewPage() {
 
         async savePrompt() {
             if (!this.form.department || !this.form.doctor || !this.form.documentType || !this.form.content.trim()) {
-                this.error = 'すべての必須項目を入力してください';
+                this.error = window.MESSAGES.VALIDATION.ALL_REQUIRED_FIELDS;
                 return;
             }
 
@@ -130,10 +130,10 @@ function promptNewPage() {
                     window.location.href = '/prompts?created=1';
                 } else {
                     const data = await response.json();
-                    this.error = data.detail || 'プロンプトの作成に失敗しました';
+                    this.error = data.detail || window.MESSAGES.ERROR.PROMPT_CREATE_FAILED;
                 }
             } catch (e) {
-                this.error = 'API エラーが発生しました';
+                this.error = window.MESSAGES.ERROR.API_ERROR;
             } finally {
                 this.isSaving = false;
             }

@@ -2,6 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.core.constants import MESSAGES
 from app.services.summary_service import (
     determine_model,
     execute_summary_generation,
@@ -56,8 +57,7 @@ class TestValidateInput:
 
         is_valid, error = validate_input("あ" * 200)
         assert is_valid is False
-        assert "入力文字数が" in error
-        assert "を超えています" in error
+        assert error == MESSAGES["VALIDATION"]["INPUT_TOO_LONG"]
 
 
 class TestDetermineModel:

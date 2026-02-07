@@ -31,23 +31,23 @@ class CloudflareClaudeAPIClient(BaseAPIClient):
                 self.settings.cloudflare_gateway_id,
                 self.settings.cloudflare_aig_token,
             ]):
-                raise APIError(MESSAGES["CLOUDFLARE_GATEWAY_SETTINGS_MISSING"])
+                raise APIError(MESSAGES["CONFIG"]["CLOUDFLARE_GATEWAY_SETTINGS_MISSING"])
 
             if not all([
                 self.aws_access_key_id,
                 self.aws_secret_access_key,
                 self.aws_region,
             ]):
-                raise APIError(MESSAGES["AWS_CREDENTIALS_MISSING"])
+                raise APIError(MESSAGES["CONFIG"]["AWS_CREDENTIALS_MISSING"])
 
             if not self.default_model:
-                raise APIError(MESSAGES["ANTHROPIC_MODEL_MISSING"])
+                raise APIError(MESSAGES["CONFIG"]["ANTHROPIC_MODEL_MISSING"])
 
             return True
         except APIError:
             raise
         except Exception as e:
-            raise APIError(MESSAGES["BEDROCK_INIT_ERROR"].format(error=str(e)))
+            raise APIError(MESSAGES["ERROR"]["BEDROCK_INIT_ERROR"].format(error=str(e)))
 
     def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
         try:
@@ -56,7 +56,7 @@ class CloudflareClaudeAPIClient(BaseAPIClient):
                 self.settings.cloudflare_gateway_id,
                 self.settings.cloudflare_aig_token,
             ]):
-                raise APIError("Cloudflare Gateway not initialized")
+                raise APIError(MESSAGES["ERROR"]["CLOUDFLARE_GATEWAY_NOT_INITIALIZED"])
 
             request_body = {
                 "messages": [
@@ -131,7 +131,7 @@ class CloudflareClaudeAPIClient(BaseAPIClient):
                             break
 
             if not result_text:
-                result_text = MESSAGES["EMPTY_RESPONSE"]
+                result_text = MESSAGES["ERROR"]["EMPTY_RESPONSE"]
 
             # トークン数を抽出
             input_tokens = 0
@@ -146,9 +146,9 @@ class CloudflareClaudeAPIClient(BaseAPIClient):
 
         except httpx.HTTPStatusError as e:
             raise APIError(
-                MESSAGES["CLOUDFLARE_GATEWAY_API_ERROR"].format(
+                MESSAGES["ERROR"]["CLOUDFLARE_GATEWAY_API_ERROR"].format(
                     error=f"HTTP {e.response.status_code}: {e.response.text}"
                 )
             )
         except Exception as e:
-            raise APIError(MESSAGES["CLOUDFLARE_GATEWAY_API_ERROR"].format(error=str(e)))
+            raise APIError(MESSAGES["ERROR"]["CLOUDFLARE_GATEWAY_API_ERROR"].format(error=str(e)))

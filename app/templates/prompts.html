@@ -157,13 +157,13 @@ function promptsPage() {
         checkQueryParams() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('created') === '1') {
-                this.successMessage = 'プロンプトを作成しました';
+                this.successMessage = window.MESSAGES.SUCCESS.PROMPT_CREATED;
                 this.clearQueryParams();
             } else if (params.get('updated') === '1') {
-                this.successMessage = 'プロンプトを更新しました';
+                this.successMessage = window.MESSAGES.SUCCESS.PROMPT_UPDATED;
                 this.clearQueryParams();
             } else if (params.get('deleted') === '1') {
-                this.successMessage = 'プロンプトを削除しました';
+                this.successMessage = window.MESSAGES.SUCCESS.PROMPT_DELETED;
                 this.clearQueryParams();
             }
         },
@@ -181,7 +181,7 @@ function promptsPage() {
                 this.prompts = data;
                 this.applyFilters();
             } catch (e) {
-                this.error = 'プロンプトの読み込みに失敗しました';
+                this.error = window.MESSAGES.ERROR.PROMPT_LOAD_FAILED;
             } finally {
                 this.isLoading = false;
             }
@@ -197,18 +197,18 @@ function promptsPage() {
         },
 
         async deletePrompt(promptId) {
-            if (!confirm('このプロンプトを削除してもよろしいですか？')) return;
+            if (!confirm(window.MESSAGES.CONFIRM.DELETE_PROMPT)) return;
 
             try {
                 const response = await fetch(`/api/prompts/${promptId}`, { method: 'DELETE' });
                 if (response.ok) {
-                    this.successMessage = 'プロンプトを削除しました';
+                    this.successMessage = window.MESSAGES.SUCCESS.PROMPT_DELETED;
                     await this.loadPrompts();
                 } else {
-                    this.error = 'プロンプトの削除に失敗しました';
+                    this.error = window.MESSAGES.ERROR.PROMPT_DELETE_FAILED;
                 }
             } catch (e) {
-                this.error = 'API エラーが発生しました';
+                this.error = window.MESSAGES.ERROR.API_ERROR;
             }
         },
 

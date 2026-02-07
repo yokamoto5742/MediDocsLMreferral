@@ -37,7 +37,7 @@ def create_or_update_evaluation_prompt(
 ) -> tuple[bool, str]:
     """評価プロンプトを作成または更新"""
     if not content:
-        return False, "評価プロンプトの内容を入力してください"
+        return False, MESSAGES["VALIDATION"]["EVALUATION_PROMPT_CONTENT_REQUIRED"]
 
     existing = db.query(EvaluationPrompt).filter(
         EvaluationPrompt.document_type == document_type
@@ -46,7 +46,7 @@ def create_or_update_evaluation_prompt(
     if existing:
         setattr(existing, 'content', content)
         setattr(existing, 'is_active', True)
-        message = MESSAGES["EVALUATION_PROMPT_UPDATED"]
+        message = MESSAGES["SUCCESS"]["EVALUATION_PROMPT_UPDATED"]
     else:
         new_prompt = EvaluationPrompt(
             document_type=document_type,
@@ -54,7 +54,7 @@ def create_or_update_evaluation_prompt(
             is_active=True
         )
         db.add(new_prompt)
-        message = MESSAGES["EVALUATION_PROMPT_CREATED"]
+        message = MESSAGES["SUCCESS"]["EVALUATION_PROMPT_CREATED"]
 
     return True, message
 
@@ -66,10 +66,12 @@ def delete_evaluation_prompt(db: Session, document_type: str) -> tuple[bool, str
     ).first()
 
     if not prompt:
-        return False, f"{document_type}の評価プロンプトが見つかりません"
+        return False, MESSAGES["ERROR"]["EVALUATION_PROMPT_NOT_FOUND"].format(
+            document_type=document_type
+        )
 
     db.delete(prompt)
-    return True, MESSAGES["EVALUATION_PROMPT_DELETED"]
+    return True, MESSAGES["SUCCESS"]["EVALUATION_PROMPT_DELETED"]
 
 
 def build_evaluation_prompt(
@@ -110,7 +112,7 @@ def execute_evaluation(
             input_tokens=0,
             output_tokens=0,
             processing_time=0.0,
-            error_message=MESSAGES["EVALUATION_NO_OUTPUT"]
+            error_message=MESSAGES["VALIDATION"]["EVALUATION_NO_OUTPUT"]
         )
 
     if not settings.gemini_evaluation_model:
@@ -120,7 +122,7 @@ def execute_evaluation(
             input_tokens=0,
             output_tokens=0,
             processing_time=0.0,
-            error_message=MESSAGES["EVALUATION_MODEL_MISSING"]
+            error_message=MESSAGES["CONFIG"]["EVALUATION_MODEL_MISSING"]
         )
 
     with get_db_session() as db:
@@ -132,7 +134,7 @@ def execute_evaluation(
                 input_tokens=0,
                 output_tokens=0,
                 processing_time=0.0,
-                error_message=MESSAGES["EVALUATION_PROMPT_NOT_SET"].format(
+                error_message=MESSAGES["VALIDATION"]["EVALUATION_PROMPT_NOT_SET"].format(
                     document_type=document_type
                 )
             )
@@ -180,7 +182,7 @@ def execute_evaluation(
             input_tokens=0,
             output_tokens=0,
             processing_time=time.time() - start_time,
-            error_message=MESSAGES["EVALUATION_API_ERROR"].format(error=str(e))
+            error_message=MESSAGES["ERROR"]["EVALUATION_API_ERROR"].format(error=str(e))
         )
 
 
@@ -229,14 +231,14 @@ async def execute_evaluation_stream(
     if not output_summary:
         yield _sse_event("error", {
             "success": False,
-            "error_message": MESSAGES["EVALUATION_NO_OUTPUT"]
+            "error_message": MESSAGES["VALIDATION"]["EVALUATION_NO_OUTPUT"]
         })
         return
 
     if not settings.gemini_evaluation_model:
         yield _sse_event("error", {
             "success": False,
-            "error_message": MESSAGES["EVALUATION_MODEL_MISSING"]
+            "error_message": MESSAGES["CONFIG"]["EVALUATION_MODEL_MISSING"]
         })
         return
 
@@ -246,7 +248,7 @@ async def execute_evaluation_stream(
         if not prompt_data:
             yield _sse_event("error", {
                 "success": False,
-                "error_message": MESSAGES["EVALUATION_PROMPT_NOT_SET"].format(
+                "error_message": MESSAGES["VALIDATION"]["EVALUATION_PROMPT_NOT_SET"].format(
                     document_type=document_type
                 )
             })
@@ -256,7 +258,7 @@ async def execute_evaluation_stream(
     # 評価開始を通知
     yield _sse_event("progress", {
         "status": "starting",
-        "message": "評価を開始します..."
+        "message": MESSAGES["STATUS"]["EVALUATION_START"]
     })
 
     start_time = time.time()
@@ -281,7 +283,7 @@ async def execute_evaluation_stream(
     # 評価開始を再度通知
     yield _sse_event("progress", {
         "status": "evaluating",
-        "message": "評価中..."
+        "message": MESSAGES["STATUS"]["EVALUATING"]
     })
 
     # ハートビートを送信しながら結果を待つ
@@ -299,7 +301,7 @@ async def execute_evaluation_stream(
             if msg_type == "error":
                 yield _sse_event("error", {
                     "success": False,
-                    "error_message": MESSAGES["EVALUATION_API_ERROR"].format(error=msg_data)
+                    "error_message": MESSAGES["ERROR"]["EVALUATION_API_ERROR"].format(error=msg_data)
                 })
                 return
             # msg_type == "result"
@@ -310,7 +312,9 @@ async def execute_evaluation_stream(
             elapsed = int(time.time() - start_time)
             yield _sse_event("progress", {
                 "status": "evaluating",
-                "message": f"評価中... ({elapsed}秒経過)"
+                "message": MESSAGES["STATUS"]["EVALUATING_ELAPSED"].format(
+                    elapsed=elapsed
+                )
             })
 
     processing_time = time.time() - start_time

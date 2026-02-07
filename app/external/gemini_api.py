@@ -24,7 +24,7 @@ class GeminiAPIClient(BaseAPIClient):
     def initialize(self) -> bool:
         try:
             if not self.settings.google_project_id:
-                raise APIError(MESSAGES["VERTEX_AI_PROJECT_MISSING"])
+                raise APIError(MESSAGES["CONFIG"]["VERTEX_AI_PROJECT_MISSING"])
 
             google_credentials_json = self.settings.google_credentials_json
 
@@ -45,11 +45,11 @@ class GeminiAPIClient(BaseAPIClient):
                     )
 
                 except json.JSONDecodeError as e:
-                    raise APIError(MESSAGES["VERTEX_AI_CREDENTIALS_JSON_PARSE_ERROR"].format(error=str(e)))
+                    raise APIError(MESSAGES["ERROR"]["VERTEX_AI_CREDENTIALS_JSON_PARSE_ERROR"].format(error=str(e)))
                 except KeyError as e:
-                    raise APIError(MESSAGES["VERTEX_AI_CREDENTIALS_FIELD_MISSING"].format(error=str(e)))
+                    raise APIError(MESSAGES["ERROR"]["VERTEX_AI_CREDENTIALS_FIELD_MISSING"].format(error=str(e)))
                 except Exception as e:
-                    raise APIError(MESSAGES["VERTEX_AI_CREDENTIALS_ERROR"].format(error=str(e)))
+                    raise APIError(MESSAGES["ERROR"]["VERTEX_AI_CREDENTIALS_ERROR"].format(error=str(e)))
             else:
                 self.client = genai.Client(
                     vertexai=True,
@@ -61,12 +61,12 @@ class GeminiAPIClient(BaseAPIClient):
         except APIError:
             raise
         except Exception as e:
-            raise APIError(MESSAGES["VERTEX_AI_INIT_ERROR"].format(error=str(e)))
+            raise APIError(MESSAGES["ERROR"]["VERTEX_AI_INIT_ERROR"].format(error=str(e)))
 
     def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
         try:
             if self.client is None:
-                raise APIError("Client not initialized")
+                raise APIError(MESSAGES["ERROR"]["GEMINI_CLIENT_NOT_INITIALIZED"])
 
             thinking_level = (
                 types.ThinkingLevel.LOW
@@ -101,7 +101,7 @@ class GeminiAPIClient(BaseAPIClient):
 
             return result_text, input_tokens, output_tokens
         except Exception as e:
-            raise APIError(MESSAGES["VERTEX_AI_API_ERROR"].format(error=str(e)))
+            raise APIError(MESSAGES["ERROR"]["VERTEX_AI_API_ERROR"].format(error=str(e)))
 
     def _generate_content_stream(
         self, prompt: str, model_name: str
@@ -109,7 +109,7 @@ class GeminiAPIClient(BaseAPIClient):
         """ストリーミングでコンテンツを生成"""
         try:
             if self.client is None:
-                raise APIError("Client not initialized")
+                raise APIError(MESSAGES["ERROR"]["GEMINI_CLIENT_NOT_INITIALIZED"])
 
             thinking_level = (
                 types.ThinkingLevel.LOW
@@ -144,4 +144,4 @@ class GeminiAPIClient(BaseAPIClient):
             yield {"input_tokens": input_tokens, "output_tokens": output_tokens}
 
         except Exception as e:
-            raise APIError(MESSAGES["VERTEX_AI_API_ERROR"].format(error=str(e)))
+            raise APIError(MESSAGES["ERROR"]["VERTEX_AI_API_ERROR"].format(error=str(e)))

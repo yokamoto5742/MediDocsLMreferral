@@ -7,7 +7,7 @@ from typing import AsyncGenerator
 from zoneinfo import ZoneInfo
 
 from app.core.config import get_settings
-from app.core.constants import ModelType
+from app.core.constants import MESSAGES, ModelType
 from app.core.database import get_db_session
 from app.external.api_factory import APIProvider, generate_summary, generate_summary_stream
 from app.models.usage import SummaryUsage
@@ -39,13 +39,13 @@ def _error_response(
 def validate_input(medical_text: str) -> tuple[bool, str | None]:
     """入力検証"""
     if not medical_text or not medical_text.strip():
-        return False, "カルテ情報を入力してください"
+        return False, MESSAGES["VALIDATION"]["NO_INPUT"]
 
     input_length = len(medical_text.strip())
     if input_length < settings.min_input_tokens:
-        return False, "入力文字数が少なすぎます"
+        return False, MESSAGES["VALIDATION"]["INPUT_TOO_SHORT"]
     if input_length > settings.max_input_tokens:
-        return False, f"入力文字数が{settings.max_input_tokens}を超えています"
+        return False, MESSAGES["VALIDATION"]["INPUT_TOO_LONG"]
 
     return True, None
 
@@ -76,7 +76,7 @@ def determine_model(
         if settings.gemini_model:
             return ModelType.GEMINI_PRO, True
         else:
-            raise ValueError("入力が長すぎますが、Geminiモデルが設定されていません")
+            raise ValueError(MESSAGES["CONFIG"]["THRESHOLD_EXCEEDED_NO_GEMINI"])
 
     return requested_model, False
 
@@ -86,15 +86,17 @@ def get_provider_and_model(selected_model: str) -> tuple[str, str]:
     if selected_model == ModelType.CLAUDE:
         model = settings.claude_model or settings.anthropic_model
         if not model:
-            raise ValueError("Claudeモデルが設定されていません")
+            raise ValueError(MESSAGES["CONFIG"]["CLAUDE_MODEL_NOT_SET"])
         return APIProvider.CLAUDE.value, model
     elif selected_model == ModelType.GEMINI_PRO:
         model = settings.gemini_model
         if not model:
-            raise ValueError("Geminiモデルが設定されていません")
+            raise ValueError(MESSAGES["CONFIG"]["GEMINI_MODEL_NOT_SET"])
         return APIProvider.GEMINI.value, model
     else:
-        raise ValueError(f"サポートされていないモデル: {selected_model}")
+        raise ValueError(
+            MESSAGES["CONFIG"]["UNSUPPORTED_MODEL"].format(model=selected_model)
+        )
 
 
 def execute_summary_generation(
@@ -112,7 +114,7 @@ def execute_summary_generation(
     # 入力検証
     is_valid, error_msg = validate_input(medical_text)
     if not is_valid:
-        return _error_response(error_msg or "入力エラーが発生しました", model)
+        return _error_response(error_msg or MESSAGES["ERROR"]["INPUT_ERROR"], model)
 
     # モデル決定
     total_length = len(medical_text) + len(additional_info or "")
@@ -224,7 +226,7 @@ async def execute_summary_generation_stream(
     if not is_valid:
         yield _sse_event("error", {
             "success": False,
-            "error_message": error_msg or "入力エラーが発生しました"
+            "error_message": error_msg or MESSAGES["ERROR"]["INPUT_ERROR"]
         })
         return
 
@@ -249,7 +251,7 @@ async def execute_summary_generation_stream(
     # 生成開始を通知（即座に送信してHerokuタイムアウトを回避）
     yield _sse_event("progress", {
         "status": "starting",
-        "message": "文書生成を開始します..."
+        "message": MESSAGES["STATUS"]["DOCUMENT_GENERATION_START"]
     })
 
     start_time = time.time()
@@ -274,7 +276,7 @@ async def execute_summary_generation_stream(
     # 生成開始を再度通知
     yield _sse_event("progress", {
         "status": "generating",
-        "message": "文書を生成中..."
+        "message": MESSAGES["STATUS"]["DOCUMENT_GENERATING"]
     })
 
     # ハートビートを送信しながら結果を待つ（Herokuタイムアウト回避のため5秒に短縮）
@@ -300,7 +302,9 @@ async def execute_summary_generation_stream(
             elapsed = int(time.time() - start_time)
             yield _sse_event("progress", {
                 "status": "generating",
-                "message": f"文書を生成中... ({elapsed}秒経過)"
+                "message": MESSAGES["STATUS"]["DOCUMENT_GENERATING_ELAPSED"].format(
+                    elapsed=elapsed
+                )
             })
 
     processing_time = time.time() - start_time

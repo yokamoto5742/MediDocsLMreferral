@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
-from app.core.constants import DEFAULT_STATISTICS_PERIOD_DAYS
+from app.core.constants import DEFAULT_STATISTICS_PERIOD_DAYS, MESSAGES
 from app.models.usage import SummaryUsage
 
 JST = ZoneInfo("Asia/Tokyo")
@@ -99,8 +99,8 @@ def get_aggregated_records(
     return [
         {
             "document_type": r.document_type or "-",
-            "department": "全科共通" if r.department == "default" else (r.department or "全科共通"),
-            "doctor": "医師共通" if r.doctor == "default" else (r.doctor or "医師共通"),
+            "department": MESSAGES["INFO"]["DEFAULT_DEPARTMENT_LABEL"] if r.department == "default" else (r.department or MESSAGES["INFO"]["DEFAULT_DEPARTMENT_LABEL"]),
+            "doctor": MESSAGES["INFO"]["DEFAULT_DOCTOR_LABEL"] if r.doctor == "default" else (r.doctor or MESSAGES["INFO"]["DEFAULT_DOCTOR_LABEL"]),
             "count": r.count,
             "input_tokens": r.input_tokens or 0,
             "output_tokens": r.output_tokens or 0,

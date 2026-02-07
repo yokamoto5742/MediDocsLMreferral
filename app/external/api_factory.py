@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Union
 
 from app.core.config import get_settings
-from app.core.constants import DEFAULT_DOCUMENT_TYPE
+from app.core.constants import DEFAULT_DOCUMENT_TYPE, MESSAGES
 from app.external.base_api import BaseAPIClient
 from app.external.claude_api import ClaudeAPIClient
 from app.external.cloudflare_claude_api import CloudflareClaudeAPIClient
@@ -26,7 +26,7 @@ class APIFactory:
             try:
                 provider = APIProvider(provider.lower())
             except ValueError:
-                raise APIError(f"未対応のAPIプロバイダー: {provider}")
+                raise APIError(MESSAGES["ERROR"]["UNSUPPORTED_API_PROVIDER"].format(provider=provider))
 
         settings = get_settings()
 
@@ -52,8 +52,8 @@ class APIFactory:
             logger.info("APIクライアント選択: ClaudeAPIClient (Direct Amazon Bedrock)")
             return ClaudeAPIClient()
 
-        logger.error(f"未対応のAPIプロバイダー: {provider}")
-        raise APIError(f"未対応のAPIプロバイダー: {provider}")
+        logger.error(MESSAGES["ERROR"]["UNSUPPORTED_API_PROVIDER"].format(provider=provider))
+        raise APIError(MESSAGES["ERROR"]["UNSUPPORTED_API_PROVIDER"].format(provider=provider))
 
     @staticmethod
     def generate_summary_with_provider(

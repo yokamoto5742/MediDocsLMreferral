@@ -81,11 +81,21 @@ export interface SSEEvaluationCompleteEvent {
     processing_time: number;
 }
 
+// メッセージ定数の型定義
+export interface MessagesMap {
+    ERROR: Record<string, string>;
+    VALIDATION: Record<string, string>;
+    SUCCESS: Record<string, string>;
+    INFO: Record<string, string>;
+    CONFIRM: Record<string, string>;
+}
+
 // グローバル変数の型宣言
 declare global {
     interface Window {
         DOCUMENT_PURPOSE_MAPPING?: Record<string, string>;
         CSRF_TOKEN?: string;
         TAB_NAMES?: readonly string[];
+        MESSAGES?: MessagesMap;
     }
 }

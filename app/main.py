@@ -6,8 +6,14 @@ from fastapi.templating import Jinja2Templates
 
 from app.api.router import api_router
 from app.core.config import get_settings
-from app.core.constants import DEFAULT_DEPARTMENT, DEFAULT_SECTION_NAMES, DOCUMENT_TYPES, \
-    DOCUMENT_TYPE_TO_PURPOSE_MAPPING, ModelType
+from app.core.constants import (
+    DEFAULT_DEPARTMENT,
+    DEFAULT_SECTION_NAMES,
+    DOCUMENT_TYPES,
+    DOCUMENT_TYPE_TO_PURPOSE_MAPPING,
+    FRONTEND_MESSAGES,
+    ModelType,
+)
 from app.core.security import generate_csrf_token
 from app.utils.error_handlers import api_exception_handler, validation_exception_handler
 
@@ -54,6 +60,7 @@ def get_common_context(active_page: str = "index") -> dict:
         "tab_names": ["全文"] + list(DEFAULT_SECTION_NAMES),
         "active_page": active_page,
         "csrf_token": generate_csrf_token(settings),
+        "messages": FRONTEND_MESSAGES,
     }
 
 

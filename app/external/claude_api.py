@@ -25,10 +25,10 @@ class ClaudeAPIClient(BaseAPIClient):
     def initialize(self) -> bool:
         try:
             if not all([self.aws_access_key_id, self.aws_secret_access_key, self.aws_region]):
-                raise APIError(MESSAGES["AWS_CREDENTIALS_MISSING"])
+                raise APIError(MESSAGES["CONFIG"]["AWS_CREDENTIALS_MISSING"])
 
             if not self.anthropic_model:
-                raise APIError(MESSAGES["ANTHROPIC_MODEL_MISSING"])
+                raise APIError(MESSAGES["CONFIG"]["ANTHROPIC_MODEL_MISSING"])
 
             self.client = AnthropicBedrock(
                 aws_access_key=self.aws_access_key_id,
@@ -38,7 +38,7 @@ class ClaudeAPIClient(BaseAPIClient):
             return True
 
         except Exception as e:
-            raise APIError(MESSAGES["BEDROCK_INIT_ERROR"].format(error=str(e)))
+            raise APIError(MESSAGES["ERROR"]["BEDROCK_INIT_ERROR"].format(error=str(e)))
 
     def _generate_content(self, prompt: str, model_name: str) -> Tuple[str, int, int]:
         """
@@ -53,7 +53,7 @@ class ClaudeAPIClient(BaseAPIClient):
         """
         try:
             if self.client is None:
-                raise APIError("Claude API クライアントが初期化されていません")
+                raise APIError(MESSAGES["ERROR"]["CLAUDE_CLIENT_NOT_INITIALIZED"])
 
             response = self.client.messages.create(
                 model=model_name,
@@ -63,7 +63,7 @@ class ClaudeAPIClient(BaseAPIClient):
                 ]
             )
 
-            summary_text = MESSAGES["EMPTY_RESPONSE"]
+            summary_text = MESSAGES["ERROR"]["EMPTY_RESPONSE"]
             if response.content:
                 for content_block in response.content:
                     if isinstance(content_block, TextBlock):
@@ -76,4 +76,4 @@ class ClaudeAPIClient(BaseAPIClient):
             return summary_text, input_tokens, output_tokens
 
         except Exception as e:
-            raise APIError(MESSAGES["BEDROCK_API_ERROR"].format(error=str(e)))
+            raise APIError(MESSAGES["ERROR"]["BEDROCK_API_ERROR"].format(error=str(e)))

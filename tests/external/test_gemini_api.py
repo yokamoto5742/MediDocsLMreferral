@@ -145,7 +145,7 @@ class TestGeminiAPIClientInitialize:
         with pytest.raises(APIError) as exc_info:
             client.initialize()
 
-        assert str(exc_info.value) == MESSAGES["VERTEX_AI_PROJECT_MISSING"]
+        assert str(exc_info.value) == MESSAGES["CONFIG"]["VERTEX_AI_PROJECT_MISSING"]
 
     @patch("app.external.gemini_api.get_settings")
     def test_initialize_invalid_json_format(self, mock_get_settings):
@@ -440,7 +440,7 @@ class TestGeminiAPIClientIntegration:
         with pytest.raises(APIError) as exc_info:
             client.generate_summary(medical_text="データ")
 
-        assert MESSAGES["VERTEX_AI_PROJECT_MISSING"] in str(exc_info.value)
+        assert MESSAGES["CONFIG"]["VERTEX_AI_PROJECT_MISSING"] in str(exc_info.value)
 
 
 class TestGeminiAPIClientEdgeCases:
@@ -529,7 +529,7 @@ class TestGeminiAPIClientEdgeCases:
         with pytest.raises(APIError) as exc_info:
             client.initialize()
 
-        assert MESSAGES["VERTEX_AI_PROJECT_MISSING"] in str(exc_info.value)
+        assert MESSAGES["CONFIG"]["VERTEX_AI_PROJECT_MISSING"] in str(exc_info.value)
 
     @patch("app.external.gemini_api.genai.Client")
     @patch("app.external.gemini_api.get_settings")

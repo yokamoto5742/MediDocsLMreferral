@@ -65,13 +65,13 @@ function evaluationPromptEditPage() {
                     this.content = data.content;
                 }
             } catch (e) {
-                this.error = '評価プロンプトの読み込みに失敗しました';
+                this.error = window.MESSAGES.ERROR.EVALUATION_PROMPT_LOAD_FAILED;
             }
         },
 
         async savePrompt() {
             if (!this.content.trim()) {
-                this.error = 'プロンプト内容を入力してください';
+                this.error = window.MESSAGES.VALIDATION.PROMPT_CONTENT_REQUIRED;
                 return;
             }
 
@@ -92,10 +92,10 @@ function evaluationPromptEditPage() {
                 if (data.success) {
                     window.location.href = '/evaluation-prompts?saved=1';
                 } else {
-                    this.error = data.message || '保存に失敗しました';
+                    this.error = data.message || window.MESSAGES.ERROR.EVALUATION_PROMPT_SAVE_FAILED;
                 }
             } catch (e) {
-                this.error = 'API エラーが発生しました';
+                this.error = window.MESSAGES.ERROR.API_ERROR;
             } finally {
                 this.isSaving = false;
             }

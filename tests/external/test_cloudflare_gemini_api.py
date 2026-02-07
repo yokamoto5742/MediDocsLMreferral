@@ -84,7 +84,7 @@ class TestCloudflareGeminiAPIClientInitialize:
 
         with pytest.raises(APIError) as exc_info:
             client.initialize()
-        assert MESSAGES["CLOUDFLARE_GATEWAY_SETTINGS_MISSING"] in str(exc_info.value)
+        assert MESSAGES["CONFIG"]["CLOUDFLARE_GATEWAY_SETTINGS_MISSING"] in str(exc_info.value)
 
     @patch("app.external.cloudflare_gemini_api.get_settings")
     def test_initialize_missing_cloudflare_gateway_id(self, mock_get_settings):
@@ -97,7 +97,7 @@ class TestCloudflareGeminiAPIClientInitialize:
 
         with pytest.raises(APIError) as exc_info:
             client.initialize()
-        assert MESSAGES["CLOUDFLARE_GATEWAY_SETTINGS_MISSING"] in str(exc_info.value)
+        assert MESSAGES["CONFIG"]["CLOUDFLARE_GATEWAY_SETTINGS_MISSING"] in str(exc_info.value)
 
     @patch("app.external.cloudflare_gemini_api.get_settings")
     def test_initialize_missing_cloudflare_aig_token(self, mock_get_settings):
@@ -110,7 +110,7 @@ class TestCloudflareGeminiAPIClientInitialize:
 
         with pytest.raises(APIError) as exc_info:
             client.initialize()
-        assert MESSAGES["CLOUDFLARE_GATEWAY_SETTINGS_MISSING"] in str(exc_info.value)
+        assert MESSAGES["CONFIG"]["CLOUDFLARE_GATEWAY_SETTINGS_MISSING"] in str(exc_info.value)
 
     @patch("app.external.cloudflare_gemini_api.get_settings")
     def test_initialize_missing_google_project_id(self, mock_get_settings):
@@ -123,7 +123,7 @@ class TestCloudflareGeminiAPIClientInitialize:
 
         with pytest.raises(APIError) as exc_info:
             client.initialize()
-        assert MESSAGES["VERTEX_AI_PROJECT_MISSING"] in str(exc_info.value)
+        assert MESSAGES["CONFIG"]["VERTEX_AI_PROJECT_MISSING"] in str(exc_info.value)
 
 
 class TestCloudflareGeminiAPIClientGenerateContent:
@@ -226,7 +226,7 @@ class TestCloudflareGeminiAPIClientGenerateContent:
         client = CloudflareGeminiAPIClient()
         result = client._generate_content("テストプロンプト", "gemini-2.0-flash")
 
-        assert result[0] == MESSAGES["EMPTY_RESPONSE"]
+        assert result[0] == MESSAGES["ERROR"]["EMPTY_RESPONSE"]
         assert result[1] == 100
         assert result[2] == 0
 

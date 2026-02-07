@@ -77,10 +77,10 @@ function evaluationPromptsPage() {
         checkQueryParams() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('saved') === '1') {
-                this.successMessage = 'プロンプトを保存しました';
+                this.successMessage = window.MESSAGES.SUCCESS.PROMPT_SAVED;
                 this.clearQueryParams();
             } else if (params.get('deleted') === '1') {
-                this.successMessage = 'プロンプトを削除しました';
+                this.successMessage = window.MESSAGES.SUCCESS.PROMPT_DELETED;
                 this.clearQueryParams();
             }
         },
@@ -97,7 +97,7 @@ function evaluationPromptsPage() {
                 const data = await response.json();
                 this.prompts = data.prompts || [];
             } catch (e) {
-                this.error = 'プロンプトの読み込みに失敗しました';
+                this.error = window.MESSAGES.ERROR.PROMPT_LOAD_FAILED;
             } finally {
                 this.isLoading = false;
             }
@@ -141,10 +141,10 @@ function evaluationPromptsPage() {
                     this.successMessage = data.message;
                     await this.loadPrompts();
                 } else {
-                    this.error = data.message || '評価プロンプトの削除に失敗しました';
+                    this.error = data.message || window.MESSAGES.ERROR.EVALUATION_PROMPT_DELETE_FAILED;
                 }
             } catch (e) {
-                this.error = 'API エラーが発生しました';
+                this.error = window.MESSAGES.ERROR.API_ERROR;
             }
         }
     };
