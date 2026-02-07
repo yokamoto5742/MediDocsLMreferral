@@ -16,16 +16,33 @@ def get_prompt(
     document_type: str,
     doctor: str,
 ) -> Prompt | None:
-    """特定のプロンプトを取得"""
-    return (
-        db.query(Prompt)
-        .filter(
-            Prompt.department == department,
-            Prompt.document_type == document_type,
-            Prompt.doctor == doctor,
+    """階層的にプロンプトを取得
+
+    優先順位:
+    1. 医師 + 文書タイプ固有
+    2. 診療科 + 文書タイプ固有
+    3. 文書タイプデフォルト
+    """
+    search_conditions = [
+        (department, document_type, doctor),
+        (department, document_type, "default"),
+        ("default", document_type, "default"),
+    ]
+
+    for dept, doc_type, doc in search_conditions:
+        prompt = (
+            db.query(Prompt)
+            .filter(
+                Prompt.department == dept,
+                Prompt.document_type == doc_type,
+                Prompt.doctor == doc,
+            )
+            .first()
         )
-        .first()
-    )
+        if prompt:
+            return prompt
+
+    return None
 
 
 def get_prompt_by_id(db: Session, prompt_id: int) -> Prompt | None:
@@ -55,7 +72,15 @@ def create_or_update_prompt(
     selected_model: str | None = None,
 ) -> Prompt:
     """プロンプトを作成または更新"""
-    existing = get_prompt(db, department, document_type, doctor)
+    existing = (
+        db.query(Prompt)
+        .filter(
+            Prompt.department == department,
+            Prompt.document_type == document_type,
+            Prompt.doctor == doctor,
+        )
+        .first()
+    )
     if existing:
         existing.content = content
         existing.selected_model = selected_model
