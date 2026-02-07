@@ -18,8 +18,11 @@ JST = ZoneInfo("Asia/Tokyo")
 settings = get_settings()
 
 
-def _error_response(error_msg: str, model: str, model_switched: bool = False) -> SummaryResponse:
-    """エラーレスポンスを生成するヘルパー関数"""
+def _error_response(
+        error_msg: str,
+        model: str,
+        model_switched: bool = False
+) -> SummaryResponse:
     return SummaryResponse(
         success=False,
         output_summary="",
@@ -56,7 +59,6 @@ def determine_model(
     model_explicitly_selected: bool = False
 ) -> tuple[str, bool]:
     """モデル自動切替判定"""
-    # プロンプトからモデルを取得
     if not model_explicitly_selected:
         try:
             from app.services.prompt_service import get_selected_model
@@ -74,7 +76,6 @@ def determine_model(
         if settings.gemini_model:
             return ModelType.GEMINI_PRO, True
         else:
-            # Geminiが利用できない場合はエラー
             raise ValueError("入力が長すぎますが、Geminiモデルが設定されていません")
 
     return requested_model, False
@@ -128,7 +129,6 @@ def execute_summary_generation(
     except ValueError as e:
         return _error_response(str(e), final_model, model_switched)
 
-    # AI API 呼び出し
     start_time = time.time()
     try:
         output_summary, input_tokens, output_tokens = generate_summary(
@@ -147,11 +147,9 @@ def execute_summary_generation(
 
     processing_time = time.time() - start_time
 
-    # 出力フォーマット
     formatted_summary = format_output_summary(output_summary)
     parsed_summary = parse_output_summary(formatted_summary)
 
-    # 使用統計保存
     save_usage(
         department=department,
         doctor=doctor,
@@ -183,7 +181,7 @@ def save_usage(
     output_tokens: int,
     processing_time: float,
 ) -> None:
-    """使用統計をDBに保存"""
+    """使用統計を保存"""
 
     try:
         with get_db_session() as db:
@@ -200,7 +198,7 @@ def save_usage(
             )
             db.add(usage)
     except Exception as e:
-        # ログに記録するが、エラーは無視（統計保存失敗で処理全体を失敗させない）
+        # ログに記録するがエラーは無視
         logging.error(f"Failed to save usage statistics: {e}", exc_info=True)
 
 

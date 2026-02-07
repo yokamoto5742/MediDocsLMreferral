@@ -5,7 +5,7 @@ from app.models.prompt import Prompt
 
 
 def get_all_prompts(db: Session) -> list[Prompt]:
-    """全プロンプトを取得（更新日時降順）"""
+    """全プロンプトを取得"""
     query = select(Prompt).order_by(Prompt.updated_at.desc())
     return list(db.execute(query).scalars().all())
 
@@ -16,13 +16,7 @@ def get_prompt(
     document_type: str,
     doctor: str,
 ) -> Prompt | None:
-    """階層的にプロンプトを取得
-
-    優先順位:
-    1. 医師 + 文書タイプ固有
-    2. 診療科 + 文書タイプ固有
-    3. 文書タイプデフォルト
-    """
+    """プロンプトを階層的に取得"""
     search_conditions = [
         (department, document_type, doctor),
         (department, document_type, "default"),
