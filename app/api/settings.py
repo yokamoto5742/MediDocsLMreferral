@@ -13,7 +13,7 @@ def get_departments():
 
 @router.get("/doctors/{department}")
 def get_doctors(department: str):
-    """指定診療科の医師一覧を取得"""
+    """診療科の医師一覧を取得"""
     doctors = DEPARTMENT_DOCTORS_MAPPING.get(department, ["default"])
     return {"doctors": doctors}
 

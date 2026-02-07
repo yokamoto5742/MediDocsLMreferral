@@ -12,16 +12,16 @@ from app.schemas.evaluation import (
 )
 from app.services import evaluation_service
 
-# 管理用ルーター（認証不要）（Web UIから使用）
+# 管理用ルーター（Web UIから使用）
 router = APIRouter(prefix="/evaluation", tags=["evaluation"])
 
-# 公開APIルーター（認証必須）
+# 保護されたAPIルーター（認証必須）
 protected_router = APIRouter(prefix="/evaluation", tags=["evaluation"])
 
 
 @protected_router.post("/evaluate", response_model=EvaluationResponse)
 def evaluate_output(request: EvaluationRequest):
-    """出力評価API（CSRF認証必須）"""
+    """出力評価API"""
     return evaluation_service.execute_evaluation(
         document_type=request.document_type,
         input_text=request.input_text,
