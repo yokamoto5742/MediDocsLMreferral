@@ -73,6 +73,14 @@ export interface SSEErrorEvent {
     error_message: string;
 }
 
+export interface SSEEvaluationCompleteEvent {
+    success: boolean;
+    evaluation_result: string;
+    input_tokens: number;
+    output_tokens: number;
+    processing_time: number;
+}
+
 // グローバル変数の型宣言
 declare global {
     interface Window {

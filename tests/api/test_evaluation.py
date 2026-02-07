@@ -291,3 +291,46 @@ def test_save_evaluation_prompt_missing_required_field(client, test_db):
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     assert "content" in response.text.lower()
+
+
+def test_evaluate_output_stream_success(client, test_db, csrf_headers):
+    """SSEストリーミング評価API - 正常系"""
+
+    def mock_stream():
+        yield 'event: progress\ndata: {"status": "evaluating", "message": "評価中..."}\n\n'
+        yield 'event: complete\ndata: {"success": true, "evaluation_result": "評価結果: 良好です", "input_tokens": 1000, "output_tokens": 500, "processing_time": 2.5}\n\n'
+
+    with patch("app.api.evaluation.execute_evaluation_stream", return_value=mock_stream()):
+        payload = {
+            "document_type": "他院への紹介",
+            "input_text": "患者は60歳男性。2型糖尿病にて加療中。",
+            "current_prescription": "メトホルミン500mg",
+            "additional_info": "HbA1c 7.5%",
+            "output_summary": "主病名: 糖尿病\n治療経過: インスリン治療中",
+        }
+
+        response = client.post("/api/evaluation/evaluate-stream", json=payload, headers=csrf_headers)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.headers["content-type"] == "text/event-stream; charset=utf-8"
+
+
+def test_evaluate_output_stream_error(client, test_db, csrf_headers):
+    """SSEストリーミング評価API - エラー"""
+
+    def mock_stream():
+        yield 'event: error\ndata: {"success": false, "error_message": "評価対象の出力がありません"}\n\n'
+
+    with patch("app.api.evaluation.execute_evaluation_stream", return_value=mock_stream()):
+        payload = {
+            "document_type": "他院への紹介",
+            "input_text": "患者情報",
+            "current_prescription": "",
+            "additional_info": "",
+            "output_summary": "",
+        }
+
+        response = client.post("/api/evaluation/evaluate-stream", json=payload, headers=csrf_headers)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.headers["content-type"] == "text/event-stream; charset=utf-8"

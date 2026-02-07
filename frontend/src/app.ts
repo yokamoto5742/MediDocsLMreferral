@@ -7,7 +7,8 @@ import type {
     EvaluationResponse,
     DoctorsResponse,
     SSECompleteEvent,
-    SSEErrorEvent
+    SSEErrorEvent,
+    SSEEvaluationCompleteEvent
 } from './types';
 
 type ScreenType = 'input' | 'output' | 'evaluation';
@@ -45,6 +46,9 @@ interface AppState {
     startEvaluationTimer(): void;
     stopEvaluationTimer(): void;
     evaluateOutput(): Promise<void>;
+    processEvaluationSSEStream(response: Response): Promise<void>;
+    handleEvaluationSSEEvent(eventText: string): void;
+    evaluateOutputFallback(): Promise<void>;
     copyToClipboard(text: string): Promise<void>;
     getCurrentTabContent(): string;
     copyCurrentTab(): void;
@@ -384,7 +388,7 @@ export function appState(): AppState {
             this.startEvaluationTimer();
 
             try {
-                const response = await fetch('/api/evaluation/evaluate', {
+                const response = await fetch('/api/evaluation/evaluate-stream', {
                     method: 'POST',
                     headers: getHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({
@@ -396,22 +400,126 @@ export function appState(): AppState {
                     })
                 });
 
-                const data = await response.json() as EvaluationResponse;
-
-                if (data.success) {
-                    this.evaluationResult = {
-                        result: data.evaluation_result || '',
-                        processingTime: data.processing_time || null
-                    };
-                    this.currentScreen = 'evaluation';
-                } else {
-                    this.error = data.error_message || '評価中にエラーが発生しました';
+                if (!response.ok) {
+                    console.warn(`SSEストリーミングエンドポイントが利用不可 (status: ${response.status})、非ストリーミングにフォールバック`);
+                    await this.evaluateOutputFallback();
+                    return;
                 }
+
+                await this.processEvaluationSSEStream(response);
+
             } catch (e) {
-                this.error = 'API エラーが発生しました';
+                console.error('SSEストリーミング中にエラーが発生:', e);
+                try {
+                    await this.evaluateOutputFallback();
+                } catch (fallbackError) {
+                    console.error('フォールバックも失敗:', fallbackError);
+                    this.error = 'API エラーが発生しました';
+                }
             } finally {
                 this.stopEvaluationTimer();
                 this.isEvaluating = false;
+            }
+        },
+
+        async processEvaluationSSEStream(response: Response) {
+            if (!response.body) {
+                throw new Error('レスポンスボディが空です');
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const events = buffer.split('\n\n');
+                    buffer = events.pop() || '';
+
+                    for (const eventText of events) {
+                        if (!eventText.trim()) continue;
+                        this.handleEvaluationSSEEvent(eventText);
+                    }
+                }
+
+                // 残りのバッファを処理
+                if (buffer.trim()) {
+                    this.handleEvaluationSSEEvent(buffer);
+                }
+            } catch (e) {
+                console.error('SSEストリーム読み取り中にエラーが発生:', e);
+                throw e;
+            } finally {
+                reader.releaseLock();
+            }
+        },
+
+        handleEvaluationSSEEvent(eventText: string) {
+            const lines = eventText.split('\n');
+            let eventType = '';
+            let data = '';
+
+            for (const line of lines) {
+                if (line.startsWith('event: ')) {
+                    eventType = line.slice(7).trim();
+                } else if (line.startsWith('data: ')) {
+                    data = line.slice(6);
+                }
+            }
+
+            if (!eventType || !data) return;
+
+            const parsed = JSON.parse(data);
+
+            switch (eventType) {
+                case 'progress':
+                    // ハートビート - UIのステータス表示を更新可能
+                    break;
+                case 'complete':
+                    if ((parsed as SSEEvaluationCompleteEvent).success) {
+                        const completeData = parsed as SSEEvaluationCompleteEvent;
+                        this.evaluationResult = {
+                            result: completeData.evaluation_result || '',
+                            processingTime: completeData.processing_time || null
+                        };
+                        this.currentScreen = 'evaluation';
+                    } else {
+                        this.error = (parsed as SSEErrorEvent).error_message || 'エラーが発生しました';
+                    }
+                    break;
+                case 'error':
+                    this.error = (parsed as SSEErrorEvent).error_message || 'エラーが発生しました';
+                    break;
+            }
+        },
+
+        async evaluateOutputFallback() {
+            const response = await fetch('/api/evaluation/evaluate', {
+                method: 'POST',
+                headers: getHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({
+                    document_type: this.settings.documentType,
+                    input_text: this.form.medicalText,
+                    current_prescription: this.form.currentPrescription,
+                    additional_info: this.form.additionalInfo,
+                    output_summary: this.result.outputSummary
+                })
+            });
+
+            const data = await response.json() as EvaluationResponse;
+
+            if (data.success) {
+                this.evaluationResult = {
+                    result: data.evaluation_result || '',
+                    processingTime: data.processing_time || null
+                };
+                this.currentScreen = 'evaluation';
+            } else {
+                this.error = data.error_message || '評価中にエラーが発生しました';
             }
         },
 

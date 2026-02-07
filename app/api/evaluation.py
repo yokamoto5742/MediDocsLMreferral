@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -11,6 +12,7 @@ from app.schemas.evaluation import (
     EvaluationResponse,
 )
 from app.services import evaluation_service
+from app.services.evaluation_service import execute_evaluation_stream
 
 # 管理用ルーター（Web UIから使用）
 router = APIRouter(prefix="/evaluation", tags=["evaluation"])
@@ -28,6 +30,27 @@ def evaluate_output(request: EvaluationRequest):
         current_prescription=request.current_prescription,
         additional_info=request.additional_info,
         output_summary=request.output_summary,
+    )
+
+
+@protected_router.post("/evaluate-stream")
+async def evaluate_output_stream(request: EvaluationRequest):
+    """SSEストリーミング出力評価API"""
+    event_generator = execute_evaluation_stream(
+        document_type=request.document_type,
+        input_text=request.input_text,
+        current_prescription=request.current_prescription,
+        additional_info=request.additional_info,
+        output_summary=request.output_summary,
+    )
+    return StreamingResponse(
+        event_generator,
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 

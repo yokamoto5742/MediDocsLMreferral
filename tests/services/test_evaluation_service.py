@@ -1,3 +1,4 @@
+import pytest
 from unittest.mock import MagicMock, patch
 
 from app.core.constants import MESSAGES
@@ -6,6 +7,7 @@ from app.services.evaluation_service import (
     create_or_update_evaluation_prompt,
     delete_evaluation_prompt,
     execute_evaluation,
+    execute_evaluation_stream,
     get_all_evaluation_prompts,
     get_evaluation_prompt,
 )
@@ -424,3 +426,151 @@ class TestExecuteEvaluation:
         assert "【現在の処方】" in call_args
         assert "【追加情報】" in call_args
         assert "【生成された出力】" in call_args
+
+
+class TestExecuteEvaluationStream:
+    """execute_evaluation_stream 関数のテスト"""
+
+    @pytest.mark.asyncio
+    @patch("app.services.evaluation_service.asyncio.to_thread")
+    @patch("app.services.evaluation_service.get_db_session")
+    @patch("app.services.evaluation_service.settings")
+    async def test_execute_evaluation_stream_success(
+        self, mock_settings, mock_get_db_session, mock_to_thread
+    ):
+        """評価ストリーミング実行 - 正常系"""
+        mock_settings.gemini_evaluation_model = "gemini-2.0-flash-thinking-exp-01-21"
+
+        # モックDB
+        mock_db = MagicMock()
+        mock_get_db_session.return_value.__enter__.return_value = mock_db
+
+        # モックプロンプト
+        mock_prompt = MagicMock()
+        mock_prompt.content = "評価プロンプト"
+        mock_db.query.return_value.filter.return_value.first.return_value = mock_prompt
+
+        # モック評価結果
+        mock_to_thread.return_value = ("評価結果: 良好です", 1000, 500)
+
+        events = []
+        async for event in execute_evaluation_stream(
+            document_type="他院への紹介",
+            input_text="患者情報",
+            current_prescription="処方内容",
+            additional_info="追加情報",
+            output_summary="出力内容"
+        ):
+            events.append(event)
+
+        # イベント検証
+        assert len(events) >= 3  # progress, progress, complete
+        assert "event: progress" in events[0]
+        assert "event: complete" in events[-1]
+        assert "評価結果: 良好です" in events[-1]
+        assert '"input_tokens": 1000' in events[-1]
+        assert '"output_tokens": 500' in events[-1]
+
+    @pytest.mark.asyncio
+    @patch("app.services.evaluation_service.settings")
+    async def test_execute_evaluation_stream_no_output(self, mock_settings):
+        """評価ストリーミング実行 - 出力なしエラー"""
+        events = []
+        async for event in execute_evaluation_stream(
+            document_type="他院への紹介",
+            input_text="患者情報",
+            current_prescription="",
+            additional_info="",
+            output_summary=""
+        ):
+            events.append(event)
+
+        assert len(events) == 1
+        assert "event: error" in events[0]
+        assert MESSAGES["EVALUATION_NO_OUTPUT"] in events[0]
+
+    @pytest.mark.asyncio
+    @patch("app.services.evaluation_service.settings")
+    async def test_execute_evaluation_stream_model_missing(self, mock_settings):
+        """評価ストリーミング実行 - モデル未設定エラー"""
+        mock_settings.gemini_evaluation_model = None
+
+        events = []
+        async for event in execute_evaluation_stream(
+            document_type="他院への紹介",
+            input_text="患者情報",
+            current_prescription="",
+            additional_info="",
+            output_summary="出力内容"
+        ):
+            events.append(event)
+
+        assert len(events) == 1
+        assert "event: error" in events[0]
+        assert MESSAGES["EVALUATION_MODEL_MISSING"] in events[0]
+
+    @pytest.mark.asyncio
+    @patch("app.services.evaluation_service.get_db_session")
+    @patch("app.services.evaluation_service.settings")
+    async def test_execute_evaluation_stream_prompt_not_set(
+        self, mock_settings, mock_get_db_session
+    ):
+        """評価ストリーミング実行 - プロンプト未設定エラー"""
+        mock_settings.gemini_evaluation_model = "gemini-2.0-flash-thinking-exp-01-21"
+
+        # モックDB
+        mock_db = MagicMock()
+        mock_get_db_session.return_value.__enter__.return_value = mock_db
+        mock_db.query.return_value.filter.return_value.first.return_value = None
+
+        events = []
+        async for event in execute_evaluation_stream(
+            document_type="他院への紹介",
+            input_text="患者情報",
+            current_prescription="",
+            additional_info="",
+            output_summary="出力内容"
+        ):
+            events.append(event)
+
+        assert len(events) == 1
+        assert "event: error" in events[0]
+        assert "他院への紹介" in events[0]
+        assert "評価プロンプトが設定されていません" in events[0]
+
+    @pytest.mark.asyncio
+    @patch("app.services.evaluation_service.asyncio.to_thread")
+    @patch("app.services.evaluation_service.get_db_session")
+    @patch("app.services.evaluation_service.settings")
+    async def test_execute_evaluation_stream_api_error(
+        self, mock_settings, mock_get_db_session, mock_to_thread
+    ):
+        """評価ストリーミング実行 - API呼び出しエラー"""
+        mock_settings.gemini_evaluation_model = "gemini-2.0-flash-thinking-exp-01-21"
+
+        # モックDB
+        mock_db = MagicMock()
+        mock_get_db_session.return_value.__enter__.return_value = mock_db
+
+        # モックプロンプト
+        mock_prompt = MagicMock()
+        mock_prompt.content = "評価プロンプト"
+        mock_db.query.return_value.filter.return_value.first.return_value = mock_prompt
+
+        # モックでエラー
+        mock_to_thread.side_effect = Exception("API接続エラー")
+
+        events = []
+        async for event in execute_evaluation_stream(
+            document_type="他院への紹介",
+            input_text="患者情報",
+            current_prescription="",
+            additional_info="",
+            output_summary="出力内容"
+        ):
+            events.append(event)
+
+        # progressイベントとerrorイベント
+        assert any("event: error" in e for e in events)
+        error_event = [e for e in events if "event: error" in e][0]
+        assert "API接続エラー" in error_event
