@@ -69,7 +69,7 @@ class BaseAPIClient(ABC):
         document_type: str,
         doctor: str
     ) -> str | None:
-        """プロンプトから選択されたモデル名を取得、なければデフォルトモデルを返す"""
+        """プロンプトから選択されたモデル名を取得"""
         try:
             with get_db_session() as db:
                 selected = get_selected_model(db, department, document_type, doctor)
@@ -121,7 +121,7 @@ class BaseAPIClient(ABC):
     def _generate_content_stream(
         self, prompt: str, model_name: str
     ) -> Generator[Union[str, dict], None, None]:
-        """ストリーミングのデフォルト実装（非ストリーミングにフォールバック）"""
+        """ストリーミングのデフォルト実装"""
         text, input_tokens, output_tokens = self._generate_content(prompt, model_name)
         yield text
         yield {"input_tokens": input_tokens, "output_tokens": output_tokens}

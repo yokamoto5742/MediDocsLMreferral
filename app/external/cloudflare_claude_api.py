@@ -58,7 +58,6 @@ class CloudflareClaudeAPIClient(BaseAPIClient):
             ]):
                 raise APIError("Cloudflare Gateway not initialized")
 
-            # Bedrock Converse APIのリクエストボディ
             request_body = {
                 "messages": [
                     {

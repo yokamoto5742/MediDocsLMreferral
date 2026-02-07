@@ -131,11 +131,9 @@ class GeminiAPIClient(BaseAPIClient):
             output_tokens = 0
 
             for chunk in response_stream:
-                # テキストチャンクを返す
                 if hasattr(chunk, 'text') and chunk.text:
                     yield chunk.text
 
-                # トークン数を更新（最後のチャンクに含まれる）
                 if hasattr(chunk, 'usage_metadata') and chunk.usage_metadata:
                     metadata = chunk.usage_metadata
                     if hasattr(metadata, 'prompt_token_count') and metadata.prompt_token_count:
@@ -143,7 +141,6 @@ class GeminiAPIClient(BaseAPIClient):
                     if hasattr(metadata, 'candidates_token_count') and metadata.candidates_token_count:
                         output_tokens = int(metadata.candidates_token_count)
 
-            # 最後にメタデータを返す
             yield {"input_tokens": input_tokens, "output_tokens": output_tokens}
 
         except Exception as e:

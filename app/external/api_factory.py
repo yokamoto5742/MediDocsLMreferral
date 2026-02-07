@@ -49,7 +49,7 @@ class APIFactory:
             ]):
                 logger.info("APIクライアント選択: CloudflareClaudeAPIClient (Cloudflare AI Gateway経由)")
                 return CloudflareClaudeAPIClient()
-            logger.info("APIクライアント選択: ClaudeAPIClient (Direct Bedrock)")
+            logger.info("APIクライアント選択: ClaudeAPIClient (Direct Amazon Bedrock)")
             return ClaudeAPIClient()
 
         logger.error(f"未対応のAPIプロバイダー: {provider}")
