@@ -77,10 +77,10 @@ function evaluationPromptsPage() {
         checkQueryParams() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('saved') === '1') {
-                this.successMessage = '評価プロンプトを保存しました';
+                this.successMessage = 'プロンプトを保存しました';
                 this.clearQueryParams();
             } else if (params.get('deleted') === '1') {
-                this.successMessage = '評価プロンプトを削除しました';
+                this.successMessage = 'プロンプトを削除しました';
                 this.clearQueryParams();
             }
         },
@@ -97,7 +97,7 @@ function evaluationPromptsPage() {
                 const data = await response.json();
                 this.prompts = data.prompts || [];
             } catch (e) {
-                this.error = '評価プロンプトの読み込みに失敗しました';
+                this.error = 'プロンプトの読み込みに失敗しました';
             } finally {
                 this.isLoading = false;
             }
