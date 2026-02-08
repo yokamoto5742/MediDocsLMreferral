@@ -144,14 +144,13 @@ MESSAGES: dict[str, dict[str, str]] = {
 
 
 def get_message(category: str, key: str, **kwargs: str) -> str:
-    """カテゴリとキーからメッセージを取得し、プレースホルダーを置換"""
+    """カテゴリとキーからメッセージを取得しプレースホルダーを置換"""
     msg = MESSAGES[category][key]
     if kwargs:
         return msg.format(**kwargs)
     return msg
 
 
-# フロントエンドに渡すメッセージのサブセット
 FRONTEND_MESSAGES: dict[str, dict[str, str]] = {
     "ERROR": {
         "API_ERROR": MESSAGES["ERROR"]["API_ERROR"],
