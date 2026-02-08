@@ -27,6 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - DRY原則：コードを重複させないでください。類似のロジックが2箇所に存在する場合は、共有関数にリファクタリングしてください。それぞれに独自の実装が必要な場合はその理由を明確にしてください。
 - コメント:分かりにくいロジックについては説明を加えます。説明不要のコードには過剰なコメントはつけないでください。
 - コメントとdocstringは必要最小限に日本語で記述します。文末に"。"や"."をつけないでください。
+- このアプリのUI画面で表示するメッセージはすべて日本語にします。app/core/constants.pyで一元管理します。
 
 ## Project Overview
 

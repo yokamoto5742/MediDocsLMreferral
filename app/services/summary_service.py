@@ -1,5 +1,3 @@
-import asyncio
-import json
 import logging
 import time
 from datetime import datetime
@@ -12,6 +10,7 @@ from app.core.database import get_db_session
 from app.external.api_factory import APIProvider, generate_summary, generate_summary_stream
 from app.models.usage import SummaryUsage
 from app.schemas.summary import SummaryResponse
+from app.services.sse_helpers import sse_event, stream_with_heartbeat
 from app.utils.text_processor import format_output_summary, parse_output_summary
 
 JST = ZoneInfo("Asia/Tokyo")
@@ -204,135 +203,6 @@ def save_usage(
         logging.error(f"Failed to save usage statistics: {e}", exc_info=True)
 
 
-def _sse_event(event_type: str, data: dict) -> str:
-    """SSEイベント文字列を生成"""
-    return f"event: {event_type}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
-
-
-async def execute_summary_generation_stream(
-    medical_text: str,
-    additional_info: str,
-    referral_purpose: str,
-    current_prescription: str,
-    department: str,
-    doctor: str,
-    document_type: str,
-    model: str,
-    model_explicitly_selected: bool = False,
-) -> AsyncGenerator[str, None]:
-    """SSEストリーミングで文書生成を実行"""
-    # 入力検証
-    is_valid, error_msg = validate_input(medical_text)
-    if not is_valid:
-        yield _sse_event("error", {
-            "success": False,
-            "error_message": error_msg or MESSAGES["ERROR"]["INPUT_ERROR"]
-        })
-        return
-
-    # モデル決定
-    total_length = len(medical_text) + len(additional_info or "")
-    try:
-        final_model, model_switched = determine_model(
-            model, total_length, department, document_type,
-            doctor, model_explicitly_selected
-        )
-    except ValueError as e:
-        yield _sse_event("error", {"success": False, "error_message": str(e)})
-        return
-
-    # プロバイダーとモデル名を取得
-    try:
-        provider, model_name = get_provider_and_model(final_model)
-    except ValueError as e:
-        yield _sse_event("error", {"success": False, "error_message": str(e)})
-        return
-
-    # 生成開始を通知（即座に送信してHerokuタイムアウトを回避）
-    yield _sse_event("progress", {
-        "status": "starting",
-        "message": MESSAGES["STATUS"]["DOCUMENT_GENERATION_START"]
-    })
-
-    start_time = time.time()
-    queue: asyncio.Queue = asyncio.Queue()
-
-    async def _generation_task():
-        """生成をスレッドで実行し結果をキューに入れる"""
-        try:
-            result = await asyncio.to_thread(
-                _run_sync_generation,
-                provider, medical_text, additional_info, referral_purpose,
-                current_prescription, department, document_type, doctor, model_name
-            )
-            await queue.put(("result", result))
-        except Exception as e:
-            logging.error(f"Generation task error: {e}", exc_info=True)
-            await queue.put(("error", str(e)))
-
-    # 生成タスクを開始
-    task = asyncio.create_task(_generation_task())
-
-    # 生成開始を再度通知
-    yield _sse_event("progress", {
-        "status": "generating",
-        "message": MESSAGES["STATUS"]["DOCUMENT_GENERATING"]
-    })
-
-    # ハートビートを送信しながら結果を待つ（Herokuタイムアウト回避のため5秒に短縮）
-    HEARTBEAT_INTERVAL = 5
-    full_text = ""
-    input_tokens = 0
-    output_tokens = 0
-
-    while not task.done():
-        try:
-            # キューから結果を取得（タイムアウト付き）
-            msg_type, msg_data = await asyncio.wait_for(
-                queue.get(), timeout=HEARTBEAT_INTERVAL
-            )
-            if msg_type == "error":
-                yield _sse_event("error", {"success": False, "error_message": msg_data})
-                return
-            # msg_type == "result"
-            full_text, input_tokens, output_tokens = msg_data
-            break
-        except asyncio.TimeoutError:
-            # ハートビートを送信してHerokuタイムアウトをリセット
-            elapsed = int(time.time() - start_time)
-            yield _sse_event("progress", {
-                "status": "generating",
-                "message": MESSAGES["STATUS"]["DOCUMENT_GENERATING_ELAPSED"].format(
-                    elapsed=elapsed
-                )
-            })
-
-    processing_time = time.time() - start_time
-
-    # 出力フォーマット
-    formatted_summary = format_output_summary(full_text)
-    parsed_summary = parse_output_summary(formatted_summary)
-
-    # 使用統計保存
-    save_usage(
-        department=department, doctor=doctor, document_type=document_type,
-        model=final_model, input_tokens=input_tokens,
-        output_tokens=output_tokens, processing_time=processing_time,
-    )
-
-    # 完了イベント
-    yield _sse_event("complete", {
-        "success": True,
-        "output_summary": formatted_summary,
-        "parsed_summary": parsed_summary,
-        "input_tokens": input_tokens,
-        "output_tokens": output_tokens,
-        "processing_time": processing_time,
-        "model_used": final_model,
-        "model_switched": model_switched,
-    })
-
-
 def _run_sync_generation(
     provider: str,
     medical_text: str,
@@ -364,3 +234,83 @@ def _run_sync_generation(
         else:
             chunks.append(item)
     return "".join(chunks), metadata.get("input_tokens", 0), metadata.get("output_tokens", 0)
+
+
+async def execute_summary_generation_stream(
+    medical_text: str,
+    additional_info: str,
+    referral_purpose: str,
+    current_prescription: str,
+    department: str,
+    doctor: str,
+    document_type: str,
+    model: str,
+    model_explicitly_selected: bool = False,
+) -> AsyncGenerator[str, None]:
+    """SSEストリーミングで文書生成を実行"""
+    # 入力検証
+    is_valid, error_msg = validate_input(medical_text)
+    if not is_valid:
+        yield sse_event("error", {
+            "success": False,
+            "error_message": error_msg or MESSAGES["ERROR"]["INPUT_ERROR"]
+        })
+        return
+
+    # モデル決定
+    total_length = len(medical_text) + len(additional_info or "")
+    try:
+        final_model, model_switched = determine_model(
+            model, total_length, department, document_type,
+            doctor, model_explicitly_selected
+        )
+    except ValueError as e:
+        yield sse_event("error", {"success": False, "error_message": str(e)})
+        return
+
+    # プロバイダーとモデル名を取得
+    try:
+        provider, model_name = get_provider_and_model(final_model)
+    except ValueError as e:
+        yield sse_event("error", {"success": False, "error_message": str(e)})
+        return
+
+    start_time = time.time()
+
+    async for item in stream_with_heartbeat(
+        sync_func=_run_sync_generation,
+        sync_func_args=(
+            provider, medical_text, additional_info, referral_purpose,
+            current_prescription, department, document_type, doctor, model_name
+        ),
+        start_message=MESSAGES["STATUS"]["DOCUMENT_GENERATION_START"],
+        running_status="generating",
+        running_message=MESSAGES["STATUS"]["DOCUMENT_GENERATING"],
+        elapsed_message_template=MESSAGES["STATUS"]["DOCUMENT_GENERATING_ELAPSED"],
+    ):
+        if isinstance(item, str):
+            yield item
+        else:
+            # resultタプル
+            full_text, input_tokens, output_tokens = item
+            processing_time = time.time() - start_time
+
+            formatted_summary = format_output_summary(full_text)
+            parsed_summary = parse_output_summary(formatted_summary)
+
+            save_usage(
+                department=department, doctor=doctor, document_type=document_type,
+                model=final_model, input_tokens=input_tokens,
+                output_tokens=output_tokens, processing_time=processing_time,
+            )
+
+            yield sse_event("complete", {
+                "success": True,
+                "output_summary": formatted_summary,
+                "parsed_summary": parsed_summary,
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+                "processing_time": processing_time,
+                "model_used": final_model,
+                "model_switched": model_switched,
+            })

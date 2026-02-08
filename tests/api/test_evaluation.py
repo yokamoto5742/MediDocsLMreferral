@@ -127,7 +127,7 @@ def test_evaluate_output_model_missing_error(client, test_db, csrf_headers):
 
 def test_get_all_evaluation_prompts(client, test_db, mock_evaluation_prompt):
     """全プロンプト取得API - 正常系"""
-    with patch("app.api.evaluation.evaluation_service.get_all_evaluation_prompts") as mock_get_all:
+    with patch("app.api.evaluation.evaluation_prompt_service.get_all_evaluation_prompts") as mock_get_all:
         mock_get_all.return_value = [mock_evaluation_prompt]
 
         response = client.get("/api/evaluation/prompts")
@@ -143,7 +143,7 @@ def test_get_all_evaluation_prompts(client, test_db, mock_evaluation_prompt):
 
 def test_get_all_evaluation_prompts_empty(client, test_db):
     """全プロンプト取得API - 空リスト"""
-    with patch("app.api.evaluation.evaluation_service.get_all_evaluation_prompts") as mock_get_all:
+    with patch("app.api.evaluation.evaluation_prompt_service.get_all_evaluation_prompts") as mock_get_all:
         mock_get_all.return_value = []
 
         response = client.get("/api/evaluation/prompts")
@@ -155,7 +155,7 @@ def test_get_all_evaluation_prompts_empty(client, test_db):
 
 def test_get_evaluation_prompt_exists(client, test_db, mock_evaluation_prompt):
     """特定プロンプト取得API - 存在する場合"""
-    with patch("app.api.evaluation.evaluation_service.get_evaluation_prompt") as mock_get:
+    with patch("app.api.evaluation.evaluation_prompt_service.get_evaluation_prompt") as mock_get:
         mock_get.return_value = mock_evaluation_prompt
 
         response = client.get("/api/evaluation/prompts/他院への紹介")
@@ -170,7 +170,7 @@ def test_get_evaluation_prompt_exists(client, test_db, mock_evaluation_prompt):
 
 def test_get_evaluation_prompt_not_exists(client, test_db):
     """特定プロンプト取得API - 存在しない場合"""
-    with patch("app.api.evaluation.evaluation_service.get_evaluation_prompt") as mock_get:
+    with patch("app.api.evaluation.evaluation_prompt_service.get_evaluation_prompt") as mock_get:
         mock_get.return_value = None
 
         response = client.get("/api/evaluation/prompts/返書")
@@ -185,7 +185,7 @@ def test_get_evaluation_prompt_not_exists(client, test_db):
 
 def test_save_evaluation_prompt_new(client, test_db):
     """プロンプト保存API - 新規作成"""
-    with patch("app.api.evaluation.evaluation_service.create_or_update_evaluation_prompt") as mock_save:
+    with patch("app.api.evaluation.evaluation_prompt_service.create_or_update_evaluation_prompt") as mock_save:
         mock_save.return_value = (True, "評価プロンプトを新規作成しました")
 
         payload = {
@@ -204,7 +204,7 @@ def test_save_evaluation_prompt_new(client, test_db):
 
 def test_save_evaluation_prompt_update(client, test_db):
     """プロンプト保存API - 更新"""
-    with patch("app.api.evaluation.evaluation_service.create_or_update_evaluation_prompt") as mock_save:
+    with patch("app.api.evaluation.evaluation_prompt_service.create_or_update_evaluation_prompt") as mock_save:
         mock_save.return_value = (True, "評価プロンプトを更新しました")
 
         payload = {
@@ -223,7 +223,7 @@ def test_save_evaluation_prompt_update(client, test_db):
 
 def test_save_evaluation_prompt_empty_content(client, test_db):
     """プロンプト保存API - 空の内容"""
-    with patch("app.api.evaluation.evaluation_service.create_or_update_evaluation_prompt") as mock_save:
+    with patch("app.api.evaluation.evaluation_prompt_service.create_or_update_evaluation_prompt") as mock_save:
         mock_save.return_value = (False, "評価プロンプトの内容を入力してください")
 
         payload = {
@@ -241,7 +241,7 @@ def test_save_evaluation_prompt_empty_content(client, test_db):
 
 def test_delete_evaluation_prompt_success(client, test_db):
     """プロンプト削除API - 正常系"""
-    with patch("app.api.evaluation.evaluation_service.delete_evaluation_prompt") as mock_delete:
+    with patch("app.api.evaluation.evaluation_prompt_service.delete_evaluation_prompt") as mock_delete:
         mock_delete.return_value = (True, "評価プロンプトを削除しました")
 
         response = client.delete("/api/evaluation/prompts/他院への紹介")
@@ -255,7 +255,7 @@ def test_delete_evaluation_prompt_success(client, test_db):
 
 def test_delete_evaluation_prompt_not_found(client, test_db):
     """プロンプト削除API - 存在しない場合"""
-    with patch("app.api.evaluation.evaluation_service.delete_evaluation_prompt") as mock_delete:
+    with patch("app.api.evaluation.evaluation_prompt_service.delete_evaluation_prompt") as mock_delete:
         mock_delete.return_value = (False, "返書の評価プロンプトが見つかりません")
 
         response = client.delete("/api/evaluation/prompts/返書")

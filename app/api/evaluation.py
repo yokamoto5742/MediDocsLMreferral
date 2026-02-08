@@ -11,7 +11,7 @@ from app.schemas.evaluation import (
     EvaluationRequest,
     EvaluationResponse,
 )
-from app.services import evaluation_service
+from app.services import evaluation_prompt_service, evaluation_service
 from app.services.evaluation_service import execute_evaluation_stream
 
 # 管理用ルーター（Web UIから使用）
@@ -57,7 +57,7 @@ async def evaluate_output_stream(request: EvaluationRequest):
 @router.get("/prompts", response_model=EvaluationPromptListResponse)
 def get_all_evaluation_prompts(db: Session = Depends(get_db)):
     """全ての評価プロンプトを取得"""
-    prompts = evaluation_service.get_all_evaluation_prompts(db)
+    prompts = evaluation_prompt_service.get_all_evaluation_prompts(db)
     return EvaluationPromptListResponse(
         prompts=[
             EvaluationPromptResponse(
@@ -79,7 +79,7 @@ def get_evaluation_prompt(
     db: Session = Depends(get_db)
 ):
     """評価プロンプトを取得"""
-    prompt = evaluation_service.get_evaluation_prompt(db, document_type)
+    prompt = evaluation_prompt_service.get_evaluation_prompt(db, document_type)
     if prompt:
         return EvaluationPromptResponse(
             id=prompt.id,
@@ -102,7 +102,7 @@ def save_evaluation_prompt(
     db: Session = Depends(get_db)
 ):
     """評価プロンプトを保存"""
-    success, message = evaluation_service.create_or_update_evaluation_prompt(
+    success, message = evaluation_prompt_service.create_or_update_evaluation_prompt(
         db, request.document_type, request.content
     )
     if success:
@@ -120,7 +120,7 @@ def delete_evaluation_prompt(
     db: Session = Depends(get_db)
 ):
     """評価プロンプトを削除"""
-    success, message = evaluation_service.delete_evaluation_prompt(db, document_type)
+    success, message = evaluation_prompt_service.delete_evaluation_prompt(db, document_type)
     if success:
         db.commit()
     return EvaluationPromptSaveResponse(
