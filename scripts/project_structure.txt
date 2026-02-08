@@ -1,7 +1,7 @@
 ============================================================
 プロジェクト構造: MediDocsLMreferral
 パス: C:\Users\yokam\PycharmProjects\MediDocsLMreferral
-生成日時: 2026-02-07 13:09:34
+生成日時: 2026-02-08 19:21:29
 ============================================================
 
 └── MediDocsLMreferral
@@ -43,10 +43,14 @@
     │   │   └── summary.py
     │   ├── services
     │   │   ├── __init__.py
+    │   │   ├── evaluation_prompt_service.py
     │   │   ├── evaluation_service.py
+    │   │   ├── model_selector.py
     │   │   ├── prompt_service.py
+    │   │   ├── sse_helpers.py
     │   │   ├── statistics_service.py
-    │   │   └── summary_service.py
+    │   │   ├── summary_service.py
+    │   │   └── usage_service.py
     │   ├── static
     │   │   └── favicon.ico
     │   ├── templates
@@ -90,7 +94,6 @@
     │   ├── tailwind.config.js
     │   ├── tsconfig.json
     │   └── vite.config.ts
-    ├── config.ini
     ├── Procfile
     ├── requirements.txt
     ├── .python-version
