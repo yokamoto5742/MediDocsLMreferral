@@ -1,12 +1,9 @@
 """CSRF認証の統合テスト"""
 from unittest.mock import MagicMock
 
-import pytest
 from fastapi.testclient import TestClient
 
-from app.core.config import get_settings
 from app.core.security import generate_csrf_token
-from app.main import app
 
 
 class TestCsrfAuthentication:

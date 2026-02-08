@@ -142,7 +142,7 @@ def _run_sync_evaluation(
         output_summary
     )
 
-    model_name = cast(str, settings.gemini_evaluation_model)
+    model_name = settings.gemini_evaluation_model
     client = GeminiAPIClient(model_name=model_name)
     client.initialize()
 

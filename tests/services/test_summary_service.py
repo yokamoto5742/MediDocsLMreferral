@@ -3,13 +3,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.core.constants import MESSAGES
-from app.services.summary_service import (
-    determine_model,
-    execute_summary_generation,
-    get_provider_and_model,
-    save_usage,
-    validate_input,
-)
+from app.services.model_selector import determine_model, get_provider_and_model
+from app.services.summary_service import execute_summary_generation, validate_input
+from app.services.usage_service import save_usage
 
 
 class TestValidateInput:
@@ -63,7 +59,7 @@ class TestValidateInput:
 class TestDetermineModel:
     """determine_model 関数のテスト"""
 
-    @patch("app.services.summary_service.settings")
+    @patch("app.services.model_selector.settings")
     def test_determine_model_below_threshold(self, mock_settings):
         """モデル決定 - 閾値以下"""
         mock_settings.max_token_threshold = 40000
@@ -80,7 +76,7 @@ class TestDetermineModel:
         assert model == "Claude"
         assert switched is False
 
-    @patch("app.services.summary_service.settings")
+    @patch("app.services.model_selector.settings")
     def test_determine_model_above_threshold_with_gemini(self, mock_settings):
         """モデル決定 - 閾値超過、Gemini利用可能"""
         mock_settings.max_token_threshold = 40000
@@ -98,7 +94,7 @@ class TestDetermineModel:
         assert model == "Gemini_Pro"
         assert switched is True
 
-    @patch("app.services.summary_service.settings")
+    @patch("app.services.model_selector.settings")
     def test_determine_model_above_threshold_no_gemini(self, mock_settings):
         """モデル決定 - 閾値超過、Gemini利用不可"""
         mock_settings.max_token_threshold = 40000
@@ -117,7 +113,7 @@ class TestDetermineModel:
         assert "入力が長すぎますが" in str(exc_info.value)
         assert "Geminiモデルが設定されていません" in str(exc_info.value)
 
-    @patch("app.services.summary_service.settings")
+    @patch("app.services.model_selector.settings")
     def test_determine_model_gemini_requested(self, mock_settings):
         """モデル決定 - Geminiが明示的に選択された"""
         mock_settings.max_token_threshold = 40000
@@ -136,7 +132,7 @@ class TestDetermineModel:
 
     @patch("app.services.prompt_service.get_prompt")
     @patch("app.core.database.get_db_session")
-    @patch("app.services.summary_service.settings")
+    @patch("app.services.model_selector.settings")
     def test_determine_model_from_prompt(self, mock_settings, mock_db_session, mock_get_prompt):
         """モデル決定 - プロンプトから取得"""
         from unittest.mock import MagicMock
@@ -163,7 +159,7 @@ class TestDetermineModel:
 class TestGetProviderAndModel:
     """get_provider_and_model 関数のテスト"""
 
-    @patch("app.services.summary_service.settings")
+    @patch("app.services.model_selector.settings")
     def test_get_provider_and_model_claude(self, mock_settings):
         """プロバイダーとモデル取得 - Claude"""
         mock_settings.claude_model = "claude-3-5-sonnet-20241022"
@@ -174,7 +170,7 @@ class TestGetProviderAndModel:
         assert provider == "claude"
         assert model == "claude-3-5-sonnet-20241022"
 
-    @patch("app.services.summary_service.settings")
+    @patch("app.services.model_selector.settings")
     def test_get_provider_and_model_claude_anthropic_fallback(self, mock_settings):
         """プロバイダーとモデル取得 - Claude（anthropic_modelフォールバック）"""
         mock_settings.claude_model = None
@@ -185,7 +181,7 @@ class TestGetProviderAndModel:
         assert provider == "claude"
         assert model == "claude-3-opus-20240229"
 
-    @patch("app.services.summary_service.settings")
+    @patch("app.services.model_selector.settings")
     def test_get_provider_and_model_gemini(self, mock_settings):
         """プロバイダーとモデル取得 - Gemini"""
         mock_settings.gemini_model = "gemini-1.5-pro-002"
@@ -206,7 +202,7 @@ class TestGetProviderAndModel:
 class TestSaveUsage:
     """save_usage 関数のテスト"""
 
-    @patch("app.services.summary_service.get_db_session")
+    @patch("app.services.usage_service.get_db_session")
     def test_save_usage_success(self, mock_get_db_session):
         """使用統計保存 - 正常系"""
         mock_db = MagicMock()
@@ -236,7 +232,7 @@ class TestSaveUsage:
         assert added_usage.app_type == "referral_letter"
         assert added_usage.processing_time == 2.5
 
-    @patch("app.services.summary_service.get_db_session")
+    @patch("app.services.usage_service.get_db_session")
     @patch("logging.error")
     def test_save_usage_failure_silent(self, mock_logging_error, mock_get_db_session):
         """使用統計保存 - 失敗時にエラーを無視"""
@@ -263,18 +259,21 @@ class TestSaveUsage:
 class TestExecuteSummaryGeneration:
     """execute_summary_generation 関数のテスト"""
 
+    @patch("app.services.summary_service.get_provider_and_model")
+    @patch("app.services.summary_service.determine_model")
     @patch("app.services.summary_service.save_usage")
     @patch("app.services.summary_service.generate_summary")
     @patch("app.services.summary_service.settings")
     def test_execute_summary_generation_success(
-        self, mock_settings, mock_generate_summary, mock_save_usage
+        self, mock_settings, mock_generate_summary, mock_save_usage,
+        mock_determine_model, mock_get_provider_and_model
     ):
         """文書生成実行 - 正常系"""
         mock_settings.min_input_tokens = 10
         mock_settings.max_input_tokens = 100000
-        mock_settings.max_token_threshold = 40000
-        mock_settings.claude_model = "claude-3-5-sonnet-20241022"
 
+        mock_determine_model.return_value = ("Claude", False)
+        mock_get_provider_and_model.return_value = ("claude", "claude-3-5-sonnet-20241022")
         mock_generate_summary.return_value = (
             "主病名: 糖尿病\n治療経過: インスリン治療中",
             1000,
@@ -328,13 +327,14 @@ class TestExecuteSummaryGeneration:
         assert result.output_tokens == 0
         assert result.processing_time == 0
 
+    @patch("app.services.summary_service.determine_model")
     @patch("app.services.summary_service.settings")
-    def test_execute_summary_generation_model_switch_error(self, mock_settings):
+    def test_execute_summary_generation_model_switch_error(self, mock_settings, mock_determine_model):
         """文書生成実行 - モデル切り替えエラー"""
         mock_settings.min_input_tokens = 10
         mock_settings.max_input_tokens = 100000
-        mock_settings.max_token_threshold = 100
-        mock_settings.gemini_model = None
+
+        mock_determine_model.side_effect = ValueError("入力が長すぎますがGeminiモデルが設定されていません")
 
         long_text = "あ" * 200
 
@@ -376,18 +376,21 @@ class TestExecuteSummaryGeneration:
         assert result.success is False
         assert "サポートされていないモデル" in result.error_message
 
+    @patch("app.services.summary_service.get_provider_and_model")
+    @patch("app.services.summary_service.determine_model")
     @patch("app.services.summary_service.save_usage")
     @patch("app.services.summary_service.generate_summary")
     @patch("app.services.summary_service.settings")
     def test_execute_summary_generation_api_error(
-        self, mock_settings, mock_generate_summary, mock_save_usage
+        self, mock_settings, mock_generate_summary, mock_save_usage,
+        mock_determine_model, mock_get_provider_and_model
     ):
         """文書生成実行 - API呼び出しエラー"""
         mock_settings.min_input_tokens = 10
         mock_settings.max_input_tokens = 100000
-        mock_settings.max_token_threshold = 40000
-        mock_settings.claude_model = "claude-3-5-sonnet-20241022"
 
+        mock_determine_model.return_value = ("Claude", False)
+        mock_get_provider_and_model.return_value = ("claude", "claude-3-5-sonnet-20241022")
         mock_generate_summary.side_effect = Exception("API接続エラー")
 
         result = execute_summary_generation(
@@ -410,18 +413,21 @@ class TestExecuteSummaryGeneration:
         # エラー時は使用統計を保存しない
         mock_save_usage.assert_not_called()
 
+    @patch("app.services.summary_service.get_provider_and_model")
+    @patch("app.services.summary_service.determine_model")
     @patch("app.services.summary_service.save_usage")
     @patch("app.services.summary_service.generate_summary")
     @patch("app.services.summary_service.settings")
     def test_execute_summary_generation_with_model_switch(
-        self, mock_settings, mock_generate_summary, mock_save_usage
+        self, mock_settings, mock_generate_summary, mock_save_usage,
+        mock_determine_model, mock_get_provider_and_model
     ):
         """文書生成実行 - モデル自動切り替え"""
         mock_settings.min_input_tokens = 10
         mock_settings.max_input_tokens = 100000
-        mock_settings.max_token_threshold = 100
-        mock_settings.gemini_model = "gemini-1.5-pro-002"
 
+        mock_determine_model.return_value = ("Gemini_Pro", True)
+        mock_get_provider_and_model.return_value = ("gemini", "gemini-1.5-pro-002")
         mock_generate_summary.return_value = (
             "主病名: 高血圧症",
             50000,
@@ -446,18 +452,21 @@ class TestExecuteSummaryGeneration:
         assert result.model_used == "Gemini_Pro"
         assert result.model_switched is True
 
+    @patch("app.services.summary_service.get_provider_and_model")
+    @patch("app.services.summary_service.determine_model")
     @patch("app.services.summary_service.save_usage")
     @patch("app.services.summary_service.generate_summary")
     @patch("app.services.summary_service.settings")
     def test_execute_summary_generation_with_additional_info(
-        self, mock_settings, mock_generate_summary, mock_save_usage
+        self, mock_settings, mock_generate_summary, mock_save_usage,
+        mock_determine_model, mock_get_provider_and_model
     ):
         """文書生成実行 - 追加情報あり"""
         mock_settings.min_input_tokens = 10
         mock_settings.max_input_tokens = 100000
-        mock_settings.max_token_threshold = 40000
-        mock_settings.claude_model = "claude-3-5-sonnet-20241022"
 
+        mock_determine_model.return_value = ("Claude", False)
+        mock_get_provider_and_model.return_value = ("claude", "claude-3-5-sonnet-20241022")
         mock_generate_summary.return_value = (
             "主病名: 糖尿病",
             1500,
@@ -485,6 +494,8 @@ class TestExecuteSummaryGeneration:
         assert call_args["department"] == "眼科"
         assert call_args["doctor"] == "橋本義弘"
 
+    @patch("app.services.summary_service.get_provider_and_model")
+    @patch("app.services.summary_service.determine_model")
     @patch("app.services.summary_service.save_usage")
     @patch("app.services.summary_service.generate_summary")
     @patch("app.services.summary_service.parse_output_summary")
@@ -497,13 +508,15 @@ class TestExecuteSummaryGeneration:
         mock_parse,
         mock_generate_summary,
         mock_save_usage,
+        mock_determine_model,
+        mock_get_provider_and_model,
     ):
         """文書生成実行 - 出力フォーマット処理"""
         mock_settings.min_input_tokens = 10
         mock_settings.max_input_tokens = 100000
-        mock_settings.max_token_threshold = 40000
-        mock_settings.claude_model = "claude-3-5-sonnet-20241022"
 
+        mock_determine_model.return_value = ("Claude", False)
+        mock_get_provider_and_model.return_value = ("claude", "claude-3-5-sonnet-20241022")
         mock_generate_summary.return_value = (
             "# 主病名: 糖尿病",
             1000,
