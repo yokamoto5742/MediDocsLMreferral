@@ -324,17 +324,17 @@ function statisticsPage() {
 
         formatModelName(model) {
             if (!model) return '-';
-            // 環境変数 GEMINI_MODEL に一致する場合は Gemini_Pro として表示
-            if (model === '{{ gemini_model_name }}') {
+            // DBの値が環境変数のモデル名、または Gemini_Pro の場合
+            if (model === '{{ gemini_model_name }}' || model === 'Gemini_Pro') {
                 return 'Gemini_Pro';
             }
             return model;
         },
 
         getActualModelName(displayName) {
-            // 表示名 Gemini_Pro を実際のモデル名に変換
+            // Gemini_Pro選択時はDB検索用の実際のモデル名に変換
             if (displayName === 'Gemini_Pro') {
-                return '{{ gemini_model_name }}';
+                return '{{ gemini_model_name }}' || 'Gemini_Pro';
             }
             return displayName;
         },
