@@ -277,11 +277,11 @@ export function appState(): AppState {
                         this.activeTab = 0;
                         this.currentScreen = 'output';
                     } else {
-                        this.error = (parsed as SSEErrorEvent).error_message || window.MESSAGES?.ERROR?.GENERIC_ERROR ?? 'エラーが発生しました';
+                        this.error = (parsed as SSEErrorEvent).error_message || (window.MESSAGES?.ERROR?.GENERIC_ERROR ?? 'エラーが発生しました');
                     }
                     break;
                 case 'error':
-                    this.error = (parsed as SSEErrorEvent).error_message || window.MESSAGES?.ERROR?.GENERIC_ERROR ?? 'エラーが発生しました';
+                    this.error = (parsed as SSEErrorEvent).error_message || (window.MESSAGES?.ERROR?.GENERIC_ERROR ?? 'エラーが発生しました');
                     break;
             }
         },
@@ -317,7 +317,7 @@ export function appState(): AppState {
                 this.activeTab = 0;
                 this.currentScreen = 'output';
             } else {
-                this.error = data.error_message || window.MESSAGES?.ERROR?.GENERIC_ERROR ?? 'エラーが発生しました';
+                this.error = data.error_message || (window.MESSAGES?.ERROR?.GENERIC_ERROR ?? 'エラーが発生しました');
             }
         },
 
@@ -488,11 +488,11 @@ export function appState(): AppState {
                         };
                         this.currentScreen = 'evaluation';
                     } else {
-                        this.error = (parsed as SSEErrorEvent).error_message || window.MESSAGES?.ERROR?.GENERIC_ERROR ?? 'エラーが発生しました';
+                        this.error = (parsed as SSEErrorEvent).error_message || (window.MESSAGES?.ERROR?.GENERIC_ERROR ?? 'エラーが発生しました');
                     }
                     break;
                 case 'error':
-                    this.error = (parsed as SSEErrorEvent).error_message || window.MESSAGES?.ERROR?.GENERIC_ERROR ?? 'エラーが発生しました';
+                    this.error = (parsed as SSEErrorEvent).error_message || (window.MESSAGES?.ERROR?.GENERIC_ERROR ?? 'エラーが発生しました');
                     break;
             }
         },
@@ -519,7 +519,7 @@ export function appState(): AppState {
                 };
                 this.currentScreen = 'evaluation';
             } else {
-                this.error = data.error_message || window.MESSAGES?.ERROR?.EVALUATION_ERROR ?? '評価中にエラーが発生しました';
+                this.error = data.error_message || (window.MESSAGES?.ERROR?.EVALUATION_ERROR ?? '評価中にエラーが発生しました');
             }
         },
 
