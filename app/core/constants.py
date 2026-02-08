@@ -120,11 +120,6 @@ MESSAGES: dict[str, dict[str, str]] = {
         "COPIED_TO_CLIPBOARD": "クリップボードにコピーしました",
     },
     "STATUS": {
-        "GENERATING": "作成中...",
-        "MODEL_SWITCHED": "入力が長いため、モデルを {} に切り替えました",
-        "TOKEN_THRESHOLD_EXCEEDED": "入力テキストが長いため{original_model} から Gemini_Pro に切り替えます",
-        "TOKEN_THRESHOLD_EXCEEDED_NO_GEMINI": "Gemini APIの認証情報が設定されていないため処理できません。",
-        "PROCESSING_TIME": "作成時間",
         "DOCUMENT_GENERATION_START": "文書生成を開始します...",
         "DOCUMENT_GENERATING": "文書を生成中...",
         "DOCUMENT_GENERATING_ELAPSED": "文書を生成中... ({elapsed}秒経過)",
