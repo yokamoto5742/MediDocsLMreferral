@@ -177,7 +177,7 @@ class TestSettingsEdgeCases:
         os.environ,
         {
             "GOOGLE_PROJECT_ID": "test-project-123",
-            "GOOGLE_CLOUD_LOCATION": "us-central1",
+            "GOOGLE_LOCATION": "us-central1",
         },
         clear=True,
     )

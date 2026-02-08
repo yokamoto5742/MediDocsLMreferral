@@ -1,6 +1,5 @@
 from functools import lru_cache
 
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.core.constants import ModelType
@@ -38,7 +37,7 @@ class Settings(BaseSettings):
     google_credentials_json: str | None = None
     gemini_model: str | None = None
     google_project_id: str | None = None
-    google_location: str = Field(default="global", validation_alias="GOOGLE_CLOUD_LOCATION")
+    google_location: str = "global"
     gemini_thinking_level: str = "HIGH"
     gemini_evaluation_model: str | None = None
 
