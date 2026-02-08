@@ -107,11 +107,10 @@ async def prompts_page(request: Request):
 @app.get("/statistics", response_class=HTMLResponse)
 async def statistics_page(request: Request):
     """統計ページ"""
-    gemini_model_name = settings.gemini_model
     return templates.TemplateResponse(
         request,
         "statistics.html",
-        {"gemini_model_name": gemini_model_name, **get_common_context("statistics")},
+        get_common_context("statistics"),
     )
 
 
