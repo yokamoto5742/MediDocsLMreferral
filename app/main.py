@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse
@@ -18,6 +20,12 @@ from app.core.security import generate_csrf_token
 from app.utils.error_handlers import api_exception_handler, validation_exception_handler
 
 settings = get_settings()
+
+# ログ設定
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s:\t%(name)s - %(message)s",
+)
 
 app = FastAPI(
     title="MediDocsLM API",
