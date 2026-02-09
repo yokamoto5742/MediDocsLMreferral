@@ -20,11 +20,7 @@ async def stream_with_heartbeat(
     elapsed_message_template: str,
     heartbeat_interval: int = 5,
 ) -> AsyncGenerator[tuple[str, int, int] | str, None]:
-    """ハートビート付きでスレッドプール上の同期処理を実行
-
-    SSEイベント文字列をyieldし、最後にresultタプルをyieldする
-    エラー時はerror SSEイベントをyieldする
-    """
+    """ハートビート付きでスレッドプール上の同期処理を実行"""
     yield sse_event("progress", {
         "status": "starting",
         "message": start_message,
@@ -59,7 +55,6 @@ async def stream_with_heartbeat(
                     "error_message": msg_data,
                 })
                 return
-            # msg_type == "result"
             yield msg_data
             return
         except asyncio.TimeoutError:

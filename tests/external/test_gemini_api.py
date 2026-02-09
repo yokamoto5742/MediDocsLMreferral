@@ -362,7 +362,7 @@ class TestGeminiAPIClientGenerateContent:
         with pytest.raises(APIError) as exc_info:
             client._generate_content(prompt="プロンプト", model_name="test-model")
 
-        assert "Client not initialized" in str(exc_info.value)
+        assert "Gemini API クライアントが初期化されていません" in str(exc_info.value)
 
     @patch("app.external.gemini_api.get_settings")
     def test_generate_content_thinking_level_config(self, mock_get_settings):

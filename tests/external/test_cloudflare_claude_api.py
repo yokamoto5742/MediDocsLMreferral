@@ -274,7 +274,7 @@ class TestCloudflareClaudeAPIClientGenerateContent:
 
         with pytest.raises(APIError) as exc_info:
             client._generate_content("テストプロンプト", "anthropic.claude-3-5-sonnet-20241022-v2:0")
-        assert "Cloudflare Gateway not initialized" in str(exc_info.value)
+        assert "Cloudflare Gateway が初期化されていません" in str(exc_info.value)
 
     @patch("app.external.cloudflare_claude_api.httpx.post")
     @patch("app.external.cloudflare_claude_api.get_settings")

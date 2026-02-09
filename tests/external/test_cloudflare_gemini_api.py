@@ -285,7 +285,7 @@ class TestCloudflareGeminiAPIClientGenerateContent:
 
         with pytest.raises(APIError) as exc_info:
             client._generate_content("テストプロンプト", "gemini-2.0-flash")
-        assert "Cloudflare Gateway not initialized" in str(exc_info.value)
+        assert "Cloudflare Gateway が初期化されていません" in str(exc_info.value)
 
     @patch("app.external.cloudflare_gemini_api.httpx.post")
     @patch("app.external.cloudflare_gemini_api.get_settings")
