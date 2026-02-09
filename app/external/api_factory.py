@@ -19,95 +19,97 @@ class APIProvider(Enum):
     GEMINI = "gemini"
 
 
-class APIFactory:
-    @staticmethod
-    def create_client(provider: Union[APIProvider, str]) -> BaseAPIClient:
-        if isinstance(provider, str):
-            try:
-                provider = APIProvider(provider.lower())
-            except ValueError:
-                raise APIError(MESSAGES["ERROR"]["UNSUPPORTED_API_PROVIDER"].format(provider=provider))
+def create_client(provider: Union[APIProvider, str]) -> BaseAPIClient:
+    """APIプロバイダーに応じたクライアントを生成"""
+    if isinstance(provider, str):
+        try:
+            provider = APIProvider(provider.lower())
+        except ValueError:
+            raise APIError(MESSAGES["ERROR"]["UNSUPPORTED_API_PROVIDER"].format(provider=provider))
 
-        settings = get_settings()
+    settings = get_settings()
 
-        if provider == APIProvider.GEMINI:
-            if all([
-                settings.cloudflare_account_id,
-                settings.cloudflare_gateway_id,
-                settings.cloudflare_aig_token,
-            ]):
-                logger.info("APIクライアント選択: CloudflareGeminiAPIClient (Cloudflare AI Gateway経由)")
-                return CloudflareGeminiAPIClient()
-            logger.info("APIクライアント選択: GeminiAPIClient (Direct Vertex AI)")
-            return GeminiAPIClient()
+    if provider == APIProvider.GEMINI:
+        if all([
+            settings.cloudflare_account_id,
+            settings.cloudflare_gateway_id,
+            settings.cloudflare_aig_token,
+        ]):
+            logger.info("APIクライアント選択: CloudflareGeminiAPIClient (Cloudflare AI Gateway経由)")
+            return CloudflareGeminiAPIClient()
+        logger.info("APIクライアント選択: GeminiAPIClient (Direct Vertex AI)")
+        return GeminiAPIClient()
 
-        if provider == APIProvider.CLAUDE:
-            if all([
-                settings.cloudflare_account_id,
-                settings.cloudflare_gateway_id,
-                settings.cloudflare_aig_token,
-            ]):
-                logger.info("APIクライアント選択: CloudflareClaudeAPIClient (Cloudflare AI Gateway経由)")
-                return CloudflareClaudeAPIClient()
-            logger.info("APIクライアント選択: ClaudeAPIClient (Direct Amazon Bedrock)")
-            return ClaudeAPIClient()
+    if provider == APIProvider.CLAUDE:
+        if all([
+            settings.cloudflare_account_id,
+            settings.cloudflare_gateway_id,
+            settings.cloudflare_aig_token,
+        ]):
+            logger.info("APIクライアント選択: CloudflareClaudeAPIClient (Cloudflare AI Gateway経由)")
+            return CloudflareClaudeAPIClient()
+        logger.info("APIクライアント選択: ClaudeAPIClient (Direct Amazon Bedrock)")
+        return ClaudeAPIClient()
 
-        logger.error(MESSAGES["ERROR"]["UNSUPPORTED_API_PROVIDER"].format(provider=provider))
-        raise APIError(MESSAGES["ERROR"]["UNSUPPORTED_API_PROVIDER"].format(provider=provider))
-
-    @staticmethod
-    def generate_summary_with_provider(
-        provider: Union[APIProvider, str],
-        medical_text: str,
-        additional_info: str = "",
-        referral_purpose: str = "",
-        current_prescription: str = "",
-        department: str = "default",
-        document_type: str = DEFAULT_DOCUMENT_TYPE,
-        doctor: str = "default",
-        model_name: str | None = None,
-    ):
-        client = APIFactory.create_client(provider)
-        return client.generate_summary(
-            medical_text,
-            additional_info,
-            referral_purpose,
-            current_prescription,
-            department,
-            document_type,
-            doctor,
-            model_name,
-        )
+    logger.error(MESSAGES["ERROR"]["UNSUPPORTED_API_PROVIDER"].format(provider=provider))
+    raise APIError(MESSAGES["ERROR"]["UNSUPPORTED_API_PROVIDER"].format(provider=provider))
 
 
-    @staticmethod
-    def generate_summary_stream_with_provider(
-        provider: Union[APIProvider, str],
-        medical_text: str,
-        additional_info: str = "",
-        referral_purpose: str = "",
-        current_prescription: str = "",
-        department: str = "default",
-        document_type: str = DEFAULT_DOCUMENT_TYPE,
-        doctor: str = "default",
-        model_name: str | None = None,
-    ):
-        client = APIFactory.create_client(provider)
-        return client.generate_summary_stream(
-            medical_text,
-            additional_info,
-            referral_purpose,
-            current_prescription,
-            department,
-            document_type,
-            doctor,
-            model_name,
-        )
+def generate_summary_with_provider(
+    provider: Union[APIProvider, str],
+    medical_text: str,
+    additional_info: str = "",
+    referral_purpose: str = "",
+    current_prescription: str = "",
+    department: str = "default",
+    document_type: str = DEFAULT_DOCUMENT_TYPE,
+    doctor: str = "default",
+    model_name: str | None = None,
+):
+    """指定されたプロバイダーで文書を生成"""
+    client = create_client(provider)
+    return client.generate_summary(
+        medical_text,
+        additional_info,
+        referral_purpose,
+        current_prescription,
+        department,
+        document_type,
+        doctor,
+        model_name,
+    )
+
+
+def generate_summary_stream_with_provider(
+    provider: Union[APIProvider, str],
+    medical_text: str,
+    additional_info: str = "",
+    referral_purpose: str = "",
+    current_prescription: str = "",
+    department: str = "default",
+    document_type: str = DEFAULT_DOCUMENT_TYPE,
+    doctor: str = "default",
+    model_name: str | None = None,
+):
+    """指定されたプロバイダーでストリーム形式の文書を生成"""
+    client = create_client(provider)
+    return client.generate_summary_stream(
+        medical_text,
+        additional_info,
+        referral_purpose,
+        current_prescription,
+        department,
+        document_type,
+        doctor,
+        model_name,
+    )
 
 
 def generate_summary(provider: str, medical_text: str, **kwargs):
-    return APIFactory.generate_summary_with_provider(provider, medical_text, **kwargs)
+    """文書を生成（後方互換性のためのエイリアス）"""
+    return generate_summary_with_provider(provider, medical_text, **kwargs)
 
 
 def generate_summary_stream(provider: str, medical_text: str, **kwargs):
-    return APIFactory.generate_summary_stream_with_provider(provider, medical_text, **kwargs)
+    """ストリーム形式で文書を生成（後方互換性のためのエイリアス）"""
+    return generate_summary_stream_with_provider(provider, medical_text, **kwargs)

@@ -2,7 +2,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.external.api_factory import APIFactory, APIProvider, generate_summary
+from app.external.api_factory import (
+    APIProvider,
+    create_client,
+    generate_summary,
+    generate_summary_with_provider,
+)
 from app.external.claude_api import ClaudeAPIClient
 from app.external.cloudflare_claude_api import CloudflareClaudeAPIClient
 from app.external.cloudflare_gemini_api import CloudflareGeminiAPIClient
@@ -29,8 +34,8 @@ class TestAPIProvider:
             APIProvider("invalid")
 
 
-class TestAPIFactoryCreateClient:
-    """APIFactory.create_client のテスト"""
+class TestCreateClient:
+    """create_client 関数のテスト"""
 
     @patch("app.external.api_factory.get_settings")
     def test_create_client_claude_enum_without_cloudflare(self, mock_get_settings):
@@ -41,7 +46,7 @@ class TestAPIFactoryCreateClient:
         mock_settings.cloudflare_aig_token = None
         mock_get_settings.return_value = mock_settings
 
-        client = APIFactory.create_client(APIProvider.CLAUDE)
+        client = create_client(APIProvider.CLAUDE)
         assert isinstance(client, ClaudeAPIClient)
 
     @patch("app.external.api_factory.get_settings")
@@ -53,7 +58,7 @@ class TestAPIFactoryCreateClient:
         mock_settings.cloudflare_aig_token = "test-token"
         mock_get_settings.return_value = mock_settings
 
-        client = APIFactory.create_client(APIProvider.CLAUDE)
+        client = create_client(APIProvider.CLAUDE)
         assert isinstance(client, CloudflareClaudeAPIClient)
 
     @patch("app.external.api_factory.get_settings")
@@ -65,7 +70,7 @@ class TestAPIFactoryCreateClient:
         mock_settings.cloudflare_aig_token = None
         mock_get_settings.return_value = mock_settings
 
-        client = APIFactory.create_client(APIProvider.GEMINI)
+        client = create_client(APIProvider.GEMINI)
         assert isinstance(client, GeminiAPIClient)
 
     @patch("app.external.api_factory.get_settings")
@@ -77,7 +82,7 @@ class TestAPIFactoryCreateClient:
         mock_settings.cloudflare_aig_token = "test-token"
         mock_get_settings.return_value = mock_settings
 
-        client = APIFactory.create_client(APIProvider.GEMINI)
+        client = create_client(APIProvider.GEMINI)
         assert isinstance(client, CloudflareGeminiAPIClient)
 
     @patch("app.external.api_factory.get_settings")
@@ -89,7 +94,7 @@ class TestAPIFactoryCreateClient:
         mock_settings.cloudflare_aig_token = None
         mock_get_settings.return_value = mock_settings
 
-        client = APIFactory.create_client("claude")
+        client = create_client("claude")
         assert isinstance(client, ClaudeAPIClient)
 
     @patch("app.external.api_factory.get_settings")
@@ -101,7 +106,7 @@ class TestAPIFactoryCreateClient:
         mock_settings.cloudflare_aig_token = "test-token"
         mock_get_settings.return_value = mock_settings
 
-        client = APIFactory.create_client("claude")
+        client = create_client("claude")
         assert isinstance(client, CloudflareClaudeAPIClient)
 
     @patch("app.external.api_factory.get_settings")
@@ -113,7 +118,7 @@ class TestAPIFactoryCreateClient:
         mock_settings.cloudflare_aig_token = None
         mock_get_settings.return_value = mock_settings
 
-        client = APIFactory.create_client("gemini")
+        client = create_client("gemini")
         assert isinstance(client, GeminiAPIClient)
 
     @patch("app.external.api_factory.get_settings")
@@ -125,7 +130,7 @@ class TestAPIFactoryCreateClient:
         mock_settings.cloudflare_aig_token = "test-token"
         mock_get_settings.return_value = mock_settings
 
-        client = APIFactory.create_client("gemini")
+        client = create_client("gemini")
         assert isinstance(client, CloudflareGeminiAPIClient)
 
     @patch("app.external.api_factory.get_settings")
@@ -137,9 +142,9 @@ class TestAPIFactoryCreateClient:
         mock_settings.cloudflare_aig_token = None
         mock_get_settings.return_value = mock_settings
 
-        client1 = APIFactory.create_client("CLAUDE")
-        client2 = APIFactory.create_client("Claude")
-        client3 = APIFactory.create_client("claude")
+        client1 = create_client("CLAUDE")
+        client2 = create_client("Claude")
+        client3 = create_client("claude")
 
         assert isinstance(client1, ClaudeAPIClient)
         assert isinstance(client2, ClaudeAPIClient)
@@ -148,18 +153,18 @@ class TestAPIFactoryCreateClient:
     def test_create_client_invalid_provider_string(self):
         """クライアント作成 - 無効なプロバイダー（文字列）"""
         with pytest.raises(APIError) as exc_info:
-            APIFactory.create_client("gpt-4")
+            create_client("gpt-4")
 
         assert "未対応のAPIプロバイダー" in str(exc_info.value)
 
     def test_create_client_invalid_provider_type(self):
         """クライアント作成 - 無効なプロバイダータイプ"""
         with pytest.raises(APIError):
-            APIFactory.create_client(123)
+            create_client(123)
 
 
-class TestAPIFactoryGenerateSummary:
-    """APIFactory.generate_summary_with_provider のテスト"""
+class TestGenerateSummaryWithProvider:
+    """generate_summary_with_provider 関数のテスト"""
 
     @patch("app.external.api_factory.get_settings")
     @patch.object(ClaudeAPIClient, "generate_summary")
@@ -173,7 +178,7 @@ class TestAPIFactoryGenerateSummary:
 
         mock_generate.return_value = ("生成された文書", 1000, 500)
 
-        result = APIFactory.generate_summary_with_provider(
+        result = generate_summary_with_provider(
             provider="claude",
             medical_text="患者情報",
         )
@@ -199,7 +204,7 @@ class TestAPIFactoryGenerateSummary:
 
         mock_generate.return_value = ("生成された文書", 2000, 800)
 
-        result = APIFactory.generate_summary_with_provider(
+        result = generate_summary_with_provider(
             provider="gemini",
             medical_text="カルテ情報",
             additional_info="追加情報",
@@ -236,7 +241,7 @@ class TestAPIFactoryGenerateSummary:
 
         mock_generate.return_value = ("文書", 1500, 600)
 
-        result = APIFactory.generate_summary_with_provider(
+        result = generate_summary_with_provider(
             provider=APIProvider.CLAUDE,
             medical_text="テストデータ",
         )
@@ -246,7 +251,7 @@ class TestAPIFactoryGenerateSummary:
     def test_generate_summary_invalid_provider(self):
         """文書生成 - 無効なプロバイダー"""
         with pytest.raises(APIError) as exc_info:
-            APIFactory.generate_summary_with_provider(
+            generate_summary_with_provider(
                 provider="invalid",
                 medical_text="データ",
             )
@@ -266,7 +271,7 @@ class TestAPIFactoryGenerateSummary:
         mock_generate.side_effect = Exception("API エラー")
 
         with pytest.raises(Exception) as exc_info:
-            APIFactory.generate_summary_with_provider(
+            generate_summary_with_provider(
                 provider="claude",
                 medical_text="データ",
             )
@@ -285,7 +290,7 @@ class TestAPIFactoryGenerateSummary:
 
         mock_generate.return_value = ("文書", 1000, 500)
 
-        APIFactory.generate_summary_with_provider(
+        generate_summary_with_provider(
             provider="claude",
             medical_text="データ",
         )
@@ -356,8 +361,8 @@ class TestGenerateSummaryFunction:
             )
 
 
-class TestAPIFactoryEdgeCases:
-    """API Factory のエッジケース"""
+class TestEdgeCases:
+    """API Factory 関数のエッジケース"""
 
     @patch("app.external.api_factory.get_settings")
     def test_create_multiple_clients_independence(self, mock_get_settings):
@@ -368,8 +373,8 @@ class TestAPIFactoryEdgeCases:
         mock_settings.cloudflare_aig_token = None
         mock_get_settings.return_value = mock_settings
 
-        client1 = APIFactory.create_client("claude")
-        client2 = APIFactory.create_client("claude")
+        client1 = create_client("claude")
+        client2 = create_client("claude")
 
         assert client1 is not client2
         assert isinstance(client1, ClaudeAPIClient)
@@ -384,8 +389,8 @@ class TestAPIFactoryEdgeCases:
         mock_settings.cloudflare_aig_token = None
         mock_get_settings.return_value = mock_settings
 
-        claude_client = APIFactory.create_client("claude")
-        gemini_client = APIFactory.create_client("gemini")
+        claude_client = create_client("claude")
+        gemini_client = create_client("gemini")
 
         assert type(claude_client) != type(gemini_client)
         assert isinstance(claude_client, ClaudeAPIClient)
@@ -400,7 +405,7 @@ class TestAPIFactoryEdgeCases:
         mock_settings.cloudflare_aig_token = "test-token"
         mock_get_settings.return_value = mock_settings
 
-        client = APIFactory.create_client(APIProvider.GEMINI)
+        client = create_client(APIProvider.GEMINI)
         assert isinstance(client, GeminiAPIClient)
 
     @patch("app.external.api_factory.get_settings")
@@ -415,7 +420,7 @@ class TestAPIFactoryEdgeCases:
 
         mock_generate.return_value = ("文書", 1000, 500)
 
-        result = APIFactory.generate_summary_with_provider(provider="claude", medical_text="患者データ")
+        result = generate_summary_with_provider(provider="claude", medical_text="患者データ")
 
         assert result == ("文書", 1000, 500)
 
@@ -436,7 +441,7 @@ class TestAPIFactoryEdgeCases:
 
         mock_generate.return_value = ("文書", 1000, 500)
 
-        result = APIFactory.generate_summary_with_provider(provider="claude", medical_text="データ")
+        result = generate_summary_with_provider(provider="claude", medical_text="データ")
 
         assert result == ("文書", 1000, 500)
 

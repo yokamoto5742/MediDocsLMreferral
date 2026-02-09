@@ -203,7 +203,6 @@ async def execute_evaluation_stream(
         if isinstance(item, str):
             yield item
         else:
-            # resultタプル
             evaluation_text, input_tokens, output_tokens = item
             processing_time = time.time() - start_time
             yield sse_event("complete", {

@@ -245,9 +245,11 @@ tests/                 # テストスイート
 ## アーキテクチャと設計パターン
 
 ### Factory Pattern
-APIプロバイダー（Claude/Gemini）の動的インスタンス化を管理します：
+APIプロバイダー（Claude/Gemini）の動的インスタンス化を管理する関数を提供します：
 ```python
-client = APIFactory.create_client(APIProvider.CLAUDE)
+from app.external.api_factory import create_client, APIProvider
+
+client = create_client(APIProvider.CLAUDE)
 result = client.generate_summary(medical_text, additional_info, ...)
 ```
 

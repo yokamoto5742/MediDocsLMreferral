@@ -99,12 +99,12 @@ npm run build
 
 ### Factory Pattern for AI Provider Management
 
-The `APIFactory` in `app/external/api_factory.py` dynamically instantiates Claude or Gemini clients:
+The `app/external/api_factory.py` module provides functions to dynamically instantiate Claude or Gemini clients:
 
 ```python
-from app.external.api_factory import APIFactory, APIProvider
+from app.external.api_factory import create_client, APIProvider
 
-client = APIFactory.create_client(APIProvider.CLAUDE)
+client = create_client(APIProvider.CLAUDE)
 result = client.generate_summary(medical_text, additional_info, ...)
 ```
 
