@@ -1,6 +1,6 @@
 # 診療情報提供書作成アプリ
 
-このアプリケーションは、生成AIを活用して診療情報提供書を効率的に作成するためのFastAPIベースのWebアプリケーションです。Claude（Anthropic）とGemini（Google Vertex AI）の両方のAIプロバイダーに対応し、自動モデル切り替え機能で最適なパフォーマンスを実現します。
+このアプリケーションは、生成AIを活用して診療情報提供書を効率的に作成するためのFastAPIベースのWebアプリケーションです。Claude（AWS Bedrock）とGemini（Google Vertex AI）の両方のAIプロバイダーに対応し、自動モデル切り替え機能で最適なパフォーマンスを実現します。
 
 ## 機能
 
@@ -12,14 +12,15 @@
 ### 文書管理
 - **複数の文書タイプ**: 他院への紹介、逆紹介、返書、最終返書
 - **診療科別カスタマイズ**: 診療科ベースの設定に対応
-- **医師別プロンプト**: 階層的プロンプトシステム（診療科 → 医師 → 文書タイプ）
+- **医師別プロンプト**: 階層的プロンプトシステム（医師 → 診療科 → 文書タイプ）
 
 ### プロンプト管理
 - **カスタムプロンプトテンプレート**: さまざまなシナリオ用のカスタムプロンプト作成・管理
 - **階層的継承**: 診療科と医師ごとのプロンプトカスタマイズ
 - **Webベース UI**: プロンプトの作成と編集のための使いやすいインターフェース
 
-### 分析とモニタリング
+### 評価と分析
+- **AI出力評価**: 生成された文書の品質をLLMで評価
 - **使用統計**: API使用状況、トークン数、作成時間を追跡
 - **パフォーマンスメトリクス**: レスポンス時間とモデル別パフォーマンス監視
 
@@ -121,6 +122,14 @@ GEMINI_MODEL=gemini-2.0-flash
 GEMINI_THINKING_LEVEL=HIGH
 ```
 
+### Cloudflare AI Gateway設定（オプション）
+```env
+# Cloudflare設定が全て揃うとCloudflareを経由したGemini APIを使用
+CLOUDFLARE_ACCOUNT_ID=your_account_id
+CLOUDFLARE_GATEWAY_ID=your_gateway_id
+CLOUDFLARE_AIG_TOKEN=your_aig_token
+```
+
 ### アプリケーション設定
 ```env
 # トークン制限
@@ -132,6 +141,10 @@ MAX_TOKEN_THRESHOLD=100000
 PROMPT_MANAGEMENT=true
 APP_TYPE=default
 SELECTED_AI_MODEL=Claude
+
+# CSRF認証
+CSRF_SECRET_KEY=your_secret_key
+CSRF_TOKEN_EXPIRE_MINUTES=60
 ```
 
 ## 使用方法
@@ -147,10 +160,6 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
-
-### フロントエンドの開発準備
-
-フロントエンド開発の詳細については、[frontend/DEVELOPMENT.md](frontend/DEVELOPMENT.md)を参照してください。
 
 ### Webインターフェースの使用
 
@@ -182,70 +191,85 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
    - モデル別トークン使用量
    - 平均作成時間
 
+### 出力評価
+
+1. **Evaluation** ページにアクセス
+2. 生成された文書テキストを入力
+3. 評価対象の文書タイプを選択
+4. **評価実行** をクリック
+5. AIによる評価結果（改善提案など）を確認
+
 ## プロジェクト構造
 
 ```
 app/
-├── api/                 # FastAPI ルートハンドラー
-│   ├── router.py       # メイン API ルーター
-│   ├── summary.py      # 文書生成エンドポイント
-│   ├── prompts.py      # プロンプト管理エンドポイント
-│   ├── evaluation.py   # 出力評価エンドポイント
-│   ├── statistics.py   # 統計エンドポイント
-│   └── settings.py     # 設定エンドポイント
-├── core/               # コア設定
-│   ├── config.py       # 環境設定
-│   ├── constants.py    # アプリケーション定数
-│   └── database.py     # データベース接続
-├── external/           # 外部 API 連携
-│   ├── api_factory.py  # APIクライアントファクトリ
-│   ├── base_api.py     # ベースAPIクライアント
-│   ├── claude_api.py   # Claude/Bedrock連携
-│   └── gemini_api.py   # Gemini/Vertex AI連携
-├── models/             # SQLAlchemy ORM モデル
-│   ├── prompt.py       # プロンプトテンプレート
-│   ├── evaluation_prompt.py  # 評価プロンプト
-│   ├── usage.py        # 利用統計
-│   └── setting.py      # アプリケーション設定
-├── schemas/            # Pydantic スキーマ
-│   ├── summary.py      # リクエスト/レスポンス
-│   ├── prompt.py       # プロンプトスキーマ
-│   ├── evaluation.py   # 評価スキーマ
-│   └── statistics.py   # 統計スキーマ
-├── services/           # ビジネスロジック
+├── api/                    # FastAPI ルートハンドラー
+│   ├── router.py          # メイン API ルーター
+│   ├── summary.py         # 文書生成エンドポイント
+│   ├── prompts.py         # プロンプト管理エンドポイント
+│   ├── evaluation.py      # 出力評価エンドポイント
+│   ├── statistics.py      # 統計エンドポイント
+│   └── settings.py        # 設定エンドポイント
+├── core/                  # コア設定
+│   ├── config.py          # 環境設定（Settings クラス）
+│   ├── constants.py       # アプリケーション定数
+│   ├── database.py        # データベース接続
+│   └── security.py        # API認証
+├── external/              # 外部 API 連携
+│   ├── api_factory.py     # APIクライアント動的生成関数
+│   ├── base_api.py        # ベースAPIクライアント
+│   ├── claude_api.py      # Claude/Bedrock連携
+│   ├── cloudflare_claude_api.py   # Cloudflareを経由したClaude
+│   ├── gemini_api.py      # Gemini/Vertex AI連携
+│   └── cloudflare_gemini_api.py   # Cloudflareを経由したGemini
+├── models/                # SQLAlchemy ORM モデル
+│   ├── prompt.py          # プロンプトテンプレート
+│   ├── evaluation_prompt.py      # 評価プロンプト
+│   ├── usage.py           # 利用統計
+│   └── setting.py         # アプリケーション設定
+├── schemas/               # Pydantic スキーマ
+│   ├── summary.py         # リクエスト/レスポンス
+│   ├── prompt.py          # プロンプトスキーマ
+│   ├── evaluation.py      # 評価スキーマ
+│   └── statistics.py      # 統計スキーマ
+├── services/              # ビジネスロジック
 │   ├── summary_service.py      # 文書生成ロジック
 │   ├── prompt_service.py       # プロンプト管理
 │   ├── evaluation_service.py   # 出力評価
-│   └── statistics_service.py   # 統計処理
-├── utils/              # ユーティリティ関数
-│   ├── text_processor.py   # テキスト解析
-│   ├── exceptions.py       # カスタム例外
-│   └── error_handlers.py   # エラーハンドリング
-├── templates/          # Jinja2 テンプレート
-└── main.py             # FastAPI アプリケーション本体
+│   ├── statistics_service.py   # 統計処理
+│   ├── model_selector.py       # モデル選択ロジック
+│   └── sse_helpers.py          # Server-Sent Events ヘルパー
+├── utils/                 # ユーティリティ関数
+│   ├── text_processor.py       # テキスト解析
+│   ├── exceptions.py           # カスタム例外
+│   └── error_handlers.py       # エラーハンドリング
+├── templates/             # Jinja2 テンプレート
+├── static/                # 静的ファイル（フロントエンド出力）
+└── main.py                # FastAPI アプリケーション本体
 
-frontend/              # フロントエンド（Vite + TypeScript + Tailwind CSS）
+frontend/                  # フロントエンド（Vite + TypeScript + Tailwind CSS）
 ├── src/
-│   ├── main.ts         # エントリーポイント
-│   ├── app.ts          # Alpine.js アプリケーションロジック
-│   ├── types.ts        # 型定義
+│   ├── main.ts           # エントリーポイント
+│   ├── app.ts            # Alpine.js アプリケーションロジック
+│   ├── types.ts          # 型定義
 │   └── styles/
-│       └── main.css    # Tailwind CSS + カスタムスタイル
-└── DEVELOPMENT.md      # フロントエンド開発ガイド
+│       └── main.css      # Tailwind CSS + カスタムスタイル
+└── DEVELOPMENT.md        # フロントエンド開発ガイド
 
-tests/                 # テストスイート
-├── conftest.py        # 共有フィクスチャ
-├── api/               # APIエンドポイントテスト
-├── core/              # コア機能テスト
-├── external/          # 外部APIテスト
-├── services/          # ビジネスロジックテスト
-└── test_utils/        # ユーティリティテスト
+tests/                    # テストスイート
+├── conftest.py          # 共有フィクスチャ
+├── api/                 # APIエンドポイントテスト
+├── core/                # コア機能テスト
+├── external/            # 外部APIテスト
+├── services/            # ビジネスロジックテスト
+└── test_utils/          # ユーティリティテスト
 ```
 
 ## アーキテクチャと設計パターン
 
 ### Factory Pattern
 APIプロバイダー（Claude/Gemini）の動的インスタンス化を管理する関数を提供します：
+
 ```python
 from app.external.api_factory import create_client, APIProvider
 
@@ -255,49 +279,57 @@ result = client.generate_summary(medical_text, additional_info, ...)
 
 ### Service Layer Pattern
 ビジネスロジックはAPIルートから分離されています：
+
 - `summary_service.py`: 文書生成とモデル選択ロジック
 - `prompt_service.py`: プロンプト管理と階層的解決
 - `evaluation_service.py`: 出力評価
 - `statistics_service.py`: 統計処理
 
-### Repository Pattern
-SQLAlchemy ORMによるデータベース操作：
-- `prompt.py`: プロンプトテンプレート（階層的継承対応）
-- `evaluation_prompt.py`: 評価プロンプト
-- `usage.py`: API使用統計
-- `setting.py`: アプリケーション設定
-
-### MVC アーキテクチャ
-- **Models**: `app/models/` の SQLAlchemy ORM モデル
-- **Views**: `app/templates/` の Jinja2 テンプレート
-- **Controllers**: `app/api/` の FastAPI ルーター
-
-## 主要なビジネスロジック
-
 ### 自動モデル切り替え
+
 `summary_service.py`の`determine_model()`メソッドで実装：
+
 - 入力が`MAX_TOKEN_THRESHOLD`（デフォルト100,000文字）を超え、Claudeが選択されている場合、自動的にGeminiに切り替え
 - Geminiが設定されていない場合はエラーを返す
 - 閾値は環境変数`MAX_TOKEN_THRESHOLD`で調整可能
 - `prompt_service.py`の`get_selected_model()`にモデル名取得ロジックを集約
 
 ### 階層的プロンプトシステム
-プロンプトは特異性の順序で解決されます：
+
+プロンプトは以下の順序で解決されます：
+
 1. 医師 + 文書タイプ固有のプロンプト
 2. 診療科 + 文書タイプ固有のプロンプト
 3. 文書タイプのデフォルトプロンプト
-4. `config.ini`のシステムデフォルト
+4. システムデフォルト（`config.ini`または環境変数）
 
-### マジックストリング削除と定数管理
-バージョン1.5.2から、`ModelType` Enumを`app/core/constants.py`に導入し、文字列リテラルを統一管理：
-- "Claude"、"Gemini_Pro"などのモデル名定数化
-- 複数の場所での重複コードを削減（DRY原則）
-- `APIProvider` Enumとともに使用してタイプセーフティを向上
+これにより、診療科別・医師別のカスタマイズが可能です。
+
+### 定数管理
+
+`app/core/constants.py`で定数を一元管理：
+
+- `ModelType` Enum: "Claude"、"Gemini_Pro"などのモデル名
+- `APIProvider` Enum: CLAUDE、GEMINI
+- 診療科・医師マッピング
+- 文書タイプ
+- ユーザー向けメッセージ（日本語）
+
+マジック文字列を避け、必ず定数を使用してください。
+
+### APIクライアント
+
+**インスタンス化**:
+
+- `api_factory.create_client(APIProvider)` で適切なクライアントを動的に生成
+- Cloudflare設定が全て揃うと CloudflareGeminiAPIClient/CloudflareClaudeAPIClient を使用
+- それ以外は GeminiAPIClient/ClaudeAPIClient を使用
 
 ### データフロー
+
 1. ユーザーがWebインターフェースからカルテデータを入力
 2. FastAPIエンドポイントが入力を受信・検証
-3. `SummaryService`が文書生成を調整
+3. `SummaryService` が文書生成を調整
 4. Factoryパターンが適切なAPIクライアントをインスタンス化
 5. 入力文字数に基づいてモデルを自動選択
 6. AIが構造化された医療文書を生成
@@ -332,6 +364,7 @@ python -m pytest tests/services/test_summary_service.py::test_generate_summary -
 ### テスト構造
 
 本プロジェクトは120以上のテストで包括的なテストカバレッジを維持：
+
 - **API統合テスト**: エンドポイントとリクエスト/レスポンス
 - **ビジネスロジック**: サービスレイヤーのユニットテスト
 - **外部API**: モック使用によるプロバイダー統合テスト
@@ -339,6 +372,7 @@ python -m pytest tests/services/test_summary_service.py::test_generate_summary -
 - **ユーティリティ**: テキスト処理とエラーハンドリング
 
 新機能追加時は以下の順序でテストを追加してください：
+
 1. サービスレイヤーテスト（TDD推奨）
 2. API統合テスト
 3. 必要に応じて外部APIテスト（pytest-mockでモック）
@@ -364,22 +398,41 @@ alembic downgrade -1
 
 テーブルは初回実行時にSQLAlchemyを介して自動作成されます。
 
+## フロントエンド開発
+
+フロントエンド開発の詳細については、[frontend/DEVELOPMENT.md](frontend/DEVELOPMENT.md)を参照してください。
+
+**開発サーバー開始:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## 型チェック
+
+```bash
+pyright
+```
+
 ## 使用技術
 
 ### バックエンド
 - **FastAPI**: 高速で最新的なPython Webフレームワーク
 - **Uvicorn**: ASGI Webサーバー
-- **Pydantic**: データ検証
+- **Pydantic v2**: データ検証
 - **SQLAlchemy**: ORM
 - **PostgreSQL**: リレーショナルデータベース
+- **Alembic**: データベーススキーマ管理
 
 ### AI/ML統合
 - **AWS Bedrock**: Claude API へのアクセス
 - **Anthropic API**: 直接 Claude API 利用
 - **Google Vertex AI**: Gemini API への統合
+- **Cloudflare AI Gateway**: API プロキシング（オプション）
 
 ### フロントエンド
-- **Vite**: 高速フロントエンドビルドツール（バージョン1.5.0から導入）
+- **Vite**: 高速フロントエンドビルドツール
 - **TypeScript**: 型安全なJavaScript
 - **Tailwind CSS**: ユーティリティファーストCSSフレームワーク
 - **Alpine.js**: 軽量なJavaScript フレームワーク
@@ -403,6 +456,7 @@ alembic downgrade -1
 - 環境変数`CLAUDE_API_KEY`または AWS 認証情報を確認
 - API キーの有効期限とアカウント余額を確認
 - Google Cloud プロジェクト ID と認証情報が正しいか確認
+- Cloudflare設定を使用する場合、`CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_GATEWAY_ID`、`CLOUDFLARE_AIG_TOKEN`が全て設定されているか確認
 
 ### テスト失敗
 - `.env.test`ファイルが正しく設定されているか確認
@@ -424,25 +478,14 @@ alembic downgrade -1
 - 変更内容と理由を日本語で記述
 - 変更範囲は最小限に
 
-### 開発コマンド
-
-**型チェック:**
-```bash
-pyright
-```
-
-**フロントエンド開発:**
-フロントエンド開発の詳細については、[frontend/DEVELOPMENT.md](frontend/DEVELOPMENT.md)を参照してください。
-
 詳細は [CLAUDE.md](CLAUDE.md) を参照してください。
 
-## ライセンス
+## 認証設定
 
-このプロジェクトは[Apache License 2.0](docs/LICENSE)のもとで公開されています。
+### CSRF対策
 
-## 変更履歴
-
-バージョン履歴と更新については、[CHANGELOG.md](docs/CHANGELOG.md)を参照してください。
+- CSRF トークンは `CSRF_SECRET_KEY` で生成
+- トークン有効期限は `CSRF_TOKEN_EXPIRE_MINUTES` で設定（デフォルト60分）
 
 ## セキュリティに関する注意事項
 
@@ -455,3 +498,11 @@ pyright
 ## 免責事項
 
 このアプリケーションは医療文書作成を支援するツールであり、専門的な医学的判断に代わるものではありません。生成されたすべてのコンテンツは、医療専門家による確認が必須です。
+
+## ライセンス
+
+このプロジェクトは[Apache License 2.0](LICENSE)のもとで公開されています。
+
+## 変更履歴
+
+バージョン履歴と更新については、[CHANGELOG.md](docs/CHANGELOG.md)を参照してください。

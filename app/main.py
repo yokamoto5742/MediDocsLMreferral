@@ -21,7 +21,6 @@ from app.utils.error_handlers import api_exception_handler, validation_exception
 
 settings = get_settings()
 
-# ログ設定
 logging.basicConfig(
     level=logging.INFO,
     format="%(levelname)s:\t%(name)s - %(message)s",

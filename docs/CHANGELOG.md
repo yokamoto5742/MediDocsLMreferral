@@ -7,6 +7,72 @@
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-02-09
+
+### 追加
+- **ログ機能**: アプリケーション動作をCSV形式で記録
+  - `app/main.py`: ロギング設定を追加（INFO/ERROR/WARNING）
+  - ログはコンソールに出力
+- **SSEストリーミングAPI**: リアルタイム文書生成・評価
+  - `app/api/summary.py`: `/generate/stream`エンドポイントを追加
+  - `app/api/evaluation.py`: `/evaluate/stream`エンドポイントを追加
+  - `app/services/sse_helpers.py`: SSEハートビート処理の共通ヘルパー関数
+- **Cloudflare AI Gateway統合**: API呼び出しの最適化
+  - `app/external/cloudflare_claude_api.py`: Cloudflare経由のClaude API
+  - `app/external/cloudflare_gemini_api.py`: Cloudflare経由のGemini API
+  - `app/core/config.py`: `use_cloudflare_gateway`, `cloudflare_account_id`, `cloudflare_gateway_id`設定を追加
+  - `app/external/api_factory.py`: Cloudflare有効時のクライアント自動選択
+- **評価プロンプト管理機能**:
+  - `app/services/evaluation_prompt_service.py`: 評価プロンプトCRUDサービス
+  - `app/api/evaluation.py`: `/prompts/*`評価プロンプト管理エンドポイント
+  - 評価ロジックをプロンプト管理から分離し、モジュール性を向上
+- **テストカバレッジ拡張**:
+  - `tests/services/test_evaluation_prompt_service.py`: 評価プロンプトサービステスト
+  - `tests/services/test_sse_helpers.py`: SSEヘルパー関数テスト
+  - `tests/api/test_summary_stream.py`: SSEストリーミングAPIテスト
+
+### 変更
+- **環境変数名の変更**: Google Cloud設定の一貫性向上
+  - `GOOGLE_CLOUD_LOCATION` → `GOOGLE_LOCATION`
+  - `app/core/config.py`: `validation_alias`で後方互換性を維持
+- **APIクライアント選択ロジック**: Cloudflare設定に基づく動的切り替え
+  - `app/external/api_factory.py`: `APIFactory`クラスを`create_client`関数に変更
+  - Cloudflare設定時は自動的にCloudflareクライアントを選択
+  - ログ出力で使用するクライアントを明示
+- **メッセージのローカライゼーション**: UI表示メッセージを日本語化
+  - `app/core/constants.py`: エラーメッセージ、ステータスメッセージを日本語に統一
+  - `frontend/src/app.ts`: エラーハンドリングでメッセージ定数を使用
+  - `tests/*`: テストケースのエラーメッセージを日本語に修正
+
+### リファクタリング
+- **評価サービスの分離**:
+  - `app/services/evaluation_service.py`: 評価実行ロジックのみに集中
+  - `app/services/evaluation_prompt_service.py`: プロンプト管理ロジックを分離
+  - SSEハートビート処理を`sse_helpers.py`に抽出
+- **コードの整理とモジュール分割**:
+  - `app/services/model_selector.py`: モデル選択ロジックを独立
+  - 関数とクラスの責任を明確化
+  - 定数とメッセージを`constants.py`に集約
+- **ドキュメントコメントの簡潔化**:
+  - `app/services/prompt_service.py`, `summary_service.py`, `external/*`: 冗長なコメントを削除
+  - 自明な処理には最小限のコメントのみ
+- **プロジェクト構造の更新**:
+  - `scripts/project_structure.txt`: 新規サービスとAPIモジュールを反映
+
+### 修正
+- **フロントエンドエラー処理**: エラーメッセージのフォールバック改善
+  - `frontend/src/app.ts`: APIエラーレスポンスの構造に対応
+- **統計表示**: モデル名表示ロジックの簡略化
+  - `app/api/statistics.py`: "Gemini_Pro" → "Gemini" 表示名マッピング
+- **SSE処理の非同期対応**:
+  - `app/api/evaluation.py`, `app/api/summary.py`: async/await構文の修正
+  - CSRF対応ヘッダーの追加
+
+### 技術的改善
+- Vite: 7.3.1に更新
+- pytest設定: `asyncio_default_fixture_loop_scope = "function"`を追加
+- CSRF対策: SSEエンドポイントでトークン検証を適用
+
 ## [1.5.3] - 2026-01-31
 
 ### 変更
