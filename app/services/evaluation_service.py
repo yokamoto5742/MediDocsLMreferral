@@ -13,6 +13,38 @@ from app.utils.exceptions import APIError
 settings = get_settings()
 
 
+def _error_response(error_msg: str, processing_time: float = 0.0) -> EvaluationResponse:
+    """エラーレスポンスを生成"""
+    return EvaluationResponse(
+        success=False,
+        evaluation_result="",
+        input_tokens=0,
+        output_tokens=0,
+        processing_time=processing_time,
+        error_message=error_msg,
+    )
+
+
+def _validate_and_get_prompt(
+    output_summary: str,
+    document_type: str
+) -> tuple[str | None, str | None]:
+    """バリデーションを実行し、プロンプトを取得"""
+    if not output_summary:
+        return None, MESSAGES["VALIDATION"]["EVALUATION_NO_OUTPUT"]
+
+    if not settings.gemini_evaluation_model:
+        return None, MESSAGES["CONFIG"]["EVALUATION_MODEL_MISSING"]
+
+    with get_db_session() as db:
+        prompt_data = get_evaluation_prompt(db, document_type)
+        if not prompt_data:
+            return None, MESSAGES["VALIDATION"]["EVALUATION_PROMPT_NOT_SET"].format(
+                document_type=document_type
+            )
+        return cast(str, prompt_data.content), None
+
+
 def build_evaluation_prompt(
     prompt_template: str,
     input_text: str,
@@ -20,6 +52,7 @@ def build_evaluation_prompt(
     additional_info: str,
     output_summary: str
 ) -> str:
+    """評価用プロンプトを構築"""
     return f"""{prompt_template}
 
 【カルテ記載】
@@ -44,40 +77,13 @@ def execute_evaluation(
     output_summary: str
 ) -> EvaluationResponse:
     """出力評価を実行"""
-    if not output_summary:
-        return EvaluationResponse(
-            success=False,
-            evaluation_result="",
-            input_tokens=0,
-            output_tokens=0,
-            processing_time=0.0,
-            error_message=MESSAGES["VALIDATION"]["EVALUATION_NO_OUTPUT"]
-        )
+    prompt_template, error_msg = _validate_and_get_prompt(output_summary, document_type)
+    if error_msg:
+        return _error_response(error_msg)
 
-    if not settings.gemini_evaluation_model:
-        return EvaluationResponse(
-            success=False,
-            evaluation_result="",
-            input_tokens=0,
-            output_tokens=0,
-            processing_time=0.0,
-            error_message=MESSAGES["CONFIG"]["EVALUATION_MODEL_MISSING"]
-        )
-
-    with get_db_session() as db:
-        prompt_data = get_evaluation_prompt(db, document_type)
-        if not prompt_data:
-            return EvaluationResponse(
-                success=False,
-                evaluation_result="",
-                input_tokens=0,
-                output_tokens=0,
-                processing_time=0.0,
-                error_message=MESSAGES["VALIDATION"]["EVALUATION_PROMPT_NOT_SET"].format(
-                    document_type=document_type
-                )
-            )
-        prompt_template = cast(str, prompt_data.content)
+    assert prompt_template is not None
+    model_name = settings.gemini_evaluation_model
+    assert model_name is not None
 
     full_prompt = build_evaluation_prompt(
         prompt_template,
@@ -89,11 +95,11 @@ def execute_evaluation(
 
     start_time = time.time()
     try:
-        client = GeminiAPIClient(model_name=settings.gemini_evaluation_model)
+        client = GeminiAPIClient(model_name=model_name)
         client.initialize()
 
         evaluation_text, input_tokens, output_tokens = client._generate_content(
-            full_prompt, settings.gemini_evaluation_model
+            full_prompt, model_name
         )
         processing_time = time.time() - start_time
 
@@ -106,23 +112,10 @@ def execute_evaluation(
         )
 
     except APIError as e:
-        return EvaluationResponse(
-            success=False,
-            evaluation_result="",
-            input_tokens=0,
-            output_tokens=0,
-            processing_time=time.time() - start_time,
-            error_message=str(e)
-        )
+        return _error_response(str(e), time.time() - start_time)
     except Exception as e:
-        return EvaluationResponse(
-            success=False,
-            evaluation_result="",
-            input_tokens=0,
-            output_tokens=0,
-            processing_time=time.time() - start_time,
-            error_message=MESSAGES["ERROR"]["EVALUATION_API_ERROR"].format(error=str(e))
-        )
+        error_msg = MESSAGES["ERROR"]["EVALUATION_API_ERROR"].format(error=str(e))
+        return _error_response(error_msg, time.time() - start_time)
 
 
 def _run_sync_evaluation(
@@ -143,6 +136,7 @@ def _run_sync_evaluation(
     )
 
     model_name = settings.gemini_evaluation_model
+    assert model_name is not None
     client = GeminiAPIClient(model_name=model_name)
     client.initialize()
 
@@ -161,31 +155,13 @@ async def execute_evaluation_stream(
     output_summary: str
 ) -> AsyncGenerator[str, None]:
     """SSEストリーミングで評価を実行"""
-    if not output_summary:
+    prompt_template, error_msg = _validate_and_get_prompt(output_summary, document_type)
+    if error_msg:
         yield sse_event("error", {
             "success": False,
-            "error_message": MESSAGES["VALIDATION"]["EVALUATION_NO_OUTPUT"]
+            "error_message": error_msg
         })
         return
-
-    if not settings.gemini_evaluation_model:
-        yield sse_event("error", {
-            "success": False,
-            "error_message": MESSAGES["CONFIG"]["EVALUATION_MODEL_MISSING"]
-        })
-        return
-
-    with get_db_session() as db:
-        prompt_data = get_evaluation_prompt(db, document_type)
-        if not prompt_data:
-            yield sse_event("error", {
-                "success": False,
-                "error_message": MESSAGES["VALIDATION"]["EVALUATION_PROMPT_NOT_SET"].format(
-                    document_type=document_type
-                )
-            })
-            return
-        prompt_template = cast(str, prompt_data.content)
 
     start_time = time.time()
 
