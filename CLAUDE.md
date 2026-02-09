@@ -31,291 +31,430 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**MediDocsLMreferral** is a FastAPI-based medical document generation application that uses Claude (AWS Bedrock/API) and Gemini (Vertex AI) to create structured referral letters (診療情報提供書). The app features automatic model switching, hierarchical prompt management, and usage statistics tracking.
+Medical referral document generator using AI (Claude/Gemini) to create structured medical documents. FastAPI backend with PostgreSQL database, Vite/TypeScript/Tailwind frontend.
 
-## Essential Commands
+## Development Commands
 
 ### Backend Development
 
+**Run development server:**
 ```bash
-# Start development server with auto-reload
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
-# Production server
-uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-### Testing
-
+**Run all tests:**
 ```bash
-# Run all tests
 python -m pytest tests/ -v --tb=short
-
-# Run with coverage
-python -m pytest tests/ -v --tb=short --cov=app --cov-report=html
-
-# Run specific test file
-python -m pytest tests/services/test_summary_service.py -v
-
-# Run specific test
-python -m pytest tests/services/test_summary_service.py::test_generate_summary -v
-
-# Type checking
-pyright
 ```
 
-### Database Migrations
-
+**Run specific test file:**
 ```bash
-# Create new migration
-alembic revision --autogenerate -m "description"
+python -m pytest tests/services/test_summary_service.py -v
+```
 
-# Apply migrations
-alembic upgrade head
+**Run specific test:**
+```bash
+python -m pytest tests/services/test_summary_service.py::test_generate_summary -v
+```
 
-# Rollback one migration
-alembic downgrade -1
+**Run with coverage:**
+```bash
+python -m pytest tests/ -v --tb=short --cov=app --cov-report=html
+```
+
+**Type checking:**
+```bash
+pyright
 ```
 
 ### Frontend Development
 
+**Start development server (with HMR):**
 ```bash
 cd frontend
-
-# Install dependencies
-npm install
-
-# Development server (port 5173, proxies to :8000)
 npm run dev
+```
 
-# Type check
+**Type check:**
+```bash
+cd frontend
 npm run typecheck
+```
 
-# Production build (outputs to ../app/static/dist/)
+**Production build:**
+```bash
+cd frontend
 npm run build
 ```
 
-## Architecture and Key Patterns
+Build output goes to `app/static/dist/`.
 
-### Factory Pattern for AI Provider Management
+### Database Migrations
 
-The `app/external/api_factory.py` module provides functions to dynamically instantiate Claude or Gemini clients:
+**Create new migration:**
+```bash
+alembic revision --autogenerate -m "説明"
+```
+
+**Apply migrations:**
+```bash
+alembic upgrade head
+```
+
+**Rollback migration:**
+```bash
+alembic downgrade -1
+```
+
+Database URL is configured in `alembic/env.py` from `app.core.config`.
+
+## Architecture
+
+### Layered Architecture
+
+```
+API Layer (FastAPI routes)
+    ↓
+Service Layer (business logic)
+    ↓
+External API Layer (Claude/Gemini clients)
+    ↓
+Model Layer (SQLAlchemy ORM)
+```
+
+### Factory Pattern for API Clients
+
+The system dynamically selects API clients based on configuration:
 
 ```python
 from app.external.api_factory import create_client, APIProvider
 
-client = create_client(APIProvider.CLAUDE)
-result = client.generate_summary(medical_text, additional_info, ...)
+# Automatically selects Cloudflare vs Direct client based on env vars
+client = create_client(APIProvider.CLAUDE)  # or APIProvider.GEMINI
+result = client.generate_summary(...)
 ```
 
-### Service Layer Pattern
-
-Business logic is separated from API routes in `app/services/`:
-
-- **`summary_service.py`**: Document generation orchestration, automatic model switching logic
-- **`prompt_service.py`**: Hierarchical prompt resolution (doctor → department → document type → default)
-- **`evaluation_service.py`**: AI-based output evaluation
-- **`statistics_service.py`**: Usage metrics and statistics
+**Client selection logic** (`app/external/api_factory.py`):
+- If all Cloudflare env vars set (`CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_GATEWAY_ID`, `CLOUDFLARE_AIG_TOKEN`): use `CloudflareGeminiAPIClient` or `CloudflareClaudeAPIClient`
+- Otherwise: use `GeminiAPIClient` or `ClaudeAPIClient`
 
 ### Automatic Model Switching
 
-Implemented in `summary_service.py::determine_model()`:
-- Monitors input character count against `MAX_TOKEN_THRESHOLD` (default 100,000)
-- Automatically switches from Claude to Gemini when threshold is exceeded
-- Raises error if Gemini credentials are not configured
-- Model name retrieval is centralized in `prompt_service.py::get_selected_model()`
+**Location:** `app/services/model_selector.py`
+
+The `determine_model()` function automatically switches from Claude to Gemini when:
+- Input exceeds `MAX_TOKEN_THRESHOLD` (default 100,000 chars)
+- User selected Claude
+- Gemini is configured
+
+If Gemini not configured, returns error instead of switching.
 
 ### Hierarchical Prompt System
 
-Prompts are resolved in specificity order (`prompt_service.py`):
+**Location:** `app/services/prompt_service.py`
+
+Prompts are resolved in this order:
 1. Doctor + document type specific prompt
 2. Department + document type specific prompt
 3. Document type default prompt
-4. System default from `config.ini`
+4. System default
 
-This allows department-specific and doctor-specific customizations to override defaults.
+This allows per-department and per-doctor customization of document generation.
+
+### Service Layer Pattern
+
+Business logic is separated from API routes:
+
+- **`summary_service.py`**: Document generation orchestration
+  - Input validation
+  - Model selection logic
+  - API client orchestration
+  - Usage statistics tracking
+- **`prompt_service.py`**: Prompt CRUD and hierarchical resolution
+- **`evaluation_service.py`**: AI-based output evaluation
+- **`evaluation_prompt_service.py`**: Evaluation prompt management
+- **`statistics_service.py`**: Usage statistics aggregation
+- **`model_selector.py`**: Model selection and switching logic
+- **`usage_service.py`**: Usage tracking persistence
+- **`sse_helpers.py`**: Server-Sent Events utilities (heartbeat, event formatting)
 
 ### Constants Management
 
-`app/core/constants.py` centralizes all magic strings:
+**Location:** `app/core/constants.py`
+
+All constants are centralized here:
 - `ModelType` Enum: "Claude", "Gemini_Pro"
 - `APIProvider` Enum: CLAUDE, GEMINI
 - Department/doctor mappings
-- Document types and section names
-- User-facing messages
+- Document types: ["他院への紹介", "紹介元への逆紹介", "返書", "最終返書"]
+- User-facing messages (Japanese)
 
-Always use these constants instead of string literals.
+**CRITICAL:** Always use constants, never magic strings. Use `get_message(category, key, **kwargs)` for user messages.
 
-### API Authentication
+### Data Flow
 
-API key authentication (`app/core/security.py::verify_api_key`):
-- Configured via `MEDIDOCS_API_KEY` environment variable
-- If unset: authentication is skipped (development mode)
-- If set: requires `X-API-Key` header for `/api/*` public endpoints
-- Admin routes (prompts, statistics, settings) accessible via Web UI without auth
-- Public API routes (summary generation, evaluation) require authentication
-
-## Project Structure
-
-```
-app/
-├── api/                    # FastAPI route handlers
-│   ├── router.py           # Main router (admin + public API separation)
-│   ├── summary.py          # Document generation endpoints
-│   ├── prompts.py          # Prompt management endpoints
-│   ├── evaluation.py       # Output evaluation endpoints
-│   ├── statistics.py       # Statistics endpoints
-│   └── settings.py         # Settings endpoints
-├── core/                   # Core configuration
-│   ├── config.py           # Environment settings (Settings class)
-│   ├── constants.py        # Application constants and Enums
-│   ├── database.py         # Database connection
-│   └── security.py         # API key authentication
-├── external/               # External API integrations
-│   ├── api_factory.py      # API client factory (Factory pattern)
-│   ├── base_api.py         # Base API client
-│   ├── claude_api.py       # Claude/Bedrock integration
-│   └── gemini_api.py       # Gemini/Vertex AI integration
-├── models/                 # SQLAlchemy ORM models
-│   ├── prompt.py           # Prompt templates
-│   ├── evaluation_prompt.py # Evaluation prompts
-│   ├── usage.py            # Usage statistics
-│   └── setting.py          # Application settings
-├── schemas/                # Pydantic schemas (request/response)
-├── services/               # Business logic layer
-├── utils/                  # Utility functions
-│   ├── text_processor.py   # Text parsing and formatting
-│   ├── exceptions.py       # Custom exceptions
-│   └── error_handlers.py   # Error handling
-├── templates/              # Jinja2 templates
-└── main.py                 # FastAPI application entry point
-
-frontend/                   # Vite + TypeScript + Tailwind CSS
-├── src/
-│   ├── main.ts             # Entry point
-│   ├── app.ts              # Alpine.js application logic
-│   ├── types.ts            # TypeScript type definitions
-│   └── styles/main.css     # Tailwind CSS + custom styles
-
-tests/                      # Test suite (120+ tests)
-├── conftest.py             # Shared fixtures
-├── api/                    # API endpoint tests
-├── core/                   # Core functionality tests
-├── external/               # External API tests (mocked)
-├── services/               # Business logic tests
-└── test_utils/             # Utility tests
-```
-
-## Data Flow
-
-1. User submits medical record data via Web UI
+1. User submits medical text via web UI
 2. FastAPI endpoint receives and validates input
-3. `SummaryService` orchestrates document generation
+3. `SummaryService` orchestrates generation
 4. Factory pattern instantiates appropriate API client
-5. Auto model selection based on input length
+5. Model auto-selected based on input length
 6. AI generates structured medical document
 7. Text processor parses output into sections
-8. Usage statistics (tokens, time, cost) saved to PostgreSQL
+8. Usage stats (tokens, time, cost) saved to PostgreSQL
 9. Structured document returned to UI
 
-## Code Style Guidelines
+### SSE Streaming Endpoints
 
-- **Python**: PEP 8 compliant
-- **Type hints**: All functions must have parameter and return type hints
-- **Imports**: stdlib → third-party → local, alphabetically sorted (imports first, then from imports)
-- **Function size**: Target ≤50 lines
-- **Comments**: Japanese only for complex logic, no trailing period
-- **Constants**: Use `constants.py` Enums instead of magic strings
-- **Commit format**: Conventional commits with emoji prefixes (`✨ feat`, `🐛 fix`, `📝 docs`, `♻️ refactor`, `✅ test`)
+**Location:** `app/api/summary.py`, `app/api/evaluation.py`
 
-## Testing Strategy
+Endpoints with `/stream` suffix provide real-time streaming:
+- `/api/generate/stream`: Streams document generation
+- `/api/evaluate/stream`: Streams evaluation results
 
-Test order when adding new features:
-1. Write service layer tests first (TDD recommended)
-2. Add API integration tests
-3. Add external API tests with mocks if needed (use `pytest-mock`)
+Use `app/services/sse_helpers.py` utilities:
+- `sse_event()`: Format SSE messages
+- `stream_with_heartbeat()`: Add periodic heartbeat to prevent timeout
 
-Tests are organized by layer:
-- **API tests**: Endpoint and request/response validation
-- **Service tests**: Business logic unit tests
-- **External tests**: Provider integration with mocks
-- **DB tests**: ORM and database operations
-- **Utils tests**: Text processing and error handling
+### Authentication
 
-## Environment Configuration
+**Location:** `app/core/security.py`
 
-Key environment variables (`.env`):
+- API endpoints under `/api/*` require `X-API-Key` header when `MEDIDOCS_API_KEY` is set
+- Management endpoints (prompts, statistics, settings) are exempt from authentication
+- Web UI access does not require authentication
+- If `MEDIDOCS_API_KEY` not set, authentication is skipped (development mode)
 
-```env
-# Database
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your_password
-POSTGRES_DB=medidocs
+### CSRF Protection
 
-# Claude API (AWS Bedrock recommended)
-AWS_ACCESS_KEY_ID=your_aws_access_key
-AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-AWS_REGION=ap-northeast-1
-ANTHROPIC_MODEL=anthropic.claude-3-5-sonnet-20241022-v2:0
+**Location:** `app/core/security.py`
 
-# Gemini (Vertex AI)
-GOOGLE_CREDENTIALS_JSON={"type":"service_account",...}
-GOOGLE_PROJECT_ID=your-gcp-project-id
-GOOGLE_LOCATION=asia-northeast1
-GEMINI_MODEL=gemini-2.0-flash
+- All state-changing endpoints require CSRF token validation
+- Token generated using `CSRF_SECRET_KEY`
+- Token expires after `CSRF_TOKEN_EXPIRE_MINUTES` (default 60)
+- SSE endpoints also validate CSRF tokens
 
-# Authentication
-MEDIDOCS_API_KEY=your_api_key_here  # Optional, skips auth if unset
+## Code Style
 
-# Application
-MAX_TOKEN_THRESHOLD=100000
-SELECTED_AI_MODEL=Claude
+### Python
+
+- Follow PEP 8
+- Use type hints for all function parameters and return values
+- Import order: standard library → third-party → local modules
+  - Sort alphabetically within each group
+  - `import` statements first, then `from` imports
+- Keep functions under 50 lines
+- Comments only for complex logic, in Japanese, no period at end
+- Use constants from `app/core/constants.py`, never magic strings
+
+### TypeScript (Frontend)
+
+- All types defined in `frontend/src/types.ts`
+- Keep types in sync with Pydantic schemas
+- Use strict type checking (`typeCheckingMode: "standard"`)
+
+### Commit Messages
+
+Use conventional commit format with emoji prefixes:
+- `✨ feat`: New feature
+- `🐛 fix`: Bug fix
+- `📝 docs`: Documentation
+- `♻️ refactor`: Code refactoring
+- `✅ test`: Tests
+
+Write commit message content in Japanese explaining what and why.
+
+Example:
+```
+✨ feat(evaluation): 評価プロンプト管理機能を追加
+
+文書タイプごとに評価プロンプトをカスタマイズできるよう、
+評価プロンプトCRUDエンドポイントとサービスレイヤーを実装
 ```
 
-## Frontend Development
+## Testing
 
-Frontend uses **Vite + TypeScript + Tailwind CSS + Alpine.js**:
+**Location:** `tests/`
 
-- **Entry point**: `frontend/src/main.ts`
-- **Alpine.js logic**: `frontend/src/app.ts` (typed)
-- **Type definitions**: `frontend/src/types.ts` (sync with Pydantic schemas)
-- **Styles**: `frontend/src/styles/main.css` (use `@apply` for custom classes)
-- **Build output**: `app/static/dist/`
-- **Dev server**: Port 5173 with proxy to backend `:8000`
+### Test Structure
 
-Workflow:
-1. Add typed methods to `app.ts`
-2. Add type definitions to `types.ts`
-3. Reference in Jinja2 templates (`app/templates/`)
-4. Run `npm run typecheck` regularly
+- 120+ tests with comprehensive coverage
+- **API tests** (`tests/api/`): Endpoint integration tests
+- **Service tests** (`tests/services/`): Business logic unit tests
+- **External API tests** (`tests/external/`): Provider integration tests (mocked)
+- **Core tests** (`tests/core/`): Config, security, database tests
+- **Utility tests** (`tests/test_utils/`): Text processing, error handling
 
-## Common Tasks
+### Test Configuration
+
+- `pytest.ini`: Test discovery settings
+- `pyrightconfig.json`: Type checking excludes tests
+- Fixtures in `tests/conftest.py`
+
+### Adding Tests
+
+When adding new features:
+1. Write service layer tests first (TDD recommended)
+2. Add API integration tests
+3. Add external API tests with `pytest-mock` if needed
+
+Mock external API calls using `pytest-mock`:
+```python
+def test_example(mocker):
+    mock_client = mocker.patch("app.external.api_factory.create_client")
+    # test logic
+```
+
+## Environment Variables
+
+**Critical variables** (see README.md for complete list):
+
+### Database
+- `DATABASE_URL` or individual `POSTGRES_*` vars
+- `DB_POOL_SIZE`, `DB_MAX_OVERFLOW`, etc.
+
+### Claude API
+- AWS Bedrock: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `ANTHROPIC_MODEL`
+- Direct API: `CLAUDE_API_KEY`
+
+### Gemini API
+- `GOOGLE_CREDENTIALS_JSON`, `GOOGLE_PROJECT_ID`, `GOOGLE_LOCATION`
+- `GEMINI_MODEL`, `GEMINI_THINKING_LEVEL`
+
+### Cloudflare (optional)
+- `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_GATEWAY_ID`, `CLOUDFLARE_AIG_TOKEN`
+
+### Application
+- `MAX_TOKEN_THRESHOLD`: Auto-switch threshold (default 100,000)
+- `SELECTED_AI_MODEL`: Default model ("Claude" or "Gemini_Pro")
+- `CSRF_SECRET_KEY`, `CSRF_TOKEN_EXPIRE_MINUTES`
+- `MEDIDOCS_API_KEY`: API authentication key (optional)
+
+## Common Patterns
+
+### Adding a New Endpoint
+
+1. Create Pydantic schema in `app/schemas/`
+2. Add service function in `app/services/`
+3. Add route in `app/api/`
+4. Add tests in `tests/api/` and `tests/services/`
+5. Update frontend types in `frontend/src/types.ts` if needed
 
 ### Adding a New AI Provider
 
-1. Create client in `app/external/` extending `BaseAPI`
-2. Add provider to `APIProvider` enum in `api_factory.py`
-3. Update factory's `create_client()` method
-4. Add configuration to `app/core/config.py`
-5. Add tests in `tests/external/`
+1. Create client class inheriting from `BaseAPIClient` in `app/external/`
+2. Add provider to `APIProvider` enum in `app/external/api_factory.py`
+3. Update `create_client()` factory function
+4. Add tests in `tests/external/`
+
+### Adding Constants
+
+Add to `app/core/constants.py`:
+```python
+# For enums
+class NewEnum(str, Enum):
+    VALUE1 = "value1"
+    VALUE2 = "value2"
+
+# For messages
+MESSAGES["CATEGORY"]["KEY"] = "メッセージ内容"
+```
+
+Then use:
+```python
+from app.core.constants import NewEnum, get_message
+
+value = NewEnum.VALUE1
+msg = get_message("CATEGORY", "KEY", placeholder="value")
+```
+
+## Frontend Architecture
+
+**Location:** `frontend/`
+
+- **Vite** for fast development and building
+- **TypeScript** for type safety
+- **Tailwind CSS** for styling
+- **Alpine.js** for reactive components
+- **Jinja2** for server-side templates
+
+### Development
+
+- Frontend dev server runs on port 5173
+- API requests proxy to `http://localhost:8000`
+- HMR (Hot Module Replacement) enabled
+- Build outputs to `app/static/dist/`
+
+### File Structure
+
+- `frontend/src/main.ts`: Entry point
+- `frontend/src/app.ts`: Alpine.js application logic
+- `frontend/src/types.ts`: TypeScript type definitions
+- `frontend/src/styles/main.css`: Tailwind + custom styles
+- `app/templates/`: Jinja2 templates
+- `app/templates/components/`: Reusable components
+- `app/templates/macros.html`: UI component macros
+
+## Common Tasks
 
 ### Adding a New Document Type
 
 1. Add to `DOCUMENT_TYPES` in `app/core/constants.py`
-2. Add purpose mapping in `DOCUMENT_TYPE_TO_PURPOSE_MAPPING`
-3. Create default prompt in database or `config.ini`
-4. Update frontend type definitions in `frontend/src/types.ts`
+2. Add purpose mapping to `DOCUMENT_TYPE_TO_PURPOSE_MAPPING`
+3. Update frontend dropdown in templates
+4. Add default prompt if needed
+5. Update tests
 
-### Modifying Prompt Resolution
+### Adding a New Department/Doctor
 
-Edit `app/services/prompt_service.py` - the hierarchical resolution logic is centralized in `get_prompt()`.
+1. Update `DEPARTMENT_DOCTORS_MAPPING` in `app/core/constants.py`
+2. Update `DEFAULT_DEPARTMENT` and `DEFAULT_DOCTOR` if needed
+3. Frontend will auto-populate from settings endpoint
+
+### Modifying Model Switching Logic
+
+Edit `app/services/model_selector.py`:
+- `determine_model()`: Auto-switching logic
+- `get_provider_and_model()`: Provider/model mapping
+
+### Changing Prompt Resolution
+
+Edit `app/services/prompt_service.py`:
+- `get_prompt()`: Hierarchical prompt resolution
+- `get_selected_model()`: Model name resolution
+
+## Troubleshooting
+
+### Tests Failing
+
+- Check `.env.test` file is configured
+- Ensure database migrations are up to date
+- Verify external API calls are mocked
+- Look for error messages in Japanese in `app/core/constants.py`
+
+### Frontend Not Building
+
+- Run `npm install` in `frontend/` directory
+- Check `vite.config.ts` paths are correct
+- Ensure TypeScript types match backend schemas
+
+### API Errors
+
+- Check environment variables are set
+- Verify API keys are valid
+- Check Cloudflare settings if using AI Gateway
+- Review logs for specific error messages
+
+### Database Connection Issues
+
+- Verify PostgreSQL is running
+- Check `DATABASE_URL` or individual `POSTGRES_*` variables
+- Ensure database exists: `createdb medidocs`
+- Run migrations: `alembic upgrade head`
 
 ## Important Notes
 
-- Tables are auto-created on first run via SQLAlchemy
-- Use Alembic for schema changes in production
-- Always mock external API calls in tests
-- Frontend and backend type definitions should be kept in sync
-- Review all AI-generated medical content before clinical use (disclaimer applies)
+- **Medical Application:** All AI-generated content must be reviewed by medical professionals
+- **Security:** Never commit `.env` files, rotate API keys regularly
+- **Language:** User-facing messages are in Japanese, code comments in Japanese only for complex logic
+- **Testing:** Maintain comprehensive test coverage (120+ tests)
+- **Type Safety:** Use type hints everywhere, run `pyright` before committing
