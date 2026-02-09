@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Union
 
 from app.core.config import get_settings
-from app.core.constants import DEFAULT_DOCUMENT_TYPE, MESSAGES
+from app.core.constants import DEFAULT_DOCUMENT_TYPE, MESSAGES, get_message
 from app.external.base_api import BaseAPIClient
 from app.external.claude_api import ClaudeAPIClient
 from app.external.cloudflare_claude_api import CloudflareClaudeAPIClient
@@ -35,9 +35,9 @@ def create_client(provider: Union[APIProvider, str]) -> BaseAPIClient:
             settings.cloudflare_gateway_id,
             settings.cloudflare_aig_token,
         ]):
-            logger.info("APIクライアント選択: CloudflareGeminiAPIClient (Cloudflare AI Gateway経由)")
+            logger.info(get_message("LOG", "CLIENT_CLOUDFLARE_GEMINI"))
             return CloudflareGeminiAPIClient()
-        logger.info("APIクライアント選択: GeminiAPIClient (Direct Vertex AI)")
+        logger.info(get_message("LOG", "CLIENT_DIRECT_GEMINI"))
         return GeminiAPIClient()
 
     if provider == APIProvider.CLAUDE:
@@ -46,9 +46,9 @@ def create_client(provider: Union[APIProvider, str]) -> BaseAPIClient:
             settings.cloudflare_gateway_id,
             settings.cloudflare_aig_token,
         ]):
-            logger.info("APIクライアント選択: CloudflareClaudeAPIClient (Cloudflare AI Gateway経由)")
+            logger.info(get_message("LOG", "CLIENT_CLOUDFLARE_CLAUDE"))
             return CloudflareClaudeAPIClient()
-        logger.info("APIクライアント選択: ClaudeAPIClient (Direct Amazon Bedrock)")
+        logger.info(get_message("LOG", "CLIENT_DIRECT_CLAUDE"))
         return ClaudeAPIClient()
 
     logger.error(MESSAGES["ERROR"]["UNSUPPORTED_API_PROVIDER"].format(provider=provider))

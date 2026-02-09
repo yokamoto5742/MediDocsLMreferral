@@ -81,6 +81,7 @@ MESSAGES: dict[str, dict[str, str]] = {
         "STATISTICS_AGGREGATED_LOAD_FAILED": "集計データの読み込みに失敗しました",
         "STATISTICS_RECORDS_LOAD_FAILED": "使用履歴の読み込みに失敗しました",
         "EVALUATION_PROMPT_NOT_FOUND": "{document_type}の評価プロンプトが見つかりません",
+        "USAGE_SAVE_FAILED": "使用統計の保存に失敗しました: {error}",
     },
     "CONFIG": {
         "ANTHROPIC_MODEL_MISSING": "ANTHROPIC_MODELが設定されていません。環境変数を確認してください。",
@@ -139,6 +140,12 @@ MESSAGES: dict[str, dict[str, str]] = {
         "DELETE_PROMPT": "このプロンプトを削除してもよろしいですか？",
         "DELETE_EVALUATION_PROMPT": "「{document_type}」の評価プロンプトを削除してもよろしいですか？",
         "RE_EVALUATE": "前回の評価をクリアして再評価しますか？",
+    },
+    "LOG": {
+        "CLIENT_CLOUDFLARE_GEMINI": "APIクライアント選択: CloudflareGeminiAPIClient",
+        "CLIENT_DIRECT_GEMINI": "APIクライアント選択: GeminiAPIClient (Direct Vertex AI)",
+        "CLIENT_CLOUDFLARE_CLAUDE": "APIクライアント選択: CloudflareClaudeAPIClient",
+        "CLIENT_DIRECT_CLAUDE": "APIクライアント選択: ClaudeAPIClient (Direct Amazon Bedrock)",
     },
 }
 

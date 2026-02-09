@@ -32,7 +32,7 @@ def _error_response(
 
 
 def validate_input(medical_text: str) -> tuple[bool, str | None]:
-    """入力検証"""
+    """テキスト入力検証"""
     if not medical_text or not medical_text.strip():
         return False, MESSAGES["VALIDATION"]["NO_INPUT"]
 
@@ -208,7 +208,6 @@ async def execute_summary_generation_stream(
         if isinstance(item, str):
             yield item
         else:
-            # resultタプル
             full_text, input_tokens, output_tokens = item
             processing_time = time.time() - start_time
 

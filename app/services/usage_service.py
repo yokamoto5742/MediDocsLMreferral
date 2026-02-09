@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from app.core.constants import get_message
 from app.core.database import get_db_session
 from app.models.usage import SummaryUsage
 
@@ -18,7 +19,6 @@ def save_usage(
     processing_time: float,
 ) -> None:
     """使用統計を保存"""
-
     try:
         with get_db_session() as db:
             usage = SummaryUsage(
@@ -35,4 +35,4 @@ def save_usage(
             db.add(usage)
     except Exception as e:
         # ログに記録するがエラーは無視
-        logging.error(f"Failed to save usage statistics: {e}", exc_info=True)
+        logging.error(get_message("ERROR", "USAGE_SAVE_FAILED", error=str(e)), exc_info=True)
