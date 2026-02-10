@@ -27,7 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - DRY原則：コードを重複させないでください。類似のロジックが2箇所に存在する場合は、共有関数にリファクタリングしてください。それぞれに独自の実装が必要な場合はその理由を明確にしてください。
 - コメント:分かりにくいロジックについては説明を加えます。説明不要のコードには過剰なコメントはつけないでください。
 - コメントとdocstringは必要最小限に日本語で記述します。文末に"。"や"."をつけないでください。
-- このアプリのUI画面で表示するメッセージはすべて日本語にします。app/core/constants.pyで一元管理します。
+- このアプリのUI画面で表示するメッセージはすべて日本語にします。constants.pyで一元管理します。
 
 ## Project Overview
 
@@ -215,15 +215,6 @@ Use `app/services/sse_helpers.py` utilities:
 - `sse_event()`: Format SSE messages
 - `stream_with_heartbeat()`: Add periodic heartbeat to prevent timeout
 
-### Authentication
-
-**Location:** `app/core/security.py`
-
-- API endpoints under `/api/*` require `X-API-Key` header when `MEDIDOCS_API_KEY` is set
-- Management endpoints (prompts, statistics, settings) are exempt from authentication
-- Web UI access does not require authentication
-- If `MEDIDOCS_API_KEY` not set, authentication is skipped (development mode)
-
 ### CSRF Protection
 
 **Location:** `app/core/security.py`
@@ -277,7 +268,6 @@ Example:
 
 ### Test Structure
 
-- 120+ tests with comprehensive coverage
 - **API tests** (`tests/api/`): Endpoint integration tests
 - **Service tests** (`tests/services/`): Business logic unit tests
 - **External API tests** (`tests/external/`): Provider integration tests (mocked)
@@ -314,7 +304,6 @@ def test_example(mocker):
 
 ### Claude API
 - AWS Bedrock: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `ANTHROPIC_MODEL`
-- Direct API: `CLAUDE_API_KEY`
 
 ### Gemini API
 - `GOOGLE_CREDENTIALS_JSON`, `GOOGLE_PROJECT_ID`, `GOOGLE_LOCATION`
@@ -327,7 +316,6 @@ def test_example(mocker):
 - `MAX_TOKEN_THRESHOLD`: Auto-switch threshold (default 100,000)
 - `SELECTED_AI_MODEL`: Default model ("Claude" or "Gemini_Pro")
 - `CSRF_SECRET_KEY`, `CSRF_TOKEN_EXPIRE_MINUTES`
-- `MEDIDOCS_API_KEY`: API authentication key (optional)
 
 ## Common Patterns
 
