@@ -253,7 +253,7 @@ class TestSaveUsage:
 
         # 警告メッセージが出力されることを確認
         mock_logging_error.assert_called_once()
-        assert "Failed to save usage statistics" in str(mock_logging_error.call_args)
+        assert "使用統計の保存に失敗しました" in str(mock_logging_error.call_args)
 
 
 class TestExecuteSummaryGeneration:
