@@ -34,7 +34,7 @@
 - **Python** 3.13以上
 - **PostgreSQL** 16以上
 - **Node.js** 18以上（フロントエンド開発用）
-- **AI APIアカウント**（下記いずれかまたは複数）:
+- **AI APIアカウント**:
   - AWS BedrockアクセスのClaude API
   - Vertex AIが有効化されたGoogle Cloud Platformアカウント
 
@@ -95,19 +95,12 @@ DB_POOL_RECYCLE=1800
 DATABASE_URL=postgresql://user:password@host:port/database
 ```
 
-### Claude API設定
-
-**AWS Bedrock（推奨）:**
+### Claude API設定(AWS Bedrock)
 ```env
 AWS_ACCESS_KEY_ID=your_aws_access_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret_key
 AWS_REGION=ap-northeast-1
 ANTHROPIC_MODEL=anthropic.claude-3-5-sonnet-20241022-v2:0
-```
-
-**直接API:**
-```env
-CLAUDE_API_KEY=your_anthropic_api_key
 ```
 
 ### Google Vertex AI設定
@@ -122,7 +115,7 @@ GEMINI_MODEL=gemini-2.0-flash
 GEMINI_THINKING_LEVEL=HIGH
 ```
 
-### Cloudflare AI Gateway設定（オプション）
+### Cloudflare AI Gateway設定
 ```env
 # Cloudflare設定が全て揃うとCloudflareを経由したGemini APIを使用
 CLOUDFLARE_ACCOUNT_ID=your_account_id
@@ -427,9 +420,8 @@ pyright
 
 ### AI/ML統合
 - **AWS Bedrock**: Claude API へのアクセス
-- **Anthropic API**: 直接 Claude API 利用
 - **Google Vertex AI**: Gemini API への統合
-- **Cloudflare AI Gateway**: API プロキシング（オプション）
+- **Cloudflare AI Gateway**: API プロキシング
 
 ### フロントエンド
 - **Vite**: 高速フロントエンドビルドツール
