@@ -453,7 +453,7 @@ pyright
 - ユーザー名とパスワードを確認
 
 ### AI APIエラー
-- 環境変数`CLAUDE_API_KEY`または AWS 認証情報を確認
+- AWS 認証情報を確認
 - API キーの有効期限とアカウント余額を確認
 - Google Cloud プロジェクト ID と認証情報が正しいか確認
 - Cloudflare設定を使用する場合、`CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_GATEWAY_ID`、`CLOUDFLARE_AIG_TOKEN`が全て設定されているか確認

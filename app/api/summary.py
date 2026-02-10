@@ -60,7 +60,7 @@ async def generate_summary_stream(request: SummaryRequest):
 def get_available_models():
     """利用可能なモデル一覧を取得"""
     models = []
-    if settings.anthropic_model or settings.claude_api_key:
+    if settings.anthropic_model:
         models.append(ModelType.CLAUDE.value)
     if settings.gemini_model:
         models.append(ModelType.GEMINI_PRO.value)

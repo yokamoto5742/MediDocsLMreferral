@@ -17,8 +17,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Automatic Notifications (Hooks)
 自動通知は`.claude/settings.local.json` で設定済：
+- **PreToolUse Hook (AskUserQuestion)**: Claude Codeがユーザーに質問する前に「Claude Codeがユーザーに質問しています」と通知
 - **Stop Hook**: ユーザーがClaude Codeを停止した時に「作業が完了しました」と通知
-- **SessionEnd Hook**: セッション終了時に「Claude Code セッションが終了しました」と通知
+- **SessionEnd Hook**: セッション終了時に「セッションが終了しました」と通知
 
 ## クリーンコードガイドライン
 - 関数のサイズ：関数は50行以下に抑えることを目標にしてください。関数の処理が多すぎる場合は、より小さな関数に分割してください。
