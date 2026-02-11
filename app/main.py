@@ -68,6 +68,7 @@ def get_common_context(active_page: str = "index") -> dict:
         "active_page": active_page,
         "csrf_token": generate_csrf_token(settings),
         "messages": FRONTEND_MESSAGES,
+        "prompt_management": settings.prompt_management,
     }
 
 
