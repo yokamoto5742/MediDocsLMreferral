@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     selected_ai_model: str = ModelType.CLAUDE.value
 
     # CSRF認証
-    csrf_secret_key: str
+    csrf_secret_key: str = "default-csrf-secret-key"
     csrf_token_expire_minutes: int = 60
 
     # CORS設定

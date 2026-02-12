@@ -113,7 +113,7 @@ def validate_medical_input(text: str, max_length: int = 100000) -> Tuple[bool, s
         return False, f"入力テキストが長すぎます（最大{max_length}文字）"
 
     # プロンプトインジェクション検出
-    is_suspicious, patterns = detect_prompt_injection(text)
+    is_suspicious, _ = detect_prompt_injection(text)
     if is_suspicious:
         return False, "入力テキストに不正なパターンが検出されました"
 
