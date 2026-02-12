@@ -135,7 +135,10 @@ function evaluationPromptsPage() {
             if (!confirm(`「${docType}」の評価プロンプトを削除してもよろしいですか？`)) return;
 
             try {
-                const response = await fetch(`/api/evaluation/prompts/${encodeURIComponent(docType)}`, { method: 'DELETE' });
+                const response = await fetch(`/api/evaluation/prompts/${encodeURIComponent(docType)}`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-Token': window.CSRF_TOKEN }
+                });
                 const data = await response.json();
                 if (data.success) {
                     this.successMessage = data.message;

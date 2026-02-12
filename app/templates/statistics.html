@@ -256,6 +256,9 @@ function statisticsPage() {
                 if (this.filter.documentType) params.append('document_type', this.filter.documentType);
 
                 const response = await fetch(`/api/statistics/aggregated?${params}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
                 this.aggregatedRecords = await response.json();
             } catch (e) {
                 this.error = window.MESSAGES.ERROR.STATISTICS_AGGREGATED_LOAD_FAILED;
@@ -287,6 +290,9 @@ function statisticsPage() {
                 if (this.filter.documentType) params.append('document_type', this.filter.documentType);
 
                 const response = await fetch(`/api/statistics/records?${params}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
                 this.records = await response.json();
                 this.totalRecords = this.records.length > 0 ? this.pagination.offset + this.records.length + (this.records.length === parseInt(this.pagination.limit) ? 1 : 0) : 0;
             } catch (e) {
