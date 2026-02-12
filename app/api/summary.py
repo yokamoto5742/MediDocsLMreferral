@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
 from app.core.config import get_settings
@@ -16,8 +16,9 @@ settings = get_settings()
 
 
 @protected_router.post("/generate", response_model=SummaryResponse)
-def generate_summary(request: SummaryRequest):
+def generate_summary(http_request: Request, request: SummaryRequest):
     """文書生成API"""
+    user_ip = http_request.client.host if http_request.client else None
     return execute_summary_generation(
         medical_text=request.medical_text,
         additional_info=request.additional_info,
@@ -28,12 +29,14 @@ def generate_summary(request: SummaryRequest):
         document_type=request.document_type,
         model=request.model,
         model_explicitly_selected=request.model_explicitly_selected,
+        user_ip=user_ip,
     )
 
 
 @protected_router.post("/generate-stream")
-async def generate_summary_stream(request: SummaryRequest):
+async def generate_summary_stream(http_request: Request, request: SummaryRequest):
     """SSEストリーミング文書生成API"""
+    user_ip = http_request.client.host if http_request.client else None
     event_generator = execute_summary_generation_stream(
         medical_text=request.medical_text,
         additional_info=request.additional_info,
@@ -44,6 +47,7 @@ async def generate_summary_stream(request: SummaryRequest):
         document_type=request.document_type,
         model=request.model,
         model_explicitly_selected=request.model_explicitly_selected,
+        user_ip=user_ip,
     )
     return StreamingResponse(
         event_generator,

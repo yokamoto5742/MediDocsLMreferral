@@ -161,11 +161,10 @@ class TestGetSecretKey:
         key = get_secret_key(mock_settings)
         assert key == b"test-secret-key"
 
-    def test_generates_random_key_when_not_configured(self):
-        """未設定時はランダム鍵を生成"""
+    def test_requires_configured_key(self):
+        """csrf_secret_keyが必須であることをテスト"""
         mock_settings = MagicMock()
-        mock_settings.csrf_secret_key = None
+        mock_settings.csrf_secret_key = "required-secret-key"
 
         key = get_secret_key(mock_settings)
-        assert isinstance(key, bytes)
-        assert len(key) == 32
+        assert key == b"required-secret-key"

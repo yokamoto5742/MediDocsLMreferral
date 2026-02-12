@@ -4,7 +4,7 @@ from app.api import evaluation, prompts, settings, statistics, summary
 from app.core.security import require_csrf_token
 
 # 管理用ルーター（Web UIから使用）
-admin_router = APIRouter()
+admin_router = APIRouter(dependencies=[Depends(require_csrf_token)])
 admin_router.include_router(prompts.router)
 admin_router.include_router(settings.router)
 admin_router.include_router(statistics.router)

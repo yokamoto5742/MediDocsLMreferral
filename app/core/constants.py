@@ -147,6 +147,19 @@ MESSAGES: dict[str, dict[str, str]] = {
         "CLIENT_CLOUDFLARE_CLAUDE": "APIクライアント選択: CloudflareClaudeAPIClient",
         "CLIENT_DIRECT_CLAUDE": "APIクライアント選択: ClaudeAPIClient (Direct Amazon Bedrock)",
     },
+    "AUDIT": {
+        "DOCUMENT_GENERATION_START": "文書生成開始",
+        "DOCUMENT_GENERATION_SUCCESS": "文書生成完了",
+        "DOCUMENT_GENERATION_FAILURE": "文書生成失敗",
+        "EVALUATION_START": "評価開始",
+        "EVALUATION_SUCCESS": "評価完了",
+        "EVALUATION_FAILURE": "評価失敗",
+        "PROMPT_CREATED": "プロンプト作成",
+        "PROMPT_UPDATED": "プロンプト更新",
+        "PROMPT_DELETED": "プロンプト削除",
+        "EVALUATION_PROMPT_SAVED": "評価プロンプト保存",
+        "EVALUATION_PROMPT_DELETED": "評価プロンプト削除",
+    },
 }
 
 

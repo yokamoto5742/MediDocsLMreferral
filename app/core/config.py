@@ -54,8 +54,8 @@ class Settings(BaseSettings):
     selected_ai_model: str = ModelType.CLAUDE.value
 
     # CSRF認証
-    csrf_secret_key: str | None = None
-    csrf_token_expire_minutes: int = 60  # トークン有効期限（分）
+    csrf_secret_key: str
+    csrf_token_expire_minutes: int = 60
 
     def get_database_url(self) -> str:
         """データベース接続URLを構築"""

@@ -1,10 +1,12 @@
 import hashlib
 import hmac
-import secrets
 import time
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import APIKeyHeader
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
 
 from app.core.config import Settings, get_settings
 
@@ -12,24 +14,9 @@ from app.core.config import Settings, get_settings
 CSRF_TOKEN_HEADER = APIKeyHeader(name="X-CSRF-Token", auto_error=False)
 
 
-def _get_secret_key(settings: Settings) -> bytes:
-    """CSRF署名用の秘密鍵を取得"""
-    if settings.csrf_secret_key:
-        return settings.csrf_secret_key.encode()
-    # 未設定時はランダム生成（サーバー再起動で無効化）
-    return secrets.token_bytes(32)
-
-
-# サーバー起動時の秘密鍵をキャッシュ
-_SECRET_KEY_CACHE: dict[str, bytes] = {}
-
-
 def get_secret_key(settings: Settings) -> bytes:
-    """秘密鍵をキャッシュして返す"""
-    cache_key = settings.csrf_secret_key or "_random_"
-    if cache_key not in _SECRET_KEY_CACHE:
-        _SECRET_KEY_CACHE[cache_key] = _get_secret_key(settings)
-    return _SECRET_KEY_CACHE[cache_key]
+    """CSRF署名用の秘密鍵を取得"""
+    return settings.csrf_secret_key.encode()
 
 
 def generate_csrf_token(settings: Settings) -> str:
@@ -88,3 +75,37 @@ async def require_csrf_token(
         )
 
     return csrf_token
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """セキュリティヘッダーをレスポンスに追加"""
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        response = await call_next(request)
+
+        # MIMEスニッフィング防止
+        response.headers["X-Content-Type-Options"] = "nosniff"
+
+        # クリックジャッキング防止
+        response.headers["X-Frame-Options"] = "DENY"
+
+        # XSS保護
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+
+        # HSTS（HTTPS環境のみ）
+        if request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
+        # CSP設定
+        csp_directives = [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline'",
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' data:",
+            "font-src 'self'",
+            "connect-src 'self'",
+            "frame-ancestors 'none'",
+        ]
+        response.headers["Content-Security-Policy"] = "; ".join(csp_directives)
+
+        return response

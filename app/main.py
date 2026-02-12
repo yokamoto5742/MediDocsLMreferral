@@ -16,7 +16,7 @@ from app.core.constants import (
     FRONTEND_MESSAGES,
     ModelType,
 )
-from app.core.security import generate_csrf_token
+from app.core.security import SecurityHeadersMiddleware, generate_csrf_token
 from app.utils.error_handlers import api_exception_handler, validation_exception_handler
 
 settings = get_settings()
@@ -32,6 +32,9 @@ app = FastAPI(
     docs_url=None, # 開発段階では "/api/docs"
     redoc_url=None,
 )
+
+# セキュリティヘッダーミドルウェアを追加
+app.add_middleware(SecurityHeadersMiddleware)
 
 # エラーハンドラーを登録
 app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore[arg-type]

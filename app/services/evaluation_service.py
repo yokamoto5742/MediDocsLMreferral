@@ -2,13 +2,15 @@ import time
 from typing import AsyncGenerator, cast
 
 from app.core.config import get_settings
-from app.core.constants import MESSAGES
+from app.core.constants import MESSAGES, get_message
 from app.core.database import get_db_session
 from app.external.gemini_api import GeminiAPIClient
 from app.schemas.evaluation import EvaluationResponse
 from app.services.evaluation_prompt_service import get_evaluation_prompt
 from app.services.sse_helpers import sse_event, stream_with_heartbeat
+from app.utils.audit_logger import log_audit_event
 from app.utils.exceptions import APIError
+from app.utils.input_sanitizer import sanitize_medical_text
 
 settings = get_settings()
 
@@ -74,11 +76,32 @@ def execute_evaluation(
     input_text: str,
     current_prescription: str,
     additional_info: str,
-    output_summary: str
+    output_summary: str,
+    user_ip: str | None = None,
 ) -> EvaluationResponse:
     """出力評価を実行"""
+    # 監査ログ: 開始
+    log_audit_event(
+        event_type=get_message("AUDIT", "EVALUATION_START"),
+        user_ip=user_ip,
+        document_type=document_type,
+    )
+
+    # サニタイゼーション適用
+    input_text = sanitize_medical_text(input_text)
+    current_prescription = sanitize_medical_text(current_prescription or "")
+    additional_info = sanitize_medical_text(additional_info or "")
+    output_summary = sanitize_medical_text(output_summary)
+
     prompt_template, error_msg = _validate_and_get_prompt(output_summary, document_type)
     if error_msg:
+        log_audit_event(
+            event_type=get_message("AUDIT", "EVALUATION_FAILURE"),
+            user_ip=user_ip,
+            document_type=document_type,
+            success=False,
+            error_message=error_msg,
+        )
         return _error_response(error_msg)
 
     assert prompt_template is not None
@@ -103,6 +126,16 @@ def execute_evaluation(
         )
         processing_time = time.time() - start_time
 
+        # 監査ログ: 成功
+        log_audit_event(
+            event_type=get_message("AUDIT", "EVALUATION_SUCCESS"),
+            user_ip=user_ip,
+            document_type=document_type,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            processing_time=processing_time,
+        )
+
         return EvaluationResponse(
             success=True,
             evaluation_result=evaluation_text,
@@ -112,9 +145,23 @@ def execute_evaluation(
         )
 
     except APIError as e:
+        log_audit_event(
+            event_type=get_message("AUDIT", "EVALUATION_FAILURE"),
+            user_ip=user_ip,
+            document_type=document_type,
+            success=False,
+            error_message=str(e),
+        )
         return _error_response(str(e), time.time() - start_time)
     except Exception as e:
         error_msg = MESSAGES["ERROR"]["EVALUATION_API_ERROR"].format(error=str(e))
+        log_audit_event(
+            event_type=get_message("AUDIT", "EVALUATION_FAILURE"),
+            user_ip=user_ip,
+            document_type=document_type,
+            success=False,
+            error_message=error_msg,
+        )
         return _error_response(error_msg, time.time() - start_time)
 
 
@@ -152,11 +199,32 @@ async def execute_evaluation_stream(
     input_text: str,
     current_prescription: str,
     additional_info: str,
-    output_summary: str
+    output_summary: str,
+    user_ip: str | None = None,
 ) -> AsyncGenerator[str, None]:
     """SSEストリーミングで評価を実行"""
+    # 監査ログ: 開始
+    log_audit_event(
+        event_type=get_message("AUDIT", "EVALUATION_START"),
+        user_ip=user_ip,
+        document_type=document_type,
+    )
+
+    # サニタイゼーション適用
+    input_text = sanitize_medical_text(input_text)
+    current_prescription = sanitize_medical_text(current_prescription or "")
+    additional_info = sanitize_medical_text(additional_info or "")
+    output_summary = sanitize_medical_text(output_summary)
+
     prompt_template, error_msg = _validate_and_get_prompt(output_summary, document_type)
     if error_msg:
+        log_audit_event(
+            event_type=get_message("AUDIT", "EVALUATION_FAILURE"),
+            user_ip=user_ip,
+            document_type=document_type,
+            success=False,
+            error_message=error_msg,
+        )
         yield sse_event("error", {
             "success": False,
             "error_message": error_msg
@@ -181,6 +249,17 @@ async def execute_evaluation_stream(
         else:
             evaluation_text, input_tokens, output_tokens = item
             processing_time = time.time() - start_time
+
+            # 監査ログ: 成功
+            log_audit_event(
+                event_type=get_message("AUDIT", "EVALUATION_SUCCESS"),
+                user_ip=user_ip,
+                document_type=document_type,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                processing_time=processing_time,
+            )
+
             yield sse_event("complete", {
                 "success": True,
                 "evaluation_result": evaluation_text,

@@ -74,13 +74,23 @@ class TestCsrfAuthentication:
         response = client.get("/")
         assert response.status_code == 200
 
-    def test_admin_endpoints_do_not_require_csrf(self, client: TestClient):
-        """管理用エンドポイント（/api/settings等）はCSRF認証不要"""
+    def test_admin_endpoints_require_csrf(self, client: TestClient, csrf_headers):
+        """管理用エンドポイント（/api/settings等）はCSRF認証必須"""
+        # CSRF トークンなしでは401エラー
         response = client.get("/api/settings/departments")
+        assert response.status_code == 401
+
+        # CSRF トークンありでは成功
+        response = client.get("/api/settings/departments", headers=csrf_headers)
         assert response.status_code == 200
         assert "departments" in response.json()
 
-    def test_models_endpoint_does_not_require_csrf(self, client: TestClient):
-        """モデル一覧エンドポイントはCSRF認証不要"""
+    def test_models_endpoint_requires_csrf(self, client: TestClient, csrf_headers):
+        """モデル一覧エンドポイントはCSRF認証必須"""
+        # CSRF トークンなしでは401エラー
         response = client.get("/api/summary/models")
+        assert response.status_code == 401
+
+        # CSRF トークンありでは成功
+        response = client.get("/api/summary/models", headers=csrf_headers)
         assert response.status_code == 200

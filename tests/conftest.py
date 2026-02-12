@@ -23,13 +23,12 @@ from app.models.usage import SummaryUsage
 
 
 @pytest.fixture(scope="function", autouse=True)
-def override_settings():
+def override_settings(monkeypatch):
     """テスト環境用の設定をオーバーライド"""
+    monkeypatch.setenv("CSRF_SECRET_KEY", "test-csrf-secret-key")
+
     def get_test_settings():
-        settings = Settings()
-        # テスト環境ではCSRF秘密鍵を固定値に設定
-        settings.csrf_secret_key = "test-csrf-secret-key"
-        return settings
+        return Settings()
 
     app.dependency_overrides[get_settings] = get_test_settings
     yield
@@ -128,10 +127,9 @@ def sample_usage_records(test_db):
 
 
 @pytest.fixture
-def csrf_headers():
+def csrf_headers(monkeypatch):
     """CSRFトークン付きヘッダーを生成"""
+    monkeypatch.setenv("CSRF_SECRET_KEY", "test-csrf-secret-key")
     settings = Settings()
-    settings.csrf_secret_key = "test-csrf-secret-key"
-    settings.csrf_token_expire_minutes = 60
     token = generate_csrf_token(settings)
     return {"X-CSRF-Token": token}

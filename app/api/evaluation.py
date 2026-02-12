@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
+from app.core.constants import get_message
 from app.core.database import get_db
 from app.schemas.evaluation import (
     EvaluationPromptListResponse,
@@ -13,6 +14,7 @@ from app.schemas.evaluation import (
 )
 from app.services import evaluation_prompt_service, evaluation_service
 from app.services.evaluation_service import execute_evaluation_stream
+from app.utils.audit_logger import log_audit_event
 
 # 管理用ルーター（Web UIから使用）
 router = APIRouter(prefix="/evaluation", tags=["evaluation"])
@@ -22,26 +24,30 @@ protected_router = APIRouter(prefix="/evaluation", tags=["evaluation"])
 
 
 @protected_router.post("/evaluate", response_model=EvaluationResponse)
-def evaluate_output(request: EvaluationRequest):
+def evaluate_output(http_request: Request, request: EvaluationRequest):
     """出力評価API"""
+    user_ip = http_request.client.host if http_request.client else None
     return evaluation_service.execute_evaluation(
         document_type=request.document_type,
         input_text=request.input_text,
         current_prescription=request.current_prescription,
         additional_info=request.additional_info,
         output_summary=request.output_summary,
+        user_ip=user_ip,
     )
 
 
 @protected_router.post("/evaluate-stream")
-async def evaluate_output_stream(request: EvaluationRequest):
+async def evaluate_output_stream(http_request: Request, request: EvaluationRequest):
     """SSEストリーミング出力評価API"""
+    user_ip = http_request.client.host if http_request.client else None
     event_generator = execute_evaluation_stream(
         document_type=request.document_type,
         input_text=request.input_text,
         current_prescription=request.current_prescription,
         additional_info=request.additional_info,
         output_summary=request.output_summary,
+        user_ip=user_ip,
     )
     return StreamingResponse(
         event_generator,
@@ -98,15 +104,22 @@ def get_evaluation_prompt(
 
 @router.post("/prompts", response_model=EvaluationPromptSaveResponse)
 def save_evaluation_prompt(
+    http_request: Request,
     request: EvaluationPromptRequest,
     db: Session = Depends(get_db)
 ):
     """評価プロンプトを保存"""
+    user_ip = http_request.client.host if http_request.client else None
     success, message = evaluation_prompt_service.create_or_update_evaluation_prompt(
         db, request.document_type, request.content
     )
     if success:
         db.commit()
+        log_audit_event(
+            event_type=get_message("AUDIT", "EVALUATION_PROMPT_SAVED"),
+            user_ip=user_ip,
+            document_type=request.document_type,
+        )
     return EvaluationPromptSaveResponse(
         success=success,
         message=message,
@@ -116,13 +129,20 @@ def save_evaluation_prompt(
 
 @router.delete("/prompts/{document_type}", response_model=EvaluationPromptSaveResponse)
 def delete_evaluation_prompt(
+    http_request: Request,
     document_type: str,
     db: Session = Depends(get_db)
 ):
     """評価プロンプトを削除"""
+    user_ip = http_request.client.host if http_request.client else None
     success, message = evaluation_prompt_service.delete_evaluation_prompt(db, document_type)
     if success:
         db.commit()
+        log_audit_event(
+            event_type=get_message("AUDIT", "EVALUATION_PROMPT_DELETED"),
+            user_ip=user_ip,
+            document_type=document_type,
+        )
     return EvaluationPromptSaveResponse(
         success=success,
         message=message,
