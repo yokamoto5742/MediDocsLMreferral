@@ -74,23 +74,40 @@ class TestCsrfAuthentication:
         response = client.get("/")
         assert response.status_code == 200
 
-    def test_admin_endpoints_require_csrf(self, client: TestClient, csrf_headers):
-        """管理用エンドポイント（/api/settings等）はCSRF認証必須"""
-        # CSRF トークンなしでは401エラー
+    def test_public_endpoints_no_csrf(self, client: TestClient):
+        """公開エンドポイント(GET)はCSRF認証不要"""
+        # 設定エンドポイント
         response = client.get("/api/settings/departments")
-        assert response.status_code == 401
-
-        # CSRF トークンありでは成功
-        response = client.get("/api/settings/departments", headers=csrf_headers)
         assert response.status_code == 200
         assert "departments" in response.json()
 
-    def test_models_endpoint_requires_csrf(self, client: TestClient, csrf_headers):
-        """モデル一覧エンドポイントはCSRF認証必須"""
-        # CSRF トークンなしでは401エラー
+        # モデル一覧エンドポイント
         response = client.get("/api/summary/models")
+        assert response.status_code == 200
+
+    def test_admin_endpoints_require_csrf(self, client: TestClient, csrf_headers):
+        """管理用エンドポイント(POST/DELETE)はCSRF認証必須"""
+        # プロンプト作成はCSRF トークン必須
+        response = client.post(
+            "/api/prompts/",
+            json={
+                "department": "内科",
+                "doctor": "default",
+                "document_type": "他院への紹介",
+                "content": "test",
+            },
+        )
         assert response.status_code == 401
 
         # CSRF トークンありでは成功
-        response = client.get("/api/summary/models", headers=csrf_headers)
+        response = client.post(
+            "/api/prompts/",
+            json={
+                "department": "内科",
+                "doctor": "default",
+                "document_type": "他院への紹介",
+                "content": "test",
+            },
+            headers=csrf_headers,
+        )
         assert response.status_code == 200

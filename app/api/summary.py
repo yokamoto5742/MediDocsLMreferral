@@ -6,10 +6,10 @@ from app.core.constants import ModelType
 from app.schemas.summary import SummaryRequest, SummaryResponse
 from app.services.summary_service import execute_summary_generation, execute_summary_generation_stream
 
-# 管理用ルーター（Web UIから使用）
-router = APIRouter(prefix="/summary", tags=["summary"])
+# 公開ルーター(読み取り専用、CSRF保護なし)
+public_router = APIRouter(prefix="/summary", tags=["summary"])
 
-# 保護されたAPIルーター（認証必須）
+# 保護されたAPIルーター(認証必須)
 protected_router = APIRouter(prefix="/summary", tags=["summary"])
 
 settings = get_settings()
@@ -60,7 +60,7 @@ async def generate_summary_stream(http_request: Request, request: SummaryRequest
     )
 
 
-@router.get("/models")
+@public_router.get("/models")
 def get_available_models():
     """利用可能なモデル一覧を取得"""
     models = []

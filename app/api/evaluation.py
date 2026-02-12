@@ -16,10 +16,13 @@ from app.services import evaluation_prompt_service, evaluation_service
 from app.services.evaluation_service import execute_evaluation_stream
 from app.utils.audit_logger import log_audit_event
 
-# 管理用ルーター（Web UIから使用）
+# 公開ルーター(読み取り専用、CSRF保護なし)
+public_router = APIRouter(prefix="/evaluation", tags=["evaluation"])
+
+# 管理用ルーター(変更操作、CSRF保護あり)
 router = APIRouter(prefix="/evaluation", tags=["evaluation"])
 
-# 保護されたAPIルーター（認証必須）
+# 保護されたAPIルーター(認証必須)
 protected_router = APIRouter(prefix="/evaluation", tags=["evaluation"])
 
 
@@ -60,7 +63,7 @@ async def evaluate_output_stream(http_request: Request, request: EvaluationReque
     )
 
 
-@router.get("/prompts", response_model=EvaluationPromptListResponse)
+@public_router.get("/prompts", response_model=EvaluationPromptListResponse)
 def get_all_evaluation_prompts(db: Session = Depends(get_db)):
     """全ての評価プロンプトを取得"""
     prompts = evaluation_prompt_service.get_all_evaluation_prompts(db)
@@ -79,7 +82,7 @@ def get_all_evaluation_prompts(db: Session = Depends(get_db)):
     )
 
 
-@router.get("/prompts/{document_type}", response_model=EvaluationPromptResponse)
+@public_router.get("/prompts/{document_type}", response_model=EvaluationPromptResponse)
 def get_evaluation_prompt(
     document_type: str,
     db: Session = Depends(get_db)

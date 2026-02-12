@@ -7,17 +7,21 @@ from app.schemas.prompt import PromptCreate, PromptListItem, PromptResponse
 from app.services import prompt_service
 from app.utils.audit_logger import log_audit_event
 
+# 公開ルーター(読み取り専用、CSRF保護なし)
+public_router = APIRouter(prefix="/prompts", tags=["prompts"])
+
+# 管理用ルーター(変更操作、CSRF保護あり)
 router = APIRouter(prefix="/prompts", tags=["prompts"])
 
 
-@router.get("/", response_model=list[PromptListItem])
+@public_router.get("/", response_model=list[PromptListItem])
 def list_prompts(db: Session = Depends(get_db)):
     """プロンプト一覧を取得"""
     prompts = prompt_service.get_all_prompts(db)
     return prompts
 
 
-@router.get("/{prompt_id}", response_model=PromptResponse)
+@public_router.get("/{prompt_id}", response_model=PromptResponse)
 def get_prompt(prompt_id: int, db: Session = Depends(get_db)):
     """単一プロンプトを取得"""
     prompt = prompt_service.get_prompt_by_id(db, prompt_id)

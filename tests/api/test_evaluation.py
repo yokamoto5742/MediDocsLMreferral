@@ -183,7 +183,7 @@ def test_get_evaluation_prompt_not_exists(client, test_db):
         assert data["is_active"] is False
 
 
-def test_save_evaluation_prompt_new(client, test_db):
+def test_save_evaluation_prompt_new(client, test_db, csrf_headers):
     """プロンプト保存API - 新規作成"""
     with patch("app.api.evaluation.evaluation_prompt_service.create_or_update_evaluation_prompt") as mock_save:
         mock_save.return_value = (True, "評価プロンプトを新規作成しました")
@@ -193,7 +193,7 @@ def test_save_evaluation_prompt_new(client, test_db):
             "content": "新しい評価プロンプト",
         }
 
-        response = client.post("/api/evaluation/prompts", json=payload)
+        response = client.post("/api/evaluation/prompts", json=payload, headers=csrf_headers)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -202,7 +202,7 @@ def test_save_evaluation_prompt_new(client, test_db):
         assert data["document_type"] == "他院への紹介"
 
 
-def test_save_evaluation_prompt_update(client, test_db):
+def test_save_evaluation_prompt_update(client, test_db, csrf_headers):
     """プロンプト保存API - 更新"""
     with patch("app.api.evaluation.evaluation_prompt_service.create_or_update_evaluation_prompt") as mock_save:
         mock_save.return_value = (True, "評価プロンプトを更新しました")
@@ -212,7 +212,7 @@ def test_save_evaluation_prompt_update(client, test_db):
             "content": "更新された評価プロンプト",
         }
 
-        response = client.post("/api/evaluation/prompts", json=payload)
+        response = client.post("/api/evaluation/prompts", json=payload, headers=csrf_headers)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -221,7 +221,7 @@ def test_save_evaluation_prompt_update(client, test_db):
         assert data["document_type"] == "他院への紹介"
 
 
-def test_save_evaluation_prompt_empty_content(client, test_db):
+def test_save_evaluation_prompt_empty_content(client, test_db, csrf_headers):
     """プロンプト保存API - 空の内容"""
     with patch("app.api.evaluation.evaluation_prompt_service.create_or_update_evaluation_prompt") as mock_save:
         mock_save.return_value = (False, "評価プロンプトの内容を入力してください")
@@ -231,7 +231,7 @@ def test_save_evaluation_prompt_empty_content(client, test_db):
             "content": "",
         }
 
-        response = client.post("/api/evaluation/prompts", json=payload)
+        response = client.post("/api/evaluation/prompts", json=payload, headers=csrf_headers)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -239,12 +239,12 @@ def test_save_evaluation_prompt_empty_content(client, test_db):
         assert data["message"] == "評価プロンプトの内容を入力してください"
 
 
-def test_delete_evaluation_prompt_success(client, test_db):
+def test_delete_evaluation_prompt_success(client, test_db, csrf_headers):
     """プロンプト削除API - 正常系"""
     with patch("app.api.evaluation.evaluation_prompt_service.delete_evaluation_prompt") as mock_delete:
         mock_delete.return_value = (True, "評価プロンプトを削除しました")
 
-        response = client.delete("/api/evaluation/prompts/他院への紹介")
+        response = client.delete("/api/evaluation/prompts/他院への紹介", headers=csrf_headers)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -253,12 +253,12 @@ def test_delete_evaluation_prompt_success(client, test_db):
         assert data["document_type"] == "他院への紹介"
 
 
-def test_delete_evaluation_prompt_not_found(client, test_db):
+def test_delete_evaluation_prompt_not_found(client, test_db, csrf_headers):
     """プロンプト削除API - 存在しない場合"""
     with patch("app.api.evaluation.evaluation_prompt_service.delete_evaluation_prompt") as mock_delete:
         mock_delete.return_value = (False, "返書の評価プロンプトが見つかりません")
 
-        response = client.delete("/api/evaluation/prompts/返書")
+        response = client.delete("/api/evaluation/prompts/返書", headers=csrf_headers)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -280,14 +280,14 @@ def test_evaluate_output_missing_required_field(client, test_db, csrf_headers):
     assert "input_text" in response.text.lower()
 
 
-def test_save_evaluation_prompt_missing_required_field(client, test_db):
+def test_save_evaluation_prompt_missing_required_field(client, test_db, csrf_headers):
     """プロンプト保存API - 必須フィールド不足"""
     payload = {
         "document_type": "他院への紹介",
         # content が欠落
     }
 
-    response = client.post("/api/evaluation/prompts", json=payload)
+    response = client.post("/api/evaluation/prompts", json=payload, headers=csrf_headers)
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     assert "content" in response.text.lower()

@@ -18,7 +18,7 @@ def test_list_prompts(client, sample_prompts):
     assert data[1]["department"] == "眼科"
 
 
-def test_create_prompt_success(client, test_db):
+def test_create_prompt_success(client, test_db, csrf_headers):
     """プロンプト作成 - 成功"""
     payload = {
         "department": "内科",
@@ -27,7 +27,7 @@ def test_create_prompt_success(client, test_db):
         "content": "新規プロンプト内容",
         "selected_model": "Claude",
     }
-    response = client.post("/api/prompts/", json=payload)
+    response = client.post("/api/prompts/", json=payload, headers=csrf_headers)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["department"] == "内科"
@@ -37,7 +37,7 @@ def test_create_prompt_success(client, test_db):
     assert "id" in data
 
 
-def test_create_prompt_updates_existing(client, sample_prompts):
+def test_create_prompt_updates_existing(client, sample_prompts, csrf_headers):
     """プロンプト作成 - 既存のプロンプトを更新"""
     payload = {
         "department": "眼科",
@@ -46,7 +46,7 @@ def test_create_prompt_updates_existing(client, sample_prompts):
         "content": "更新されたプロンプト",
         "selected_model": "Gemini_Pro",
     }
-    response = client.post("/api/prompts/", json=payload)
+    response = client.post("/api/prompts/", json=payload, headers=csrf_headers)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert data["content"] == "更新されたプロンプト"
@@ -57,10 +57,10 @@ def test_create_prompt_updates_existing(client, sample_prompts):
     assert len(prompts) == 2
 
 
-def test_delete_prompt_success(client, sample_prompts):
+def test_delete_prompt_success(client, sample_prompts, csrf_headers):
     """プロンプト削除 - 成功"""
     prompt_id = sample_prompts[1].id
-    response = client.delete(f"/api/prompts/{prompt_id}")
+    response = client.delete(f"/api/prompts/{prompt_id}", headers=csrf_headers)
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {"status": "deleted"}
 
@@ -69,8 +69,8 @@ def test_delete_prompt_success(client, sample_prompts):
     assert len(prompts) == 1
 
 
-def test_delete_prompt_not_found(client, test_db):
+def test_delete_prompt_not_found(client, test_db, csrf_headers):
     """プロンプト削除 - 存在しないID"""
-    response = client.delete("/api/prompts/9999")
+    response = client.delete("/api/prompts/9999", headers=csrf_headers)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert "not found" in response.json()["detail"].lower()
