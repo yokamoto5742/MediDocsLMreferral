@@ -10,7 +10,7 @@ from app.services.evaluation_prompt_service import get_evaluation_prompt
 from app.services.sse_helpers import sse_event, stream_with_heartbeat
 from app.utils.audit_logger import log_audit_event
 from app.utils.exceptions import APIError
-from app.utils.input_sanitizer import sanitize_medical_text
+from app.utils.input_sanitizer import sanitize_medical_text, validate_medical_input
 
 settings = get_settings()
 
@@ -29,11 +29,23 @@ def _error_response(error_msg: str, processing_time: float = 0.0) -> EvaluationR
 
 def _validate_and_get_prompt(
     output_summary: str,
-    document_type: str
+    document_type: str,
+    input_text: str = "",
 ) -> tuple[str | None, str | None]:
-    """バリデーションを実行し、プロンプトを取得"""
+    """バリデーションを実行し、プロンプトを取得（プロンプトインジェクション検出を含む）"""
     if not output_summary:
         return None, MESSAGES["VALIDATION"]["EVALUATION_NO_OUTPUT"]
+
+    # プロンプトインジェクション検出（output_summaryとinput_textの両方をチェック）
+    if output_summary:
+        is_valid, error_msg = validate_medical_input(output_summary, settings.max_input_tokens)
+        if not is_valid:
+            return None, error_msg
+
+    if input_text:
+        is_valid, error_msg = validate_medical_input(input_text, settings.max_input_tokens)
+        if not is_valid:
+            return None, error_msg
 
     if not settings.gemini_evaluation_model:
         return None, MESSAGES["CONFIG"]["EVALUATION_MODEL_MISSING"]
@@ -93,7 +105,7 @@ def execute_evaluation(
     additional_info = sanitize_medical_text(additional_info or "")
     output_summary = sanitize_medical_text(output_summary)
 
-    prompt_template, error_msg = _validate_and_get_prompt(output_summary, document_type)
+    prompt_template, error_msg = _validate_and_get_prompt(output_summary, document_type, input_text)
     if error_msg:
         log_audit_event(
             event_type=get_message("AUDIT", "EVALUATION_FAILURE"),
@@ -216,7 +228,7 @@ async def execute_evaluation_stream(
     additional_info = sanitize_medical_text(additional_info or "")
     output_summary = sanitize_medical_text(output_summary)
 
-    prompt_template, error_msg = _validate_and_get_prompt(output_summary, document_type)
+    prompt_template, error_msg = _validate_and_get_prompt(output_summary, document_type, input_text)
     if error_msg:
         log_audit_event(
             event_type=get_message("AUDIT", "EVALUATION_FAILURE"),

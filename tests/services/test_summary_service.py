@@ -336,7 +336,11 @@ class TestExecuteSummaryGeneration:
 
         mock_determine_model.side_effect = ValueError("入力が長すぎますがGeminiモデルが設定されていません")
 
-        long_text = "あ" * 200
+        # 繰り返しパターンではない長いテキストを生成（各文を微妙に変化させる）
+        long_text = "患者は" + "".join([
+            f"{i}日前から咳と発熱を訴えており、血圧は{140+i}/{90+i}、脈拍は{88+i}回、体温は{37.8+i*0.1:.1f}度です。"
+            for i in range(50)
+        ])
 
         result = execute_summary_generation(
             medical_text=long_text,
@@ -434,7 +438,11 @@ class TestExecuteSummaryGeneration:
             1000,
         )
 
-        long_text = "あ" * 200
+        # 繰り返しパターンではない長いテキストを生成（各文を微妙に変化させる）
+        long_text = "患者は" + "".join([
+            f"{i}日前から咳と発熱を訴えており、血圧は{140+i}/{90+i}、脈拍は{88+i}回、体温は{37.8+i*0.1:.1f}度です。"
+            for i in range(50)
+        ])
 
         result = execute_summary_generation(
             medical_text=long_text,

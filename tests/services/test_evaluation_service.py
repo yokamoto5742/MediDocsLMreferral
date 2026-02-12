@@ -62,6 +62,7 @@ class TestExecuteEvaluation:
     ):
         """評価実行 - 正常系"""
         mock_settings.gemini_evaluation_model = "gemini-2.0-flash-thinking-exp-01-21"
+        mock_settings.max_input_tokens = 100000
 
         # モックDB
         mock_db = MagicMock()
@@ -119,6 +120,7 @@ class TestExecuteEvaluation:
     def test_execute_evaluation_model_missing(self, mock_settings):
         """評価実行 - モデル未設定エラー"""
         mock_settings.gemini_evaluation_model = None
+        mock_settings.max_input_tokens = 100000
 
         result = execute_evaluation(
             document_type="他院への紹介",
@@ -140,6 +142,7 @@ class TestExecuteEvaluation:
     ):
         """評価実行 - プロンプト未設定エラー"""
         mock_settings.gemini_evaluation_model = "gemini-2.0-flash-thinking-exp-01-21"
+        mock_settings.max_input_tokens = 100000
 
         # モックDB
         mock_db = MagicMock()
@@ -168,6 +171,7 @@ class TestExecuteEvaluation:
     ):
         """評価実行 - API呼び出しエラー"""
         mock_settings.gemini_evaluation_model = "gemini-2.0-flash-thinking-exp-01-21"
+        mock_settings.max_input_tokens = 100000
 
         # モックDB
         mock_db = MagicMock()
@@ -206,6 +210,7 @@ class TestExecuteEvaluation:
     ):
         """評価実行 - 一般的な例外"""
         mock_settings.gemini_evaluation_model = "gemini-2.0-flash-thinking-exp-01-21"
+        mock_settings.max_input_tokens = 100000
 
         # モックDB
         mock_db = MagicMock()
@@ -243,6 +248,7 @@ class TestExecuteEvaluation:
     ):
         """評価実行 - 全フィールド指定"""
         mock_settings.gemini_evaluation_model = "gemini-2.0-flash-thinking-exp-01-21"
+        mock_settings.max_input_tokens = 100000
 
         # モックDB
         mock_db = MagicMock()
@@ -262,9 +268,15 @@ class TestExecuteEvaluation:
         )
         mock_client_class.return_value = mock_client
 
+        # 繰り返しパターンではない長いテキストを生成
+        long_input_text = "患者は" + "".join([
+            f"{i}日前から症状{i}を訴えており、検査値{i}は{100+i}でした。"
+            for i in range(50)
+        ])
+
         result = execute_evaluation(
             document_type="他院への紹介",
-            input_text="詳細な患者情報" * 100,
+            input_text=long_input_text,
             current_prescription="複数の処方薬",
             additional_info="詳細な追加情報",
             output_summary="詳細な出力内容"
@@ -296,6 +308,7 @@ class TestExecuteEvaluationStream:
     ):
         """評価ストリーミング実行 - 正常系"""
         mock_settings.gemini_evaluation_model = "gemini-2.0-flash-thinking-exp-01-21"
+        mock_settings.max_input_tokens = 100000
 
         # モックDB
         mock_db = MagicMock()
@@ -350,6 +363,7 @@ class TestExecuteEvaluationStream:
     async def test_execute_evaluation_stream_model_missing(self, mock_settings):
         """評価ストリーミング実行 - モデル未設定エラー"""
         mock_settings.gemini_evaluation_model = None
+        mock_settings.max_input_tokens = 100000
 
         events = []
         async for event in execute_evaluation_stream(
@@ -373,6 +387,7 @@ class TestExecuteEvaluationStream:
     ):
         """評価ストリーミング実行 - プロンプト未設定エラー"""
         mock_settings.gemini_evaluation_model = "gemini-2.0-flash-thinking-exp-01-21"
+        mock_settings.max_input_tokens = 100000
 
         # モックDB
         mock_db = MagicMock()
@@ -403,6 +418,7 @@ class TestExecuteEvaluationStream:
     ):
         """評価ストリーミング実行 - API呼び出しエラー"""
         mock_settings.gemini_evaluation_model = "gemini-2.0-flash-thinking-exp-01-21"
+        mock_settings.max_input_tokens = 100000
 
         # モックDB
         mock_db = MagicMock()

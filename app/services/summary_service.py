@@ -9,7 +9,7 @@ from app.services.model_selector import determine_model, get_provider_and_model
 from app.services.sse_helpers import sse_event, stream_with_heartbeat
 from app.services.usage_service import save_usage
 from app.utils.audit_logger import log_audit_event
-from app.utils.input_sanitizer import sanitize_medical_text
+from app.utils.input_sanitizer import sanitize_medical_text, validate_medical_input
 from app.utils.text_processor import format_output_summary, parse_output_summary
 
 settings = get_settings()
@@ -34,7 +34,7 @@ def _error_response(
 
 
 def validate_input(medical_text: str) -> tuple[bool, str | None]:
-    """テキスト入力検証"""
+    """テキスト入力検証（長さチェックとプロンプトインジェクション検出）"""
     if not medical_text or not medical_text.strip():
         return False, MESSAGES["VALIDATION"]["NO_INPUT"]
 
@@ -43,6 +43,11 @@ def validate_input(medical_text: str) -> tuple[bool, str | None]:
         return False, MESSAGES["VALIDATION"]["INPUT_TOO_SHORT"]
     if input_length > settings.max_input_tokens:
         return False, MESSAGES["VALIDATION"]["INPUT_TOO_LONG"]
+
+    # プロンプトインジェクション検出
+    is_valid, error_msg = validate_medical_input(medical_text, settings.max_input_tokens)
+    if not is_valid:
+        return False, error_msg
 
     return True, None
 

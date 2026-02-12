@@ -57,6 +57,12 @@ class Settings(BaseSettings):
     csrf_secret_key: str
     csrf_token_expire_minutes: int = 60
 
+    # CORS設定
+    cors_origins: list[str] = ["http://localhost:8000", "http://127.0.0.1:8000"]
+    cors_allow_credentials: bool = True
+    cors_allow_methods: list[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    cors_allow_headers: list[str] = ["*"]
+
     def get_database_url(self) -> str:
         """データベース接続URLを構築"""
         if self.database_url:
