@@ -29,6 +29,13 @@
 - **Tailwind CSS**: ユーティリティファーストなスタイリング
 - **Alpine.js**: 軽量なJavaScript フレームワーク
 
+### セキュリティ
+- **CSRF保護**: トークンベースの状態変更エンドポイント保護
+- **プロンプトインジェクション対策**: 多層的な入力検証とサニタイゼーション
+- **CORS制御**: 環境変数ベースの柔軟なクロスオリジン設定
+- **セキュリティヘッダー**: XSS、クリックジャッキング、MIME スニッフィング対策
+- **監査ログ**: 医療操作のセキュリティイベント記録
+
 ## 前提条件
 
 - **Python** 3.13以上
@@ -241,7 +248,9 @@ app/
 ├── utils/                 # ユーティリティ関数
 │   ├── text_processor.py       # テキスト解析
 │   ├── exceptions.py           # カスタム例外
-│   └── error_handlers.py       # エラーハンドリング
+│   ├── error_handlers.py       # エラーハンドリング
+│   ├── input_sanitizer.py      # プロンプトインジェクション検出とサニタイゼーション
+│   └── audit_logger.py         # セキュリティ監査ログ
 ├── templates/             # Jinja2 テンプレート
 ├── static/                # 静的ファイル（フロントエンド出力）
 └── main.py                # FastAPI アプリケーション本体
@@ -461,6 +470,21 @@ pyright
 - データベースマイグレーションが完了しているか確認
 - 外部API呼び出しがモックされているか確認
 
+### セキュリティ関連エラー
+
+**プロンプトインジェクション検出エラー**
+- 医療テキストに特定のキーワード（指示、命令など）が含まれた場合、誤検出の可能性
+- `app/utils/input_sanitizer.py`の検出パターンを確認してカスタマイズ可能
+
+**CSRF トークン検証失敗**
+- トークンの有効期限を確認（デフォルト60分）
+- `X-CSRF-Token`ヘッダーが正しく送信されているか確認
+- `CSRF_SECRET_KEY`が同じ値に設定されているか確認
+
+**CORS エラー**
+- `CORS_ORIGINS`に現在のホストが含まれているか確認
+- ブラウザのデバッグツールでネットワークエラーを確認
+
 ## コントリビューション
 
 ### コードスタイル
@@ -478,12 +502,52 @@ pyright
 
 詳細は [CLAUDE.md](CLAUDE.md) を参照してください。
 
-## 認証設定
+## セキュリティ機能
 
-### CSRF対策
+### CSRF保護
 
 - CSRF トークンは `CSRF_SECRET_KEY` で生成
 - トークン有効期限は `CSRF_TOKEN_EXPIRE_MINUTES` で設定（デフォルト60分）
+- すべての状態変更エンドポイント（POST/PUT/DELETE）で検証
+
+### CORS設定
+
+以下の環境変数で制御可能：
+- `CORS_ORIGINS`: 許可するオリジンのリスト
+- `CORS_ALLOW_CREDENTIALS`: クッキー送信の許可
+- `CORS_ALLOW_METHODS`: 許可するHTTPメソッド
+- `CORS_ALLOW_HEADERS`: 許可するヘッダー
+
+### プロンプトインジェクション対策
+
+入力テキストのサニタイゼーション機能：
+- システムプロンプト上書き指示の検出
+- ロールプレイング攻撃パターンの検出（英語・日本語両対応）
+- 異常な繰り返しパターンの検出
+- XSS関連パターンの除去
+- 制御文字の除去
+
+**実装:** `app/utils/input_sanitizer.py`
+
+### セキュリティヘッダー
+
+`SecurityHeadersMiddleware`により以下を自動設定：
+- `X-Content-Type-Options: nosniff` - MIMEスニッフィング防止
+- `X-Frame-Options: DENY` - クリックジャッキング防止
+- `X-XSS-Protection: 1; mode=block` - XSS保護
+- `Content-Security-Policy` - スクリプト/スタイル実行制御
+- `Strict-Transport-Security` - HTTPS強制（HTTPS環境のみ）
+
+### 監査ログ
+
+セキュリティイベントをJSON形式で記録：
+- 文書生成操作
+- ユーザーIP
+- 実行モデルと文書タイプ
+- 成功/失敗状態
+- 個人情報（PHI）は記録対象外
+
+**実装:** `app/utils/audit_logger.py`
 
 ## セキュリティに関する注意事項
 

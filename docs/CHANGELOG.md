@@ -7,7 +7,34 @@
 
 ## [Unreleased]
 
-## [1.6.0] - 2026-02-09
+## [1.5.0] - 2026-02-12
+
+### セキュリティ
+- **プロンプトインジェクション対策**: 悪意のある入力パターンを検出・ブロック
+  - `app/utils/input_sanitizer.py`: 多層防御アプローチによる検出機能
+  - 疑わしいパターン（システムプロンプト上書き、命令注入等）を検出
+  - 検出時は即座にエラーレスポンスを返却
+  - `tests/test_utils/test_input_sanitizer.py`: 包括的なテストケース
+- **CORS設定**: クロスオリジンリクエストの制御を強化
+  - 環境変数による許可オリジンの設定（`CORS_ORIGINS`）
+  - 資格情報付きリクエストの制御（`CORS_ALLOW_CREDENTIALS`）
+  - `tests/core/test_cors.py`: CORS設定の検証テスト
+- **監査ログ機能**: セキュリティイベントの記録
+  - `app/utils/audit_logger.py`: JSON形式でのログ出力
+  - プロンプトインジェクション検出、認証失敗等のイベントを記録
+- **CSP設定の改善**: Content Security Policyに`unsafe-eval`を追加
+  - Alpine.jsの動的評価機能に対応
+
+### 変更
+- **CSRF設定**: シークレットキーにデフォルト値を追加
+  - 開発環境での初期セットアップを簡素化
+  - 本番環境では必ず環境変数で上書きすることを推奨
+
+### 修正
+- **プロンプトインジェクション検出ロジック**: 不要な変数を削除
+  - コードの可読性とメンテナンス性を向上
+
+## [1.4.0] - 2026-02-09
 
 ### 追加
 - **ログ機能**: アプリケーション動作をCSV形式で記録
@@ -73,7 +100,7 @@
 - pytest設定: `asyncio_default_fixture_loop_scope = "function"`を追加
 - CSRF対策: SSEエンドポイントでトークン検証を適用
 
-## [1.5.3] - 2026-01-31
+## [1.3.3] - 2026-01-31
 
 ### 変更
 - **環境変数名の変更**: APIキー認証用の環境変数を`API_KEY`から`MEDIDOCS_API_KEY`に変更
@@ -109,7 +136,7 @@
   - `frontend/src/app.ts`: `updateDoctors()`にエラーハンドリングを追加し、APIエラー時の挙動を改善
   - `tests/api/test_api_authentication.py`: 認証テストを更新し、設定エンドポイントが認証不要であることを確認するテストを追加
 
-## [1.5.2] - 2026-01-29
+## [1.3.2] - 2026-01-29
 
 ### リファクタリング
 - **DRY原則の適用**: `app/services/summary_service.py`にエラーレスポンス生成ヘルパー関数`_error_response`を導入し、重複コードを削減
@@ -131,7 +158,7 @@
   - `tests/api/test_settings.py`: `test_get_doctors_default_department`の期待値を修正
   - `tests/external/test_base_api.py`: `@patch`のパスを更新、`get_selected_model`を使用
 
-## [1.5.1] - 2026-01-29
+## [1.3.1] - 2026-01-29
 
 ### 追加
 - `package.json`: Alpine.jsをdependenciesに追加
@@ -153,7 +180,7 @@
 - フロントエンド関連ファイルをVite版に完全移行
 - 開発関連ドキュメントを整理統合
 
-## [1.5.0] - 2026-01-28
+## [1.3.0] - 2026-01-28
 
 ### 追加
 - **フロントエンド環境構築**: Vite + TypeScript + Tailwind CSSのモダンなビルド環境を導入
@@ -203,7 +230,7 @@
 - Vite版（フェーズ4）はビルド済み、いつでも切り替え可能
 - HMR対応の開発環境が利用可能
 
-## [1.4.0] - 2026-01-27
+## [1.2.0] - 2026-01-27
 
 ### 追加
 - `app/models/prompt.py`: 型ヒントを追加
