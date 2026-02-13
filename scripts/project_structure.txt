@@ -1,7 +1,7 @@
 ============================================================
 プロジェクト構造: MediDocsLMreferral
 パス: C:\Users\yokam\PycharmProjects\MediDocsLMreferral
-生成日時: 2026-02-08 19:21:29
+生成日時: 2026-02-13 13:43:50
 ============================================================
 
 └── MediDocsLMreferral
@@ -72,8 +72,10 @@
     │   │   └── statistics.html
     │   ├── utils
     │   │   ├── __init__.py
+    │   │   ├── audit_logger.py
     │   │   ├── error_handlers.py
     │   │   ├── exceptions.py
+    │   │   ├── input_sanitizer.py
     │   │   └── text_processor.py
     │   ├── __init__.py
     │   └── main.py
