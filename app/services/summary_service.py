@@ -164,7 +164,6 @@ def execute_summary_generation(
         processing_time=processing_time,
     )
 
-    # 監査ログ: 成功
     log_audit_event(
         event_type=get_message("AUDIT", "DOCUMENT_GENERATION_SUCCESS"),
         user_ip=user_ip,

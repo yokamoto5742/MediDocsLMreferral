@@ -32,11 +32,11 @@ def _validate_and_get_prompt(
     document_type: str,
     input_text: str = "",
 ) -> tuple[str | None, str | None]:
-    """バリデーションを実行し、プロンプトを取得（プロンプトインジェクション検出を含む）"""
+    """バリデーションを実行してプロンプトを取得（プロンプトインジェクション検出を含む）"""
     if not output_summary:
         return None, MESSAGES["VALIDATION"]["EVALUATION_NO_OUTPUT"]
 
-    # プロンプトインジェクション検出（output_summaryとinput_textの両方をチェック）
+    # プロンプトインジェクション検出
     if output_summary:
         is_valid, error_msg = validate_medical_input(output_summary, settings.max_input_tokens)
         if not is_valid:
@@ -138,7 +138,6 @@ def execute_evaluation(
         )
         processing_time = time.time() - start_time
 
-        # 監査ログ: 成功
         log_audit_event(
             event_type=get_message("AUDIT", "EVALUATION_SUCCESS"),
             user_ip=user_ip,
@@ -262,7 +261,6 @@ async def execute_evaluation_stream(
             evaluation_text, input_tokens, output_tokens = item
             processing_time = time.time() - start_time
 
-            # 監査ログ: 成功
             log_audit_event(
                 event_type=get_message("AUDIT", "EVALUATION_SUCCESS"),
                 user_ip=user_ip,
