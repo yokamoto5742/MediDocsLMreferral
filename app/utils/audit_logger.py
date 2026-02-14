@@ -3,7 +3,7 @@ import logging
 from datetime import UTC, datetime
 from typing import Any
 
-# 専用の監査ログロガー
+
 audit_logger = logging.getLogger("audit")
 
 
