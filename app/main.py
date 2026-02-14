@@ -47,7 +47,7 @@ app.add_middleware(
 app.add_middleware(SecurityHeadersMiddleware)
 
 # エラーハンドラーを登録
-app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore[arg-type]
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, api_exception_handler)
 
 # 静的ファイル
@@ -127,7 +127,7 @@ async def prompts_page(request: Request):
 
 @app.get("/statistics", response_class=HTMLResponse)
 async def statistics_page(request: Request):
-    """統計ページ"""
+    """統計情報ページ"""
     return templates.TemplateResponse(
         request,
         "statistics.html",

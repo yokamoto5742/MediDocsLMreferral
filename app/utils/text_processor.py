@@ -3,7 +3,6 @@ import re
 from app.core.constants import DEFAULT_SECTION_NAMES, SECTION_DETECTION_PATTERNS
 
 section_aliases = {
-    "治療内容": "治療経過",
     "その他": "備考",
     "補足": "備考",
     "メモ": "備考"
