@@ -6,6 +6,7 @@ import type {
     SummaryResponse,
     EvaluationResponse,
     DoctorsResponse,
+    SelectedModelResponse,
     SSECompleteEvent,
     SSEErrorEvent,
     SSEEvaluationCompleteEvent
@@ -115,6 +116,7 @@ export function appState(): AppState {
         async init() {
             await this.updateDoctors();
             this.updateReferralPurpose();
+            await this.updateSelectedModel();
         },
 
         updateReferralPurpose() {
@@ -139,6 +141,29 @@ export function appState(): AppState {
                 }
             } catch (error) {
                 console.error('医師リストの取得中にエラーが発生しました:', error);
+            }
+        },
+
+        async updateSelectedModel() {
+            try {
+                const params = new URLSearchParams({
+                    department: this.settings.department,
+                    document_type: this.settings.documentType,
+                    doctor: this.settings.doctor
+                });
+                const response = await fetch(`/api/settings/selected-model?${params}`, {
+                    headers: getHeaders()
+                });
+                if (!response.ok) {
+                    console.error('選択モデルの取得に失敗しました:', response.status, response.statusText);
+                    return;
+                }
+                const data = await response.json() as SelectedModelResponse;
+                if (data.selected_model) {
+                    this.settings.model = data.selected_model;
+                }
+            } catch (error) {
+                console.error('選択モデルの取得中にエラーが発生しました:', error);
             }
         },
 

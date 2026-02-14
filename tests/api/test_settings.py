@@ -159,3 +159,75 @@ def test_settings_endpoints_no_authentication(client, test_db):
 
     response = client.get("/api/settings/document-types")
     assert response.status_code == status.HTTP_200_OK
+
+
+def test_get_selected_model_with_no_prompt(client, test_db):
+    """選択モデル取得 - プロンプトが存在しない場合"""
+    response = client.get(
+        "/api/settings/selected-model",
+        params={
+            "department": "default",
+            "document_type": "他院への紹介",
+            "doctor": "default"
+        }
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert "selected_model" in data
+    assert data["selected_model"] is None
+
+
+def test_get_selected_model_with_prompt(client, test_db, sample_prompts):
+    """選択モデル取得 - プロンプトが存在する場合"""
+    test_prompt = sample_prompts[1]  # 眼科の橋本義弘のプロンプト
+    response = client.get(
+        "/api/settings/selected-model",
+        params={
+            "department": test_prompt.department,
+            "document_type": test_prompt.document_type,
+            "doctor": test_prompt.doctor
+        }
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert "selected_model" in data
+    assert data["selected_model"] == test_prompt.selected_model
+
+
+def test_get_selected_model_hierarchical_lookup(client, test_db):
+    """選択モデル取得 - 階層的検索の確認"""
+    from app.models.prompt import Prompt
+
+    # 診療科レベルのプロンプトを作成
+    dept_prompt = Prompt(
+        department="眼科",
+        document_type="他院への紹介",
+        doctor="default",
+        content="診療科レベルのプロンプト",
+        selected_model="Gemini_Pro"
+    )
+    test_db.add(dept_prompt)
+    test_db.commit()
+
+    # 医師レベルのプロンプトがない場合、診療科レベルのモデルが返される
+    response = client.get(
+        "/api/settings/selected-model",
+        params={
+            "department": "眼科",
+            "document_type": "他院への紹介",
+            "doctor": "橋本義弘"
+        }
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["selected_model"] == "Gemini_Pro"
+
+
+def test_get_selected_model_missing_parameters(client, test_db):
+    """選択モデル取得 - パラメータ不足"""
+    response = client.get("/api/settings/selected-model")
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY

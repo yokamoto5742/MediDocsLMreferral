@@ -51,6 +51,10 @@ export interface DoctorsResponse {
     doctors: string[];
 }
 
+export interface SelectedModelResponse {
+    selected_model: string | null;
+}
+
 // SSEイベント型
 export interface SSEProgressEvent {
     status: string;
