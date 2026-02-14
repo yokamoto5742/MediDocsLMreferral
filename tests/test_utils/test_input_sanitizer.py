@@ -1,5 +1,3 @@
-import pytest
-
 from app.utils.input_sanitizer import (
     detect_prompt_injection,
     sanitize_medical_text,
@@ -151,7 +149,7 @@ class TestValidateMedicalInput:
     def test_excessive_length(self):
         """長すぎる入力はFalseを返す"""
         text = "a" * 100001
-        is_valid, error_msg = validate_medical_input(text, max_length=100000)
+        is_valid, error_msg = validate_medical_input(text)
         assert not is_valid
         assert "長すぎます" in error_msg
 

@@ -4,7 +4,3 @@ class AppError(Exception):
 
 class APIError(AppError):
     pass
-
-
-class DatabaseError(AppError):
-    pass
