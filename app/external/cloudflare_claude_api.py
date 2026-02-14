@@ -72,7 +72,7 @@ class CloudflareClaudeAPIClient(BaseAPIClient):
 
             body_str = json.dumps(request_body)
 
-            # 元のBedrock URL（署名用）
+            # Bedrock URL（署名用）
             stock_url = (
                 f"https://bedrock-runtime.{self.aws_region}.amazonaws.com"
                 f"/model/{model_name}/converse"

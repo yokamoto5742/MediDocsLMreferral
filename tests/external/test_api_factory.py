@@ -5,7 +5,6 @@ import pytest
 from app.external.api_factory import (
     APIProvider,
     create_client,
-    generate_summary,
     generate_summary_with_provider,
 )
 from app.external.claude_api import ClaudeAPIClient
@@ -298,67 +297,6 @@ class TestGenerateSummaryWithProvider:
         call_args = mock_generate.call_args[0]
         # DEFAULT_DOCUMENT_TYPE が使用される
         assert call_args[5] == "他院への紹介"
-
-
-class TestGenerateSummaryFunction:
-    """generate_summary 関数のテスト"""
-
-    @patch("app.external.api_factory.get_settings")
-    @patch.object(ClaudeAPIClient, "generate_summary")
-    def test_generate_summary_function(self, mock_generate, mock_get_settings):
-        """generate_summary関数 - 正常系"""
-        mock_settings = MagicMock()
-        mock_settings.cloudflare_account_id = None
-        mock_settings.cloudflare_gateway_id = None
-        mock_settings.cloudflare_aig_token = None
-        mock_get_settings.return_value = mock_settings
-
-        mock_generate.return_value = ("生成結果", 1000, 500)
-
-        result = generate_summary(
-            provider="claude",
-            medical_text="患者情報",
-        )
-
-        assert result == ("生成結果", 1000, 500)
-        mock_generate.assert_called_once()
-
-    @patch("app.external.api_factory.get_settings")
-    @patch.object(GeminiAPIClient, "generate_summary")
-    def test_generate_summary_function_with_kwargs(self, mock_generate, mock_get_settings):
-        """generate_summary関数 - kwargsあり"""
-        mock_settings = MagicMock()
-        mock_settings.cloudflare_account_id = None
-        mock_settings.cloudflare_gateway_id = None
-        mock_settings.cloudflare_aig_token = None
-        mock_get_settings.return_value = mock_settings
-
-        mock_generate.return_value = ("結果", 2000, 800)
-
-        result = generate_summary(
-            provider="gemini",
-            medical_text="カルテ",
-            additional_info="追加",
-            department="眼科",
-            doctor="橋本義弘",
-            model_name="gemini-1.5-pro-002",
-        )
-
-        assert result == ("結果", 2000, 800)
-
-        call_args = mock_generate.call_args[0]
-        assert call_args[0] == "カルテ"
-        assert call_args[1] == "追加"
-        assert call_args[4] == "眼科"
-        assert call_args[6] == "橋本義弘"
-
-    def test_generate_summary_function_invalid_provider(self):
-        """generate_summary関数 - 無効なプロバイダー"""
-        with pytest.raises(APIError):
-            generate_summary(
-                provider="openai",
-                medical_text="データ",
-            )
 
 
 class TestEdgeCases:

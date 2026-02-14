@@ -262,10 +262,10 @@ class TestExecuteSummaryGeneration:
     @patch("app.services.summary_service.get_provider_and_model")
     @patch("app.services.summary_service.determine_model")
     @patch("app.services.summary_service.save_usage")
-    @patch("app.services.summary_service.generate_summary")
+    @patch("app.services.summary_service.generate_summary_with_provider")
     @patch("app.services.summary_service.settings")
     def test_execute_summary_generation_success(
-        self, mock_settings, mock_generate_summary, mock_save_usage,
+        self, mock_settings, mock_generate_summary_with_provider, mock_save_usage,
         mock_determine_model, mock_get_provider_and_model
     ):
         """文書生成実行 - 正常系"""
@@ -274,7 +274,7 @@ class TestExecuteSummaryGeneration:
 
         mock_determine_model.return_value = ("Claude", False)
         mock_get_provider_and_model.return_value = ("claude", "claude-3-5-sonnet-20241022")
-        mock_generate_summary.return_value = (
+        mock_generate_summary_with_provider.return_value = (
             "主病名: 糖尿病\n治療経過: インスリン治療中",
             1000,
             500,
@@ -383,10 +383,10 @@ class TestExecuteSummaryGeneration:
     @patch("app.services.summary_service.get_provider_and_model")
     @patch("app.services.summary_service.determine_model")
     @patch("app.services.summary_service.save_usage")
-    @patch("app.services.summary_service.generate_summary")
+    @patch("app.services.summary_service.generate_summary_with_provider")
     @patch("app.services.summary_service.settings")
     def test_execute_summary_generation_api_error(
-        self, mock_settings, mock_generate_summary, mock_save_usage,
+        self, mock_settings, mock_generate_summary_with_provider, mock_save_usage,
         mock_determine_model, mock_get_provider_and_model
     ):
         """文書生成実行 - API呼び出しエラー"""
@@ -395,7 +395,7 @@ class TestExecuteSummaryGeneration:
 
         mock_determine_model.return_value = ("Claude", False)
         mock_get_provider_and_model.return_value = ("claude", "claude-3-5-sonnet-20241022")
-        mock_generate_summary.side_effect = Exception("API接続エラー")
+        mock_generate_summary_with_provider.side_effect = Exception("API接続エラー")
 
         result = execute_summary_generation(
             medical_text="テストデータ" * 10,
@@ -420,10 +420,10 @@ class TestExecuteSummaryGeneration:
     @patch("app.services.summary_service.get_provider_and_model")
     @patch("app.services.summary_service.determine_model")
     @patch("app.services.summary_service.save_usage")
-    @patch("app.services.summary_service.generate_summary")
+    @patch("app.services.summary_service.generate_summary_with_provider")
     @patch("app.services.summary_service.settings")
     def test_execute_summary_generation_with_model_switch(
-        self, mock_settings, mock_generate_summary, mock_save_usage,
+        self, mock_settings, mock_generate_summary_with_provider, mock_save_usage,
         mock_determine_model, mock_get_provider_and_model
     ):
         """文書生成実行 - モデル自動切り替え"""
@@ -432,7 +432,7 @@ class TestExecuteSummaryGeneration:
 
         mock_determine_model.return_value = ("Gemini_Pro", True)
         mock_get_provider_and_model.return_value = ("gemini", "gemini-1.5-pro-002")
-        mock_generate_summary.return_value = (
+        mock_generate_summary_with_provider.return_value = (
             "主病名: 高血圧症",
             50000,
             1000,
@@ -463,10 +463,10 @@ class TestExecuteSummaryGeneration:
     @patch("app.services.summary_service.get_provider_and_model")
     @patch("app.services.summary_service.determine_model")
     @patch("app.services.summary_service.save_usage")
-    @patch("app.services.summary_service.generate_summary")
+    @patch("app.services.summary_service.generate_summary_with_provider")
     @patch("app.services.summary_service.settings")
     def test_execute_summary_generation_with_additional_info(
-        self, mock_settings, mock_generate_summary, mock_save_usage,
+        self, mock_settings, mock_generate_summary_with_provider, mock_save_usage,
         mock_determine_model, mock_get_provider_and_model
     ):
         """文書生成実行 - 追加情報あり"""
@@ -475,7 +475,7 @@ class TestExecuteSummaryGeneration:
 
         mock_determine_model.return_value = ("Claude", False)
         mock_get_provider_and_model.return_value = ("claude", "claude-3-5-sonnet-20241022")
-        mock_generate_summary.return_value = (
+        mock_generate_summary_with_provider.return_value = (
             "主病名: 糖尿病",
             1500,
             600,
@@ -495,7 +495,7 @@ class TestExecuteSummaryGeneration:
 
         assert result.success is True
         # generate_summary が正しい引数で呼ばれることを確認
-        call_args = mock_generate_summary.call_args[1]
+        call_args = mock_generate_summary_with_provider.call_args[1]
         assert call_args["additional_info"] == "追加情報" * 10
         assert call_args["referral_purpose"] == "精査依頼"
         assert call_args["current_prescription"] == "処方内容"
@@ -505,7 +505,7 @@ class TestExecuteSummaryGeneration:
     @patch("app.services.summary_service.get_provider_and_model")
     @patch("app.services.summary_service.determine_model")
     @patch("app.services.summary_service.save_usage")
-    @patch("app.services.summary_service.generate_summary")
+    @patch("app.services.summary_service.generate_summary_with_provider")
     @patch("app.services.summary_service.parse_output_summary")
     @patch("app.services.summary_service.format_output_summary")
     @patch("app.services.summary_service.settings")
@@ -514,7 +514,7 @@ class TestExecuteSummaryGeneration:
         mock_settings,
         mock_format,
         mock_parse,
-        mock_generate_summary,
+        mock_generate_summary_with_provider,
         mock_save_usage,
         mock_determine_model,
         mock_get_provider_and_model,
@@ -525,7 +525,7 @@ class TestExecuteSummaryGeneration:
 
         mock_determine_model.return_value = ("Claude", False)
         mock_get_provider_and_model.return_value = ("claude", "claude-3-5-sonnet-20241022")
-        mock_generate_summary.return_value = (
+        mock_generate_summary_with_provider.return_value = (
             "# 主病名: 糖尿病",
             1000,
             500,

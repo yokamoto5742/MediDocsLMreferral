@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 
 from app.core.config import get_settings
 from app.core.constants import MESSAGES, get_message
-from app.external.api_factory import generate_summary, generate_summary_stream
+from app.external.api_factory import generate_summary_with_provider, generate_summary_stream_with_provider
 from app.schemas.summary import SummaryResponse
 from app.services.model_selector import determine_model, get_provider_and_model
 from app.services.sse_helpers import sse_event, stream_with_heartbeat
@@ -127,7 +127,7 @@ def execute_summary_generation(
 
     start_time = time.time()
     try:
-        output_summary, input_tokens, output_tokens = generate_summary(
+        output_summary, input_tokens, output_tokens = generate_summary_with_provider(
             provider=provider,
             medical_text=medical_text,
             additional_info=additional_info,
@@ -199,7 +199,7 @@ def _run_sync_generation(
     model_name: str,
 ) -> tuple[str, int, int]:
     """同期ストリーミングジェネレータをスレッドプールで実行"""
-    stream = generate_summary_stream(
+    stream = generate_summary_stream_with_provider(
         provider=provider,
         medical_text=medical_text,
         additional_info=additional_info,

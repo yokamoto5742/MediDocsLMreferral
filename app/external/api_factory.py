@@ -103,13 +103,3 @@ def generate_summary_stream_with_provider(
         doctor,
         model_name,
     )
-
-
-def generate_summary(provider: str, medical_text: str, **kwargs):
-    """文書を生成（後方互換性のためのエイリアス）"""
-    return generate_summary_with_provider(provider, medical_text, **kwargs)
-
-
-def generate_summary_stream(provider: str, medical_text: str, **kwargs):
-    """ストリーム形式で文書を生成（後方互換性のためのエイリアス）"""
-    return generate_summary_stream_with_provider(provider, medical_text, **kwargs)
