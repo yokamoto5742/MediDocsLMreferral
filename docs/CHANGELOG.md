@@ -7,6 +7,20 @@
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-02-14
+
+### 追加
+- **選択モデル取得API**: 現在選択されているAIモデルを取得するエンドポイント
+  - `app/api/settings.py`: `/api/settings/models/selected`エンドポイントを追加
+  - 選択されたモデル情報をJSON形式で返却
+  - `tests/api/test_settings.py`: エンドポイント動作検証テストを追加
+
+### 変更
+- **例外ハンドラーのリファクタリング**: 汎用的な例外処理に統一
+  - `app/utils/error_handlers.py`: エラーハンドリングロジックを簡潔化
+  - `app/utils/exceptions.py`: 未使用の`DatabaseError`を削除
+  - `tests/test_utils/test_input_sanitizer.py`: テストを修正
+
 ## [1.5.0] - 2026-02-12
 
 ### セキュリティ
