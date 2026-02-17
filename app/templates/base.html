@@ -60,6 +60,9 @@
         {% if messages %}
         window.MESSAGES = {{ messages | tojson }};
         {% endif %}
+        {% if document_types %}
+        window.DOCUMENT_TYPES = {{ document_types | tojson }};
+        {% endif %}
     </script>
 
     <script type="module" src="/static/dist/js/main.js"></script>
